@@ -73,7 +73,6 @@ class PotentialTrack extends HTMLElement {
   set stress(value) {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0 && numValue + this._resistance <= this._score) {
-      this._stress = numValue;
       this.setAttribute('stress', numValue);
     }
   }
@@ -85,7 +84,6 @@ class PotentialTrack extends HTMLElement {
   set resistance(value) {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0 && this._stress + numValue <= this._score) {
-      this._resistance = numValue;
       this.setAttribute('resistance', numValue);
     }
   }
