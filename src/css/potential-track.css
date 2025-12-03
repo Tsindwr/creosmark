@@ -1,0 +1,91 @@
+/**
+ * Potential Track Custom Element Styles
+ * 
+ * These CSS custom properties can be used to customize the appearance
+ * of the potential-track element from outside the shadow DOM.
+ */
+
+/* Default theme (dark) */
+potential-track {
+  /* Center circle */
+  --potential-center-bg: #1a1a2e;
+  --potential-center-stroke: #4a4a6a;
+  --potential-score-color: #e0e0e0;
+  
+  /* Empty nodes */
+  --potential-node-empty: #2a2a4a;
+  --potential-node-stroke: #5a5a8a;
+  --potential-node-hover-stroke: #8a8aba;
+  --potential-node-focus-stroke: #aaaaff;
+  
+  /* Stress (left side) */
+  --potential-stress-fill: #8b0000;
+  --potential-stress-stroke: #ff4444;
+  
+  /* Resistance (right side) */
+  --potential-resistance-fill: #004d00;
+  --potential-resistance-stroke: #44ff44;
+  
+  /* Labels */
+  --potential-label-color: #888;
+  
+  /* Font */
+  --potential-font: 'Georgia', serif;
+}
+
+/* Light theme example */
+potential-track.light-theme {
+  --potential-center-bg: #f0f0f5;
+  --potential-center-stroke: #9090b0;
+  --potential-score-color: #2a2a4a;
+  
+  --potential-node-empty: #d0d0e0;
+  --potential-node-stroke: #9090b0;
+  --potential-node-hover-stroke: #6060a0;
+  --potential-node-focus-stroke: #4040ff;
+  
+  --potential-stress-fill: #ff6666;
+  --potential-stress-stroke: #cc0000;
+  
+  --potential-resistance-fill: #66ff66;
+  --potential-resistance-stroke: #00cc00;
+  
+  --potential-label-color: #555;
+}
+
+/* Fantasy/parchment theme */
+potential-track.fantasy-theme {
+  --potential-center-bg: #d4a574;
+  --potential-center-stroke: #8b4513;
+  --potential-score-color: #4a3520;
+  
+  --potential-node-empty: #c4956a;
+  --potential-node-stroke: #8b4513;
+  --potential-node-hover-stroke: #a0522d;
+  --potential-node-focus-stroke: #cd853f;
+  
+  --potential-stress-fill: #b22222;
+  --potential-stress-stroke: #dc143c;
+  
+  --potential-resistance-fill: #228b22;
+  --potential-resistance-stroke: #32cd32;
+  
+  --potential-label-color: #654321;
+  --potential-font: 'Cinzel', serif;
+}
+
+/* Size variations */
+potential-track.small {
+  width: 120px;
+  height: 120px;
+}
+
+potential-track.medium {
+  width: 200px;
+  height: 200px;
+}
+
+potential-track.large {
+  width: 300px;
+  height: 300px;
+}

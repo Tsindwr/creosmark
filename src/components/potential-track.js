@@ -1,0 +1,395 @@
+/**
+ * PotentialTrack - A custom web element for tracking character potential
+ * 
+ * Features:
+ * - Main score/number displayed in the center
+ * - Semi-halo of nodes equal to the score surrounding the center
+ * - Stress tracking (fills from left side)
+ * - Resistance tracking (fills from right side)
+ * - Constraint: stress + resistance <= score
+ */
+class PotentialTrack extends HTMLElement {
+  static get observedAttributes() {
+    return ['score', 'stress', 'resistance'];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._score = 10;
+    this._stress = 0;
+    this._resistance = 0;
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    
+    const numValue = parseInt(newValue, 10);
+    if (isNaN(numValue) || numValue < 0) return;
+
+    switch (name) {
+      case 'score':
+        this._score = numValue;
+        // Reset stress and resistance if they exceed the new score
+        if (this._stress + this._resistance > this._score) {
+          this._stress = 0;
+          this._resistance = 0;
+        }
+        break;
+      case 'stress':
+        if (numValue + this._resistance <= this._score) {
+          this._stress = numValue;
+        }
+        break;
+      case 'resistance':
+        if (this._stress + numValue <= this._score) {
+          this._resistance = numValue;
+        }
+        break;
+    }
+    
+    this.render();
+  }
+
+  get score() {
+    return this._score;
+  }
+
+  set score(value) {
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 0) {
+      this.setAttribute('score', numValue);
+    }
+  }
+
+  get stress() {
+    return this._stress;
+  }
+
+  set stress(value) {
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 0 && numValue + this._resistance <= this._score) {
+      this._stress = numValue;
+      this.setAttribute('stress', numValue);
+    }
+  }
+
+  get resistance() {
+    return this._resistance;
+  }
+
+  set resistance(value) {
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 0 && this._stress + numValue <= this._score) {
+      this._resistance = numValue;
+      this.setAttribute('resistance', numValue);
+    }
+  }
+
+  /**
+   * Add stress to the track (queue pushing from left)
+   * @returns {boolean} True if stress was added, false if not possible
+   */
+  addStress() {
+    if (this._stress + this._resistance < this._score) {
+      this._stress++;
+      this.setAttribute('stress', this._stress);
+      this.dispatchEvent(new CustomEvent('stress-changed', { 
+        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
+      }));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Remove stress from the track
+   * @returns {boolean} True if stress was removed, false if not possible
+   */
+  removeStress() {
+    if (this._stress > 0) {
+      this._stress--;
+      this.setAttribute('stress', this._stress);
+      this.dispatchEvent(new CustomEvent('stress-changed', { 
+        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
+      }));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Add resistance to the track (queue pushing from right)
+   * @returns {boolean} True if resistance was added, false if not possible
+   */
+  addResistance() {
+    if (this._stress + this._resistance < this._score) {
+      this._resistance++;
+      this.setAttribute('resistance', this._resistance);
+      this.dispatchEvent(new CustomEvent('resistance-changed', { 
+        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
+      }));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Remove resistance from the track
+   * @returns {boolean} True if resistance was removed, false if not possible
+   */
+  removeResistance() {
+    if (this._resistance > 0) {
+      this._resistance--;
+      this.setAttribute('resistance', this._resistance);
+      this.dispatchEvent(new CustomEvent('resistance-changed', { 
+        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
+      }));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Handle node click events
+   * @param {number} index - The index of the clicked node
+   */
+  handleNodeClick(index) {
+    const midpoint = Math.floor(this._score / 2);
+    
+    // Left half handles stress (0 to midpoint-1)
+    // Right half handles resistance (midpoint to score-1)
+    if (index < midpoint) {
+      // Clicking on the left side toggles stress
+      const stressIndex = index;
+      if (stressIndex < this._stress) {
+        // Remove stress up to this point
+        this._stress = stressIndex;
+      } else {
+        // Add stress up to this point (if room available)
+        const newStress = stressIndex + 1;
+        if (newStress + this._resistance <= this._score) {
+          this._stress = newStress;
+        }
+      }
+      this.setAttribute('stress', this._stress);
+      this.dispatchEvent(new CustomEvent('stress-changed', { 
+        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
+      }));
+    } else {
+      // Clicking on the right side toggles resistance
+      const resistanceIndex = this._score - 1 - index;
+      if (resistanceIndex < this._resistance) {
+        // Remove resistance up to this point
+        this._resistance = resistanceIndex;
+      } else {
+        // Add resistance up to this point (if room available)
+        const newResistance = resistanceIndex + 1;
+        if (this._stress + newResistance <= this._score) {
+          this._resistance = newResistance;
+        }
+      }
+      this.setAttribute('resistance', this._resistance);
+      this.dispatchEvent(new CustomEvent('resistance-changed', { 
+        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
+      }));
+    }
+    
+    this.render();
+  }
+
+  /**
+   * Calculate node positions in a semi-circle (arc) around the center
+   * @returns {Array} Array of {x, y, angle} positions for each node
+   */
+  calculateNodePositions() {
+    const positions = [];
+    const totalNodes = this._score;
+    
+    // Arc spans from 225 degrees (bottom-left) to -45 degrees (bottom-right)
+    // Going counterclockwise around the top
+    const startAngle = (225 * Math.PI) / 180; // Start angle in radians
+    const endAngle = (-45 * Math.PI) / 180;   // End angle in radians
+    const arcSpan = startAngle - endAngle;     // Total arc span
+    
+    // Radius for the node positions
+    const radius = 70;
+    
+    for (let i = 0; i < totalNodes; i++) {
+      // Distribute nodes evenly along the arc
+      const t = totalNodes > 1 ? i / (totalNodes - 1) : 0.5;
+      const angle = startAngle - (t * arcSpan);
+      
+      positions.push({
+        x: 100 + radius * Math.cos(angle),
+        y: 100 - radius * Math.sin(angle),
+        angle: angle
+      });
+    }
+    
+    return positions;
+  }
+
+  /**
+   * Get the state of a node based on stress and resistance values
+   * @param {number} index - The node index
+   * @returns {string} 'stress' | 'resistance' | 'empty'
+   */
+  getNodeState(index) {
+    // Stress fills from left (index 0 onwards)
+    if (index < this._stress) {
+      return 'stress';
+    }
+    
+    // Resistance fills from right (index score-1 backwards)
+    const resistanceStartIndex = this._score - this._resistance;
+    if (index >= resistanceStartIndex) {
+      return 'resistance';
+    }
+    
+    return 'empty';
+  }
+
+  render() {
+    const positions = this.calculateNodePositions();
+    
+    const nodesHTML = positions.map((pos, index) => {
+      const state = this.getNodeState(index);
+      const stateClass = state !== 'empty' ? state : '';
+      return `
+        <circle 
+          class="node ${stateClass}" 
+          cx="${pos.x}" 
+          cy="${pos.y}" 
+          r="12" 
+          data-index="${index}"
+          tabindex="0"
+          role="button"
+          aria-label="Node ${index + 1}: ${state === 'empty' ? 'empty' : state}"
+        />
+      `;
+    }).join('');
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: inline-block;
+          width: 200px;
+          height: 200px;
+        }
+        
+        .potential-track-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+        }
+        
+        svg {
+          width: 100%;
+          height: 100%;
+        }
+        
+        .center-circle {
+          fill: var(--potential-center-bg, #1a1a2e);
+          stroke: var(--potential-center-stroke, #4a4a6a);
+          stroke-width: 3;
+        }
+        
+        .score-text {
+          fill: var(--potential-score-color, #e0e0e0);
+          font-family: var(--potential-font, 'Georgia', serif);
+          font-size: 32px;
+          font-weight: bold;
+          text-anchor: middle;
+          dominant-baseline: central;
+        }
+        
+        .node {
+          fill: var(--potential-node-empty, #2a2a4a);
+          stroke: var(--potential-node-stroke, #5a5a8a);
+          stroke-width: 2;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .node:hover {
+          stroke: var(--potential-node-hover-stroke, #8a8aba);
+          stroke-width: 3;
+          transform-origin: center;
+        }
+        
+        .node:focus {
+          outline: none;
+          stroke: var(--potential-node-focus-stroke, #aaaaff);
+          stroke-width: 3;
+        }
+        
+        .node.stress {
+          fill: var(--potential-stress-fill, #8b0000);
+          stroke: var(--potential-stress-stroke, #ff4444);
+        }
+        
+        .node.resistance {
+          fill: var(--potential-resistance-fill, #004d00);
+          stroke: var(--potential-resistance-stroke, #44ff44);
+        }
+        
+        .label {
+          font-family: var(--potential-font, 'Georgia', serif);
+          font-size: 10px;
+          fill: var(--potential-label-color, #888);
+          text-anchor: middle;
+        }
+        
+        .stress-label {
+          fill: var(--potential-stress-stroke, #ff4444);
+        }
+        
+        .resistance-label {
+          fill: var(--potential-resistance-stroke, #44ff44);
+        }
+      </style>
+      
+      <div class="potential-track-container">
+        <svg viewBox="0 0 200 200">
+          <!-- Semi-circle arc of nodes -->
+          ${nodesHTML}
+          
+          <!-- Center circle with score -->
+          <circle class="center-circle" cx="100" cy="100" r="40" />
+          <text class="score-text" x="100" y="100">${this._score}</text>
+          
+          <!-- Labels -->
+          <text class="label stress-label" x="30" y="190">Stress: ${this._stress}</text>
+          <text class="label resistance-label" x="170" y="190">Res: ${this._resistance}</text>
+        </svg>
+      </div>
+    `;
+
+    // Add click event listeners to nodes
+    this.shadowRoot.querySelectorAll('.node').forEach(node => {
+      node.addEventListener('click', (e) => {
+        const index = parseInt(e.target.dataset.index, 10);
+        this.handleNodeClick(index);
+      });
+      
+      // Keyboard accessibility
+      node.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const index = parseInt(e.target.dataset.index, 10);
+          this.handleNodeClick(index);
+        }
+      });
+    });
+  }
+}
+
+// Register the custom element
+customElements.define('potential-track', PotentialTrack);
+
+export default PotentialTrack;

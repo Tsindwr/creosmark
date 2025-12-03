@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creosmark - Character Sheet Builder</title>
+  <link rel="stylesheet" href="src/css/potential-track.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-family: 'Georgia', serif;
+      font-size: 2.5rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #a0a0b0;
+      font-size: 1.1rem;
+    }
+    
+    .character-sheet {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(30, 30, 50, 0.8);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .section-title {
+      font-family: 'Georgia', serif;
+      color: #ffd700;
+      border-bottom: 2px solid #4a4a6a;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .potential-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    
+    .potential-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.6);
+      border-radius: 10px;
+      border: 1px solid #4a4a6a;
+    }
+    
+    .potential-stat h3 {
+      margin: 0 0 15px 0;
+      color: #c0c0d0;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-stress {
+      background: #8b0000;
+      color: white;
+    }
+    
+    .btn-stress:hover {
+      background: #a00000;
+    }
+    
+    .btn-resistance {
+      background: #004d00;
+      color: white;
+    }
+    
+    .btn-resistance:hover {
+      background: #006600;
+    }
+    
+    .btn-reset {
+      background: #4a4a6a;
+      color: white;
+    }
+    
+    .btn-reset:hover {
+      background: #5a5a8a;
+    }
+    
+    .demo-section {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.4);
+      border-radius: 10px;
+    }
+    
+    .theme-demos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    .theme-demo {
+      text-align: center;
+      padding: 20px;
+      background: rgba(50, 50, 70, 0.5);
+      border-radius: 10px;
+    }
+    
+    .theme-demo.light-bg {
+      background: #f0f0f5;
+    }
+    
+    .theme-demo.fantasy-bg {
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23e8d4b8" width="100" height="100"/></svg>');
+    }
+    
+    .theme-demo h4 {
+      margin: 0 0 10px 0;
+      color: inherit;
+    }
+    
+    .theme-demo.light-bg h4 {
+      color: #333;
+    }
+    
+    .instructions {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.4);
+      border-radius: 10px;
+    }
+    
+    .instructions h3 {
+      color: #ffd700;
+      margin-top: 0;
+    }
+    
+    .instructions ul {
+      line-height: 1.8;
+    }
+    
+    .instructions code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Consolas', monospace;
+    }
+    
+    .event-log {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 0.85rem;
+    }
+    
+    .event-log-entry {
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .event-log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .event-stress {
+      color: #ff6666;
+    }
+    
+    .event-resistance {
+      color: #66ff66;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚔️ Creosmark ⚔️</h1>
+    <p>A Character Sheet Builder for Sunder Players</p>
+  </div>
+  
+  <div class="character-sheet">
+    <h2 class="section-title">🎯 Potential Tracks</h2>
+    
+    <div class="potential-section">
+      <!-- Body Potential -->
+      <div class="potential-stat">
+        <h3>Body</h3>
+        <potential-track id="body-track" score="8" stress="0" resistance="0"></potential-track>
+        <div class="controls">
+          <button class="btn btn-stress" onclick="bodyTrack.addStress()">+ Stress</button>
+          <button class="btn btn-stress" onclick="bodyTrack.removeStress()">- Stress</button>
+          <button class="btn btn-resistance" onclick="bodyTrack.addResistance()">+ Resistance</button>
+          <button class="btn btn-resistance" onclick="bodyTrack.removeResistance()">- Resistance</button>
+        </div>
+      </div>
+      
+      <!-- Mind Potential -->
+      <div class="potential-stat">
+        <h3>Mind</h3>
+        <potential-track id="mind-track" score="10" stress="2" resistance="1"></potential-track>
+        <div class="controls">
+          <button class="btn btn-stress" onclick="mindTrack.addStress()">+ Stress</button>
+          <button class="btn btn-stress" onclick="mindTrack.removeStress()">- Stress</button>
+          <button class="btn btn-resistance" onclick="mindTrack.addResistance()">+ Resistance</button>
+          <button class="btn btn-resistance" onclick="mindTrack.removeResistance()">- Resistance</button>
+        </div>
+      </div>
+      
+      <!-- Soul Potential -->
+      <div class="potential-stat">
+        <h3>Soul</h3>
+        <potential-track id="soul-track" score="6" stress="0" resistance="2"></potential-track>
+        <div class="controls">
+          <button class="btn btn-stress" onclick="soulTrack.addStress()">+ Stress</button>
+          <button class="btn btn-stress" onclick="soulTrack.removeStress()">- Stress</button>
+          <button class="btn btn-resistance" onclick="soulTrack.addResistance()">+ Resistance</button>
+          <button class="btn btn-resistance" onclick="soulTrack.removeResistance()">- Resistance</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Event Log -->
+    <div class="demo-section">
+      <h3 class="section-title">📝 Event Log</h3>
+      <div id="event-log" class="event-log">
+        <div class="event-log-entry">Events will appear here when you interact with the tracks...</div>
+      </div>
+    </div>
+    
+    <!-- Theme Demos -->
+    <div class="demo-section">
+      <h3 class="section-title">🎨 Theme Variations</h3>
+      <div class="theme-demos">
+        <div class="theme-demo">
+          <h4>Default (Dark)</h4>
+          <potential-track score="6" stress="1" resistance="1"></potential-track>
+        </div>
+        <div class="theme-demo light-bg">
+          <h4>Light Theme</h4>
+          <potential-track class="light-theme" score="6" stress="2" resistance="0"></potential-track>
+        </div>
+        <div class="theme-demo fantasy-bg">
+          <h4>Fantasy Theme</h4>
+          <potential-track class="fantasy-theme" score="6" stress="0" resistance="2"></potential-track>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="instructions">
+      <h3>📖 How to Use</h3>
+      <ul>
+        <li><strong>Click on nodes</strong> to toggle stress (left side) or resistance (right side)</li>
+        <li><strong>Stress</strong> (red) fills from the left - represents damage, exhaustion, or strain</li>
+        <li><strong>Resistance</strong> (green) fills from the right - represents armor, protection, or buffs</li>
+        <li>The center number shows your <strong>total potential score</strong></li>
+        <li>Total stress + resistance can never exceed your score</li>
+        <li>Use the buttons below each track or click directly on nodes</li>
+        <li>Keyboard accessible: use <code>Tab</code> to navigate and <code>Enter</code>/<code>Space</code> to toggle</li>
+      </ul>
+      
+      <h3>💻 Developer Usage</h3>
+      <pre><code>&lt;!-- Include the component --&gt;
+&lt;script type="module" src="src/components/potential-track.js"&gt;&lt;/script&gt;
+&lt;link rel="stylesheet" href="src/css/potential-track.css"&gt;
+
+&lt;!-- Use the component --&gt;
+&lt;potential-track score="10" stress="0" resistance="0"&gt;&lt;/potential-track&gt;
+
+&lt;!-- JavaScript API --&gt;
+&lt;script&gt;
+  const track = document.querySelector('potential-track');
+  track.addStress();        // Add 1 stress
+  track.removeStress();     // Remove 1 stress
+  track.addResistance();    // Add 1 resistance
+  track.removeResistance(); // Remove 1 resistance
+  
+  // Listen for changes
+  track.addEventListener('stress-changed', (e) =&gt; {
+    console.log(e.detail); // { stress, resistance, score }
+  });
+&lt;/script&gt;</code></pre>
+    </div>
+  </div>
+  
+  <script type="module" src="src/components/potential-track.js"></script>
+  <script>
+    // Get track elements
+    const bodyTrack = document.getElementById('body-track');
+    const mindTrack = document.getElementById('mind-track');
+    const soulTrack = document.getElementById('soul-track');
+    const eventLog = document.getElementById('event-log');
+    
+    // Event logging function
+    function logEvent(trackName, type, detail) {
+      const entry = document.createElement('div');
+      entry.className = `event-log-entry event-${type.includes('stress') ? 'stress' : 'resistance'}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${trackName}: ${type} - Stress: ${detail.stress}, Resistance: ${detail.resistance}`;
+      
+      // Remove placeholder if present
+      const placeholder = eventLog.querySelector('.event-log-entry:only-child');
+      if (placeholder && placeholder.textContent.includes('Events will appear')) {
+        placeholder.remove();
+      }
+      
+      eventLog.insertBefore(entry, eventLog.firstChild);
+      
+      // Keep only last 20 entries
+      while (eventLog.children.length > 20) {
+        eventLog.removeChild(eventLog.lastChild);
+      }
+    }
+    
+    // Add event listeners to all tracks
+    bodyTrack.addEventListener('stress-changed', (e) => logEvent('Body', 'stress-changed', e.detail));
+    bodyTrack.addEventListener('resistance-changed', (e) => logEvent('Body', 'resistance-changed', e.detail));
+    mindTrack.addEventListener('stress-changed', (e) => logEvent('Mind', 'stress-changed', e.detail));
+    mindTrack.addEventListener('resistance-changed', (e) => logEvent('Mind', 'resistance-changed', e.detail));
+    soulTrack.addEventListener('stress-changed', (e) => logEvent('Soul', 'stress-changed', e.detail));
+    soulTrack.addEventListener('resistance-changed', (e) => logEvent('Soul', 'resistance-changed', e.detail));
+  </script>
+</body>
+</html>
