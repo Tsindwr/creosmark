@@ -489,17 +489,22 @@
       const rollAllButton = document.getElementById('roll-all-button');
       rollAllButton.disabled = true;
       
-      // Trigger all dice rollers
+      // Trigger all dice rollers with staggered timing
       const rollers = document.querySelectorAll('.stat-roller');
+      const staggerDelay = 100; // ms between each roll
+      const animationDuration = 1000; // matches dice-roller animation
+      
       for (let i = 0; i < rollers.length; i++) {
-        // Small delay between each roll for visual effect
-        if (i > 0) await new Promise(resolve => setTimeout(resolve, 100));
+        // Delay before each roll for visual effect
+        if (i > 0) await new Promise(resolve => setTimeout(resolve, staggerDelay));
         triggerRoll(i);
       }
       
+      // Re-enable button after all animations complete
+      const totalDuration = (rollers.length * staggerDelay) + animationDuration;
       setTimeout(() => {
         rollAllButton.disabled = false;
-      }, 2000);
+      }, totalDuration);
     }
     
     // Trigger a roll for a specific roller
@@ -572,12 +577,17 @@
     
     // Update all result displays to show selection state
     function updateResultDisplays() {
-      document.querySelectorAll('.stat-result-display').forEach(resultDiv => {
-        const index = parseInt(resultDiv.dataset.rollerIndex);
-        if (selectedRollerIndex === index) {
-          resultDiv.classList.add('selected');
-        } else {
-          resultDiv.classList.remove('selected');
+      // Cache roller slots for efficiency
+      const slots = document.querySelectorAll('.roller-slot');
+      slots.forEach(slot => {
+        const resultDiv = slot.querySelector('.stat-result-display');
+        if (resultDiv) {
+          const index = parseInt(resultDiv.dataset.rollerIndex);
+          if (selectedRollerIndex === index) {
+            resultDiv.classList.add('selected');
+          } else {
+            resultDiv.classList.remove('selected');
+          }
         }
       });
     }
