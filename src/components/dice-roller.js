@@ -179,6 +179,10 @@ class DiceRoller extends HTMLElement {
    * Display dice values
    * @param {Array<number>} rolls - Array of dice values
    * @param {boolean} isAnimating - Whether this is part of animation
+   * 
+   * Note: When multiple dice show the same highest value (e.g., [4, 6, 6]),
+   * only the FIRST occurrence is visually marked as dropped, since the
+   * calculation only removes one die from the total.
    */
   displayDice(rolls, isAnimating) {
     const diceElements = this.shadowRoot.querySelectorAll('.die');

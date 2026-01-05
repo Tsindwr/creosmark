@@ -282,6 +282,12 @@
     // Character stats storage
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
     
+    // Shared validation function for stat values
+    function validateStatValue(value) {
+      const numValue = parseInt(value, 10);
+      return !isNaN(numValue) && numValue >= 1 && numValue <= 18 ? numValue : null;
+    }
+    
     // Load saved stats from localStorage
     function loadStats() {
       STATS.forEach(stat => {
@@ -289,10 +295,9 @@
         if (savedValue) {
           const input = document.getElementById(stat);
           if (input) {
-            const value = parseInt(savedValue, 10);
-            // Validate before setting
-            if (!isNaN(value) && value >= 1 && value <= 18) {
-              input.value = value;
+            const validValue = validateStatValue(savedValue);
+            if (validValue !== null) {
+              input.value = validValue;
             } else {
               // Clear corrupted data and use default
               localStorage.removeItem(`character_${stat}`);
@@ -313,9 +318,9 @@
       const input = document.getElementById(stat);
       if (input) {
         input.addEventListener('input', (e) => {
-          const value = parseInt(e.target.value, 10);
-          if (!isNaN(value) && value >= 1 && value <= 18) {
-            saveStat(stat, value);
+          const validValue = validateStatValue(e.target.value);
+          if (validValue !== null) {
+            saveStat(stat, validValue);
             // Clear any error styling
             e.target.style.borderColor = '';
           } else if (e.target.value !== '') {
@@ -326,8 +331,8 @@
         
         // Also validate on blur to provide feedback
         input.addEventListener('blur', (e) => {
-          const value = parseInt(e.target.value, 10);
-          if (isNaN(value) || value < 1 || value > 18) {
+          const validValue = validateStatValue(e.target.value);
+          if (validValue === null) {
             // Reset to last saved value or default
             const savedValue = localStorage.getItem(`character_${stat}`) || '10';
             e.target.value = savedValue;
