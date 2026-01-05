@@ -368,6 +368,7 @@ class PotentialTrack extends HTMLElement {
           font-weight: bold;
           text-transform: uppercase;
           letter-spacing: 2px;
+          transition: font-size 0.2s ease;
         }
       </style>
       
@@ -470,6 +471,44 @@ class PotentialTrack extends HTMLElement {
         this.addResistance();
       }
     });
+    
+    // Adjust label font size based on available space
+    if (this._label) {
+      this.adjustLabelSize();
+    }
+  }
+  
+  /**
+   * Adjust label font size to prevent overlap with nodes
+   */
+  adjustLabelSize() {
+    const labelElement = this.shadowRoot.querySelector('.title-label');
+    if (!labelElement) return;
+    
+    // Get the label's bounding box
+    const bbox = labelElement.getBBox();
+    const labelWidth = bbox.width;
+    
+    // Calculate available space between the two bottom nodes
+    // The nodes are at positions calculated in calculateNodePositions
+    // For a semi-circle from 225° to -45°, the bottom nodes are roughly at x=30 and x=170
+    const positions = this.calculateNodePositions();
+    const nodeRadius = 12;
+    
+    if (positions.length >= 2) {
+      const leftNode = positions[0];
+      const rightNode = positions[positions.length - 1];
+      
+      // Available space is between the right edge of left node and left edge of right node
+      const availableSpace = rightNode.x - leftNode.x - (nodeRadius * 4); // Extra margin
+      
+      // If label is too wide, scale it down
+      if (labelWidth > availableSpace) {
+        const scaleFactor = availableSpace / labelWidth;
+        const newFontSize = Math.max(8, 14 * scaleFactor); // Min 8px, default 14px
+        labelElement.style.fontSize = `${newFontSize}px`;
+      }
+    }
   }
 }
 

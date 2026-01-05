@@ -80,6 +80,104 @@
       font-size: 1.8rem;
     }
     
+    .dice-pool-section {
+      margin-bottom: 40px;
+      padding: 25px;
+      background: rgba(40, 40, 60, 0.6);
+      border-radius: 10px;
+      border: 2px solid #5a5a8a;
+    }
+    
+    .dice-pool-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .dice-pool-title {
+      font-family: 'Georgia', serif;
+      color: #ffd700;
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    
+    .roll-all-button {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      background: #6a4a9a;
+      border: 2px solid #7a5aaa;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+    }
+    
+    .roll-all-button:hover:not(:disabled) {
+      background: #7a5aaa;
+      border-color: #8a6aba;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(106, 74, 154, 0.4);
+    }
+    
+    .roll-all-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .stat-pool {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .stat-value-card {
+      background: rgba(50, 50, 70, 0.8);
+      border: 2px solid #4a4a6a;
+      border-radius: 8px;
+      padding: 15px 10px;
+      text-align: center;
+      cursor: grab;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    
+    .stat-value-card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+    
+    .stat-value-card.assigned {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #2a2a4a;
+    }
+    
+    .stat-value-card:not(.assigned):hover {
+      border-color: #6a6a9a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #ffd700;
+      font-family: 'Georgia', serif;
+    }
+    
+    .pool-instructions {
+      font-size: 0.9rem;
+      color: #a0a0b0;
+      font-style: italic;
+      margin-top: 10px;
+    }
+    
     .subsection-title {
       font-family: 'Georgia', serif;
       color: #a0a0d0;
@@ -103,6 +201,18 @@
       background: rgba(40, 40, 60, 0.6);
       border-radius: 10px;
       border: 1px solid #4a4a6a;
+      transition: all 0.3s ease;
+    }
+    
+    .stat-input-group.drop-target {
+      border-color: #7a7aaa;
+      background: rgba(60, 60, 80, 0.7);
+    }
+    
+    .stat-input-group.drop-active {
+      border-color: #ffd700;
+      background: rgba(70, 70, 90, 0.8);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
     }
     
     .stat-label {
@@ -137,6 +247,34 @@
       outline: none;
       border-color: #6a6a9a;
       box-shadow: 0 0 10px rgba(106, 106, 154, 0.5);
+    }
+    
+    .stat-input.has-pool-value {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: #ffd700;
+    }
+    
+    .clear-stat-button {
+      padding: 5px 10px;
+      font-size: 12px;
+      color: #ff6666;
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #ff4444;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Georgia', serif;
+      margin-top: 5px;
+    }
+    
+    .clear-stat-button:hover {
+      background: rgba(139, 0, 0, 0.5);
+      border-color: #ff6666;
+    }
+    
+    .clear-stat-button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
     
     .roll-button-container {
@@ -176,91 +314,89 @@
   <div class="character-builder">
     <h2 class="section-title">🎲 Build Your Character</h2>
     
+    <!-- Dice Pool Section -->
+    <div class="dice-pool-section">
+      <div class="dice-pool-header">
+        <h3 class="dice-pool-title">🎲 Stat Pool</h3>
+        <button class="roll-all-button" id="roll-all-button">Roll 8 Stats</button>
+      </div>
+      <div class="stat-pool" id="stat-pool">
+        <!-- Rolled stats will appear here -->
+      </div>
+      <p class="pool-instructions">
+        Roll 8 stats, then drag and drop them onto the potentials below. Click "Roll 8 Stats" to generate new values.
+      </p>
+    </div>
+    
     <!-- Physical Stats -->
     <h3 class="subsection-title">💪 Physical Potentials</h3>
     <div class="stats-grid">
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="might">
         <label class="stat-label" for="might">Might</label>
         <div class="stat-input-row">
           <input type="number" id="might" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Might" data-stat="might"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="might" style="display: none;">Clear</button>
       </div>
       
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="finesse">
         <label class="stat-label" for="finesse">Finesse</label>
         <div class="stat-input-row">
           <input type="number" id="finesse" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Finesse" data-stat="finesse"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="finesse" style="display: none;">Clear</button>
       </div>
       
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="nerve">
         <label class="stat-label" for="nerve">Nerve</label>
         <div class="stat-input-row">
           <input type="number" id="nerve" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Nerve" data-stat="nerve"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="nerve" style="display: none;">Clear</button>
       </div>
       
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="seep">
         <label class="stat-label" for="seep">Seep</label>
         <div class="stat-input-row">
           <input type="number" id="seep" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Seep" data-stat="seep"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="seep" style="display: none;">Clear</button>
       </div>
     </div>
     
     <!-- Mental Stats -->
     <h3 class="subsection-title">🧠 Mental Potentials</h3>
     <div class="stats-grid">
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="instinct">
         <label class="stat-label" for="instinct">Instinct</label>
         <div class="stat-input-row">
           <input type="number" id="instinct" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Instinct" data-stat="instinct"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="instinct" style="display: none;">Clear</button>
       </div>
       
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="wit">
         <label class="stat-label" for="wit">Wit</label>
         <div class="stat-input-row">
           <input type="number" id="wit" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Wit" data-stat="wit"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="wit" style="display: none;">Clear</button>
       </div>
       
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="heart">
         <label class="stat-label" for="heart">Heart</label>
         <div class="stat-input-row">
           <input type="number" id="heart" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Heart" data-stat="heart"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="heart" style="display: none;">Clear</button>
       </div>
       
-      <div class="stat-input-group">
+      <div class="stat-input-group" data-stat="tether">
         <label class="stat-label" for="tether">Tether</label>
         <div class="stat-input-row">
           <input type="number" id="tether" class="stat-input" min="1" max="18" value="10">
         </div>
-        <div class="roll-button-container">
-          <dice-roller label="Roll Tether" data-stat="tether"></dice-roller>
-        </div>
+        <button class="clear-stat-button" data-stat="tether" style="display: none;">Clear</button>
       </div>
     </div>
     
@@ -268,9 +404,11 @@
     <div class="instructions">
       <h3>📖 How to Use</h3>
       <ul>
-        <li><strong>Manual Entry:</strong> Type values directly into the input fields (1-18)</li>
-        <li><strong>Roll Dice:</strong> Click the "Roll" button to generate a random stat value</li>
-        <li><strong>Roll Formula:</strong> 3d6 drop the highest die (special case: if all three dice are 1, the result is 1)</li>
+        <li><strong>Roll Stats:</strong> Click "Roll 8 Stats" to generate 8 random values using 3d6 drop highest</li>
+        <li><strong>Assign Stats (Drag & Drop):</strong> Drag rolled values from the pool and drop them onto your desired potentials</li>
+        <li><strong>Assign Stats (Click):</strong> Click a stat value in the pool to select it (gold border), then click a potential to assign it</li>
+        <li><strong>Manual Entry:</strong> You can also type values directly into the input fields (1-18)</li>
+        <li><strong>Clear Assignment:</strong> Click "Clear" button to return a stat value back to the pool</li>
         <li><strong>View Sheet:</strong> Click "View Character Sheet" to see your stats displayed with potential tracks</li>
         <li>Your stats are automatically saved as you make changes</li>
       </ul>
@@ -282,6 +420,219 @@
     // Character stats storage
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
     
+    // State management
+    let statPool = [];
+    let assignedStats = {}; // Maps stat name to pool index
+    
+    // Dice rolling logic (from dice-roller component)
+    function rollDie() {
+      return Math.floor(Math.random() * 6) + 1;
+    }
+    
+    function rollDice() {
+      const results = [];
+      for (let i = 0; i < 3; i++) {
+        results.push(rollDie());
+      }
+      return results;
+    }
+    
+    function calculateSunderResult(rolls) {
+      // Special case: all dice are 1
+      if (rolls.every(roll => roll === 1)) {
+        return 1;
+      }
+      
+      // Drop the highest
+      const sorted = [...rolls].sort((a, b) => a - b);
+      sorted.pop(); // Remove highest
+      
+      // Sum remaining dice
+      return sorted.reduce((sum, roll) => sum + roll, 0);
+    }
+    
+    function rollStat() {
+      const rolls = rollDice();
+      return calculateSunderResult(rolls);
+    }
+    
+    // Roll all 8 stats
+    function rollAllStats() {
+      statPool = [];
+      assignedStats = {};
+      
+      for (let i = 0; i < 8; i++) {
+        statPool.push({
+          value: rollStat(),
+          assigned: false,
+          id: Date.now() + i
+        });
+      }
+      
+      renderStatPool();
+      updateAllClearButtons();
+      localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
+      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+    }
+    
+    // Render the stat pool
+    function renderStatPool() {
+      const poolContainer = document.getElementById('stat-pool');
+      poolContainer.innerHTML = '';
+      
+      statPool.forEach((stat, index) => {
+        const card = document.createElement('div');
+        card.className = `stat-value-card ${stat.assigned ? 'assigned' : ''}`;
+        card.draggable = !stat.assigned;
+        card.dataset.poolIndex = index;
+        card.innerHTML = `<div class="stat-value">${stat.value}</div>`;
+        
+        if (!stat.assigned) {
+          card.addEventListener('dragstart', handleDragStart);
+          card.addEventListener('dragend', handleDragEnd);
+          // Add click handler for easier assignment
+          card.addEventListener('click', () => handleCardClick(index));
+          card.style.cursor = selectedCardIndex === index ? 'pointer' : 'grab';
+          if (selectedCardIndex === index) {
+            card.style.border = '2px solid #ffd700';
+          }
+        }
+        
+        poolContainer.appendChild(card);
+      });
+    }
+    
+    // Click-to-assign mechanism
+    let selectedCardIndex = null;
+    
+    function handleCardClick(index) {
+      if (selectedCardIndex === index) {
+        // Deselect
+        selectedCardIndex = null;
+      } else {
+        // Select
+        selectedCardIndex = index;
+      }
+      renderStatPool();
+    }
+    
+    // Drag and drop handlers
+    let draggedPoolIndex = null;
+    
+    function handleDragStart(e) {
+      draggedPoolIndex = parseInt(e.target.dataset.poolIndex);
+      e.target.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedPoolIndex.toString());
+    }
+    
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+    }
+    
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+    
+    function handleDragEnter(e) {
+      const group = e.currentTarget;
+      if (!group.classList.contains('stat-input-group')) return;
+      group.classList.add('drop-active');
+    }
+    
+    function handleDragLeave(e) {
+      const group = e.currentTarget;
+      if (!group.classList.contains('stat-input-group')) return;
+      group.classList.remove('drop-active');
+    }
+    
+    function handleDrop(e) {
+      e.preventDefault();
+      const group = e.currentTarget;
+      group.classList.remove('drop-active');
+      
+      const statName = group.dataset.stat;
+      if (draggedPoolIndex !== null && statPool[draggedPoolIndex]) {
+        assignStatToInput(statName, draggedPoolIndex);
+      }
+    }
+    
+    // Assign a stat from pool to an input
+    function assignStatToInput(statName, poolIndex) {
+      const input = document.getElementById(statName);
+      const clearButton = document.querySelector(`.clear-stat-button[data-stat="${statName}"]`);
+      
+      // Check if this stat already has an assigned value
+      if (assignedStats[statName] !== undefined) {
+        // Free up the old assignment
+        const oldIndex = assignedStats[statName];
+        if (statPool[oldIndex]) {
+          statPool[oldIndex].assigned = false;
+        }
+      }
+      
+      // Assign new value
+      statPool[poolIndex].assigned = true;
+      assignedStats[statName] = poolIndex;
+      
+      const validValue = validateStatValue(statPool[poolIndex].value);
+      if (validValue !== null) {
+        input.value = validValue;
+        input.classList.add('has-pool-value');
+        saveStat(statName, validValue);
+      }
+      
+      // Show clear button
+      if (clearButton) {
+        clearButton.style.display = 'block';
+      }
+      
+      renderStatPool();
+      localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
+      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+    }
+    
+    // Clear a stat assignment
+    function clearStatAssignment(statName) {
+      const input = document.getElementById(statName);
+      const clearButton = document.querySelector(`.clear-stat-button[data-stat="${statName}"]`);
+      
+      if (assignedStats[statName] !== undefined) {
+        const poolIndex = assignedStats[statName];
+        if (statPool[poolIndex]) {
+          statPool[poolIndex].assigned = false;
+        }
+        delete assignedStats[statName];
+      }
+      
+      input.value = 10;
+      input.classList.remove('has-pool-value');
+      saveStat(statName, 10);
+      
+      if (clearButton) {
+        clearButton.style.display = 'none';
+      }
+      
+      renderStatPool();
+      localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
+      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+    }
+    
+    // Update all clear buttons
+    function updateAllClearButtons() {
+      STATS.forEach(stat => {
+        const clearButton = document.querySelector(`.clear-stat-button[data-stat="${stat}"]`);
+        if (clearButton) {
+          if (assignedStats[stat] !== undefined) {
+            clearButton.style.display = 'block';
+          } else {
+            clearButton.style.display = 'none';
+          }
+        }
+      });
+    }
+    
     // Shared validation function for stat values
     function validateStatValue(value) {
       const numValue = parseInt(value, 10);
@@ -290,6 +641,29 @@
     
     // Load saved stats from localStorage
     function loadStats() {
+      // Load stat pool
+      const savedPool = localStorage.getItem('character_stat_pool');
+      const savedAssignments = localStorage.getItem('character_assigned_stats');
+      
+      if (savedPool) {
+        try {
+          statPool = JSON.parse(savedPool);
+          renderStatPool();
+        } catch (e) {
+          console.error('Failed to load stat pool:', e);
+        }
+      }
+      
+      if (savedAssignments) {
+        try {
+          assignedStats = JSON.parse(savedAssignments);
+          updateAllClearButtons();
+        } catch (e) {
+          console.error('Failed to load assignments:', e);
+        }
+      }
+      
+      // Load individual stat values
       STATS.forEach(stat => {
         const savedValue = localStorage.getItem(`character_${stat}`);
         if (savedValue) {
@@ -298,6 +672,10 @@
             const validValue = validateStatValue(savedValue);
             if (validValue !== null) {
               input.value = validValue;
+              // Check if this was from pool assignment
+              if (assignedStats[stat] !== undefined) {
+                input.classList.add('has-pool-value');
+              }
             } else {
               // Clear corrupted data and use default
               localStorage.removeItem(`character_${stat}`);
@@ -313,57 +691,86 @@
       localStorage.setItem(`character_${statName}`, value);
     }
     
-    // Add input event listeners
-    STATS.forEach(stat => {
-      const input = document.getElementById(stat);
-      if (input) {
-        input.addEventListener('input', (e) => {
-          const validValue = validateStatValue(e.target.value);
-          if (validValue !== null) {
-            saveStat(stat, validValue);
-            // Clear any error styling
-            e.target.style.borderColor = '';
-          } else if (e.target.value !== '') {
-            // Show error styling for invalid values
-            e.target.style.borderColor = '#ff4444';
-          }
-        });
-        
-        // Also validate on blur to provide feedback
-        input.addEventListener('blur', (e) => {
-          const validValue = validateStatValue(e.target.value);
-          if (validValue === null) {
-            // Reset to last saved value or default
-            const savedValue = localStorage.getItem(`character_${stat}`) || '10';
-            e.target.value = savedValue;
-            e.target.style.borderColor = '';
-          }
-        });
+    // Initialize event listeners
+    function initializeEventListeners() {
+      // Roll all button
+      const rollAllButton = document.getElementById('roll-all-button');
+      if (rollAllButton) {
+        rollAllButton.addEventListener('click', rollAllStats);
       }
-    });
-    
-    // Add roll event listeners
-    document.querySelectorAll('dice-roller').forEach(roller => {
-      roller.addEventListener('roll-complete', (e) => {
-        const statName = roller.dataset.stat;
-        const result = e.detail.result;
-        const input = document.getElementById(statName);
+      
+      // Stat input groups for drag and drop AND click-to-assign
+      document.querySelectorAll('.stat-input-group').forEach(group => {
+        group.addEventListener('dragover', handleDragOver);
+        group.addEventListener('dragenter', handleDragEnter);
+        group.addEventListener('dragleave', handleDragLeave);
+        group.addEventListener('drop', handleDrop);
         
+        // Add click handler for click-to-assign
+        group.addEventListener('click', (e) => {
+          const statName = group.dataset.stat;
+          if (selectedCardIndex !== null && statPool[selectedCardIndex] && !statPool[selectedCardIndex].assigned) {
+            assignStatToInput(statName, selectedCardIndex);
+            selectedCardIndex = null;
+            renderStatPool();
+          }
+        });
+      });
+      
+      // Clear buttons
+      document.querySelectorAll('.clear-stat-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const statName = e.target.dataset.stat;
+          clearStatAssignment(statName);
+        });
+      });
+      
+      // Input event listeners for manual entry
+      STATS.forEach(stat => {
+        const input = document.getElementById(stat);
         if (input) {
-          input.value = result;
-          saveStat(statName, result);
+          input.addEventListener('input', (e) => {
+            const validValue = validateStatValue(e.target.value);
+            if (validValue !== null) {
+              saveStat(stat, validValue);
+              // Clear any error styling
+              e.target.style.borderColor = '';
+              
+              // If manually entered, remove pool assignment
+              if (assignedStats[stat] !== undefined) {
+                const poolIndex = assignedStats[stat];
+                if (statPool[poolIndex]) {
+                  statPool[poolIndex].assigned = false;
+                }
+                delete assignedStats[stat];
+                e.target.classList.remove('has-pool-value');
+                renderStatPool();
+                updateAllClearButtons();
+                localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
+                localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+              }
+            } else if (e.target.value !== '') {
+              // Show error styling for invalid values
+              e.target.style.borderColor = '#ff4444';
+            }
+          });
           
-          // Visual feedback
-          input.style.transition = 'all 0.3s ease';
-          input.style.background = 'rgba(255, 215, 0, 0.3)';
-          setTimeout(() => {
-            input.style.background = '';
-          }, 500);
+          // Also validate on blur to provide feedback
+          input.addEventListener('blur', (e) => {
+            const validValue = validateStatValue(e.target.value);
+            if (validValue === null) {
+              // Reset to last saved value or default
+              const savedValue = localStorage.getItem(`character_${stat}`) || '10';
+              e.target.value = savedValue;
+              e.target.style.borderColor = '';
+            }
+          });
         }
       });
-    });
+    }
     
-    // Load stats on page load
+    // Initialize on page load
+    initializeEventListeners();
     loadStats();
   </script>
 </body>
