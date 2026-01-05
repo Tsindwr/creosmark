@@ -380,7 +380,7 @@ class PotentialTrack extends HTMLElement {
           <circle class="center-circle" cx="100" cy="100" r="40" 
                   role="button" 
                   tabindex="0"
-                  aria-label="Add stress (left click) or resistance (right click)" />
+                  aria-label="Interact to add stress or resistance" />
           <text class="score-text" x="100" y="100" style="pointer-events: none;">${this._score}</text>
           
           <!-- Title label below the stat, between nodes -->
@@ -434,13 +434,14 @@ class PotentialTrack extends HTMLElement {
         this._isLongPress = true;
         this.addResistance();
         // Haptic feedback if available
-        if (navigator.vibrate) {
+        if ('vibrate' in navigator) {
           navigator.vibrate(50);
         }
       }, 500); // 500ms for long press
     });
     
     centerCircle.addEventListener('touchend', (e) => {
+      e.preventDefault(); // Prevent synthetic click event
       if (this._longPressTimer) {
         clearTimeout(this._longPressTimer);
       }
