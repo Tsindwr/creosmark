@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Builder - Creosmark</title>
+  <link rel="stylesheet" href="src/css/potential-track.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-family: 'Georgia', serif;
+      font-size: 2.5rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #a0a0b0;
+      font-size: 1.1rem;
+    }
+    
+    .view-switch {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .view-switch-button {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      background: #2a6a4a;
+      border: 2px solid #3a7a5a;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+    }
+    
+    .view-switch-button:hover {
+      background: #3a7a5a;
+      border-color: #4a8a6a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(42, 106, 74, 0.4);
+    }
+    
+    .character-builder {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(30, 30, 50, 0.8);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .section-title {
+      font-family: 'Georgia', serif;
+      color: #ffd700;
+      border-bottom: 2px solid #4a4a6a;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+    
+    .subsection-title {
+      font-family: 'Georgia', serif;
+      color: #a0a0d0;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.6);
+      border-radius: 10px;
+      border: 1px solid #4a4a6a;
+    }
+    
+    .stat-label {
+      font-weight: bold;
+      color: #e0e0e0;
+      font-size: 1.1rem;
+      font-family: 'Georgia', serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .stat-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .stat-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      background: rgba(20, 20, 40, 0.8);
+      color: #e0e0e0;
+      border: 2px solid #4a4a6a;
+      border-radius: 5px;
+      font-family: 'Georgia', serif;
+    }
+    
+    .stat-input:focus {
+      outline: none;
+      border-color: #6a6a9a;
+      box-shadow: 0 0 10px rgba(106, 106, 154, 0.5);
+    }
+    
+    .roll-button-container {
+      display: flex;
+      justify-content: center;
+    }
+    
+    .instructions {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.4);
+      border-radius: 10px;
+    }
+    
+    .instructions h3 {
+      color: #ffd700;
+      margin-top: 0;
+    }
+    
+    .instructions ul {
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚔️ Creosmark ⚔️</h1>
+    <p>Character Builder</p>
+  </div>
+  
+  <div class="view-switch">
+    <button class="view-switch-button" onclick="window.location.href='character-sheet.html'">
+      📋 View Character Sheet
+    </button>
+  </div>
+  
+  <div class="character-builder">
+    <h2 class="section-title">🎲 Build Your Character</h2>
+    
+    <!-- Physical Stats -->
+    <h3 class="subsection-title">💪 Physical Potentials</h3>
+    <div class="stats-grid">
+      <div class="stat-input-group">
+        <label class="stat-label" for="might">Might</label>
+        <div class="stat-input-row">
+          <input type="number" id="might" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Might" data-stat="might"></dice-roller>
+        </div>
+      </div>
+      
+      <div class="stat-input-group">
+        <label class="stat-label" for="finesse">Finesse</label>
+        <div class="stat-input-row">
+          <input type="number" id="finesse" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Finesse" data-stat="finesse"></dice-roller>
+        </div>
+      </div>
+      
+      <div class="stat-input-group">
+        <label class="stat-label" for="nerve">Nerve</label>
+        <div class="stat-input-row">
+          <input type="number" id="nerve" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Nerve" data-stat="nerve"></dice-roller>
+        </div>
+      </div>
+      
+      <div class="stat-input-group">
+        <label class="stat-label" for="seep">Seep</label>
+        <div class="stat-input-row">
+          <input type="number" id="seep" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Seep" data-stat="seep"></dice-roller>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mental Stats -->
+    <h3 class="subsection-title">🧠 Mental Potentials</h3>
+    <div class="stats-grid">
+      <div class="stat-input-group">
+        <label class="stat-label" for="instinct">Instinct</label>
+        <div class="stat-input-row">
+          <input type="number" id="instinct" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Instinct" data-stat="instinct"></dice-roller>
+        </div>
+      </div>
+      
+      <div class="stat-input-group">
+        <label class="stat-label" for="wit">Wit</label>
+        <div class="stat-input-row">
+          <input type="number" id="wit" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Wit" data-stat="wit"></dice-roller>
+        </div>
+      </div>
+      
+      <div class="stat-input-group">
+        <label class="stat-label" for="heart">Heart</label>
+        <div class="stat-input-row">
+          <input type="number" id="heart" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Heart" data-stat="heart"></dice-roller>
+        </div>
+      </div>
+      
+      <div class="stat-input-group">
+        <label class="stat-label" for="tether">Tether</label>
+        <div class="stat-input-row">
+          <input type="number" id="tether" class="stat-input" min="1" max="18" value="10">
+        </div>
+        <div class="roll-button-container">
+          <dice-roller label="Roll Tether" data-stat="tether"></dice-roller>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="instructions">
+      <h3>📖 How to Use</h3>
+      <ul>
+        <li><strong>Manual Entry:</strong> Type values directly into the input fields (1-18)</li>
+        <li><strong>Roll Dice:</strong> Click the "Roll" button to generate a random stat value</li>
+        <li><strong>Roll Formula:</strong> 3d6 drop the highest die (special case: if all three dice are 1, the result is 1)</li>
+        <li><strong>View Sheet:</strong> Click "View Character Sheet" to see your stats displayed with potential tracks</li>
+        <li>Your stats are automatically saved as you make changes</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script type="module" src="src/components/dice-roller.js"></script>
+  <script type="module">
+    // Character stats storage
+    const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
+    
+    // Load saved stats from localStorage
+    function loadStats() {
+      STATS.forEach(stat => {
+        const savedValue = localStorage.getItem(`character_${stat}`);
+        if (savedValue) {
+          const input = document.getElementById(stat);
+          if (input) {
+            input.value = savedValue;
+          }
+        }
+      });
+    }
+    
+    // Save stat to localStorage
+    function saveStat(statName, value) {
+      localStorage.setItem(`character_${statName}`, value);
+    }
+    
+    // Add input event listeners
+    STATS.forEach(stat => {
+      const input = document.getElementById(stat);
+      if (input) {
+        input.addEventListener('input', (e) => {
+          const value = parseInt(e.target.value, 10);
+          if (!isNaN(value) && value >= 1 && value <= 18) {
+            saveStat(stat, value);
+          }
+        });
+      }
+    });
+    
+    // Add roll event listeners
+    document.querySelectorAll('dice-roller').forEach(roller => {
+      roller.addEventListener('roll-complete', (e) => {
+        const statName = roller.dataset.stat;
+        const result = e.detail.result;
+        const input = document.getElementById(statName);
+        
+        if (input) {
+          input.value = result;
+          saveStat(statName, result);
+          
+          // Visual feedback
+          input.style.transition = 'all 0.3s ease';
+          input.style.background = 'rgba(255, 215, 0, 0.3)';
+          setTimeout(() => {
+            input.style.background = '';
+          }, 500);
+        }
+      });
+    });
+    
+    // Load stats on page load
+    loadStats();
+  </script>
+</body>
+</html>
