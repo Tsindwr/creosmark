@@ -485,27 +485,30 @@ class PotentialTrack extends HTMLElement {
     const labelElement = this.shadowRoot.querySelector('.title-label');
     if (!labelElement) return;
     
+    // Constants for font sizing
+    const DEFAULT_FONT_SIZE = 14;
+    const MIN_FONT_SIZE = 8;
+    const NODE_RADIUS = 12;
+    const NODE_MARGIN_MULTIPLIER = 4; // Extra margin to account for node radius and spacing
+    
     // Get the label's bounding box
     const bbox = labelElement.getBBox();
     const labelWidth = bbox.width;
     
-    // Calculate available space between the two bottom nodes
-    // The nodes are at positions calculated in calculateNodePositions
-    // For a semi-circle from 225° to -45°, the bottom nodes are roughly at x=30 and x=170
+    // Calculate available space between the leftmost and rightmost nodes
     const positions = this.calculateNodePositions();
-    const nodeRadius = 12;
     
     if (positions.length >= 2) {
       const leftNode = positions[0];
       const rightNode = positions[positions.length - 1];
       
       // Available space is between the right edge of left node and left edge of right node
-      const availableSpace = rightNode.x - leftNode.x - (nodeRadius * 4); // Extra margin
+      const availableSpace = rightNode.x - leftNode.x - (NODE_RADIUS * NODE_MARGIN_MULTIPLIER);
       
-      // If label is too wide, scale it down
+      // If label is too wide, scale it down proportionally
       if (labelWidth > availableSpace) {
         const scaleFactor = availableSpace / labelWidth;
-        const newFontSize = Math.max(8, 14 * scaleFactor); // Min 8px, default 14px
+        const newFontSize = Math.max(MIN_FONT_SIZE, DEFAULT_FONT_SIZE * scaleFactor);
         labelElement.style.fontSize = `${newFontSize}px`;
       }
     }

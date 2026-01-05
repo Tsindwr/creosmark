@@ -147,6 +147,11 @@
       user-select: none;
     }
     
+    .stat-value-card.selected {
+      border-color: #ffd700;
+      cursor: pointer;
+    }
+    
     .stat-value-card.dragging {
       opacity: 0.5;
       cursor: grabbing;
@@ -461,11 +466,13 @@
       statPool = [];
       assignedStats = {};
       
+      // Use counter for unique IDs to avoid collisions
+      const baseId = Date.now();
       for (let i = 0; i < 8; i++) {
         statPool.push({
           value: rollStat(),
           assigned: false,
-          id: Date.now() + i
+          id: baseId + (i * 1000) + Math.floor(Math.random() * 1000)
         });
       }
       
@@ -492,9 +499,8 @@
           card.addEventListener('dragend', handleDragEnd);
           // Add click handler for easier assignment
           card.addEventListener('click', () => handleCardClick(index));
-          card.style.cursor = selectedCardIndex === index ? 'pointer' : 'grab';
           if (selectedCardIndex === index) {
-            card.style.border = '2px solid #ffd700';
+            card.classList.add('selected');
           }
         }
         
@@ -593,18 +599,26 @@
       localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
     }
     
-    // Clear a stat assignment
-    function clearStatAssignment(statName) {
-      const input = document.getElementById(statName);
-      const clearButton = document.querySelector(`.clear-stat-button[data-stat="${statName}"]`);
-      
+    // Helper function to free up a pool assignment
+    function freePoolAssignment(statName) {
       if (assignedStats[statName] !== undefined) {
         const poolIndex = assignedStats[statName];
         if (statPool[poolIndex]) {
           statPool[poolIndex].assigned = false;
         }
         delete assignedStats[statName];
+        renderStatPool();
+        localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
+        localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
       }
+    }
+    
+    // Clear a stat assignment
+    function clearStatAssignment(statName) {
+      const input = document.getElementById(statName);
+      const clearButton = document.querySelector(`.clear-stat-button[data-stat="${statName}"]`);
+      
+      freePoolAssignment(statName);
       
       input.value = 10;
       input.classList.remove('has-pool-value');
@@ -614,9 +628,7 @@
         clearButton.style.display = 'none';
       }
       
-      renderStatPool();
-      localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
-      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+      updateAllClearButtons();
     }
     
     // Update all clear buttons
@@ -738,16 +750,9 @@
               
               // If manually entered, remove pool assignment
               if (assignedStats[stat] !== undefined) {
-                const poolIndex = assignedStats[stat];
-                if (statPool[poolIndex]) {
-                  statPool[poolIndex].assigned = false;
-                }
-                delete assignedStats[stat];
+                freePoolAssignment(stat);
                 e.target.classList.remove('has-pool-value');
-                renderStatPool();
                 updateAllClearButtons();
-                localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
-                localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
               }
             } else if (e.target.value !== '') {
               // Show error styling for invalid values
