@@ -387,8 +387,8 @@ class PotentialTrack extends HTMLElement {
           ${this._label ? `<text class="label title-label" x="100" y="165">${this._label}</text>` : ''}
           
           <!-- Labels -->
-          <text class="label stress-label" x="30" y="190">Stress: ${this._stress}</text>
-          <text class="label resistance-label" x="170" y="190">Res: ${this._resistance}</text>
+<!--          <text class="label stress-label" x="30" y="190">Stress: ${this._stress}</text>-->
+<!--          <text class="label resistance-label" x="170" y="190">Res: ${this._resistance}</text>-->
         </svg>
       </div>
     `;
