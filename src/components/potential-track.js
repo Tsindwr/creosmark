@@ -273,6 +273,7 @@ class PotentialTrack extends HTMLElement {
     }).join('');
 
     this.shadowRoot.innerHTML = `
+      <link rel="stylesheet" href="src/css/potential-track.css">
       <style>
         :host {
           display: inline-block;

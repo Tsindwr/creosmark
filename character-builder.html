@@ -129,51 +129,75 @@
       cursor: not-allowed;
     }
     
-    .stat-pool {
+    .dice-rollers-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
       margin-bottom: 15px;
     }
     
-    .stat-value-card {
-      background: rgba(50, 50, 70, 0.8);
-      border: 2px solid #4a4a6a;
+    @media (max-width: 1024px) {
+      .dice-rollers-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .dice-rollers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .roller-slot {
+      position: relative;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .roller-slot.has-result {
+      background: rgba(50, 50, 70, 0.4);
       border-radius: 8px;
-      padding: 15px 10px;
-      text-align: center;
+      padding: 10px;
+    }
+    
+    .stat-result-display {
+      font-size: 32px;
+      font-weight: bold;
+      color: #ffd700;
+      font-family: 'Georgia', serif;
+      margin-top: 10px;
       cursor: grab;
-      transition: all 0.3s ease;
       user-select: none;
+      padding: 10px 20px;
+      background: rgba(70, 70, 90, 0.8);
+      border-radius: 8px;
+      border: 2px solid #5a5a8a;
+      transition: all 0.3s ease;
     }
     
-    .stat-value-card.selected {
-      border-color: #ffd700;
-      cursor: pointer;
+    .stat-result-display:hover:not(.assigned) {
+      border-color: #7a7aaa;
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
     
-    .stat-value-card.dragging {
+    .stat-result-display.dragging {
       opacity: 0.5;
       cursor: grabbing;
     }
     
-    .stat-value-card.assigned {
+    .stat-result-display.assigned {
       opacity: 0.4;
       cursor: not-allowed;
-      border-color: #2a2a4a;
+      border-color: #3a3a5a;
     }
     
-    .stat-value-card:not(.assigned):hover {
-      border-color: #6a6a9a;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    
-    .stat-value {
-      font-size: 28px;
-      font-weight: bold;
-      color: #ffd700;
-      font-family: 'Georgia', serif;
+    .stat-result-display.selected {
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
     }
     
     .pool-instructions {
@@ -319,17 +343,46 @@
   <div class="character-builder">
     <h2 class="section-title">🎲 Build Your Character</h2>
     
-    <!-- Dice Pool Section -->
+    <!-- Dice Pool Section with Visual Rollers -->
     <div class="dice-pool-section">
       <div class="dice-pool-header">
-        <h3 class="dice-pool-title">🎲 Stat Pool</h3>
-        <button class="roll-all-button" id="roll-all-button">Roll 8 Stats</button>
+        <h3 class="dice-pool-title">🎲 Stat Rolling</h3>
+        <button class="roll-all-button" id="roll-all-button">Roll All 8 Stats</button>
       </div>
-      <div class="stat-pool" id="stat-pool">
-        <!-- Rolled stats will appear here -->
+      
+      <!-- 4x2 Grid of Dice Rollers -->
+      <div class="dice-rollers-grid" id="dice-rollers-grid">
+        <!-- Physical Stats Rollers -->
+        <div class="roller-slot" data-index="0">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        <div class="roller-slot" data-index="1">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        <div class="roller-slot" data-index="2">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        <div class="roller-slot" data-index="3">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        
+        <!-- Mental Stats Rollers -->
+        <div class="roller-slot" data-index="4">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        <div class="roller-slot" data-index="5">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        <div class="roller-slot" data-index="6">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
+        <div class="roller-slot" data-index="7">
+          <dice-roller dice="3" sides="6" label="Roll" class="stat-roller"></dice-roller>
+        </div>
       </div>
+      
       <p class="pool-instructions">
-        Roll 8 stats, then drag and drop them onto the potentials below. Click "Roll 8 Stats" to generate new values.
+        Click individual "Roll" buttons to roll each stat, or "Roll All 8 Stats" to roll everything at once. Drag rolled values onto the potentials below to assign them.
       </p>
     </div>
     
@@ -409,11 +462,12 @@
     <div class="instructions">
       <h3>📖 How to Use</h3>
       <ul>
-        <li><strong>Roll Stats:</strong> Click "Roll 8 Stats" to generate 8 random values using 3d6 drop highest</li>
-        <li><strong>Assign Stats (Drag & Drop):</strong> Drag rolled values from the pool and drop them onto your desired potentials</li>
-        <li><strong>Assign Stats (Click):</strong> Click a stat value in the pool to select it (gold border), then click a potential to assign it</li>
+        <li><strong>Roll Individual Stats:</strong> Click "Roll" button on each dice roller to generate a random value using 3d6 drop highest</li>
+        <li><strong>Roll All Stats:</strong> Click "Roll All 8 Stats" to roll all potentials at once</li>
+        <li><strong>Assign Stats (Drag & Drop):</strong> Drag rolled values from the dice rollers and drop them onto your desired potentials</li>
+        <li><strong>Assign Stats (Click):</strong> Click a rolled value to select it (gold border), then click a potential to assign it</li>
         <li><strong>Manual Entry:</strong> You can also type values directly into the input fields (1-18)</li>
-        <li><strong>Clear Assignment:</strong> Click "Clear" button to return a stat value back to the pool</li>
+        <li><strong>Clear Assignment:</strong> Click "Clear" button to return a stat value back to the roller</li>
         <li><strong>View Sheet:</strong> Click "View Character Sheet" to see your stats displayed with potential tracks</li>
         <li>Your stats are automatically saved as you make changes</li>
       </ul>
@@ -425,111 +479,117 @@
     // Character stats storage
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
     
-    // State management
-    let statPool = [];
-    let assignedStats = {}; // Maps stat name to pool index
+    // State management for roller results
+    let rollerResults = Array(8).fill(null); // Stores {value, assigned} for each roller
+    let assignedStats = {}; // Maps stat name to roller index
+    let selectedRollerIndex = null;
     
-    // Dice rolling logic (from dice-roller component)
-    function rollDie() {
-      return Math.floor(Math.random() * 6) + 1;
-    }
-    
-    function rollDice() {
-      const results = [];
-      for (let i = 0; i < 3; i++) {
-        results.push(rollDie());
-      }
-      return results;
-    }
-    
-    function calculateSunderResult(rolls) {
-      // Special case: all dice are 1
-      if (rolls.every(roll => roll === 1)) {
-        return 1;
+    // Roll all 8 stats at once
+    async function rollAllStats() {
+      const rollAllButton = document.getElementById('roll-all-button');
+      rollAllButton.disabled = true;
+      
+      // Trigger all dice rollers
+      const rollers = document.querySelectorAll('.stat-roller');
+      for (let i = 0; i < rollers.length; i++) {
+        // Small delay between each roll for visual effect
+        if (i > 0) await new Promise(resolve => setTimeout(resolve, 100));
+        triggerRoll(i);
       }
       
-      // Drop the highest
-      const sorted = [...rolls].sort((a, b) => a - b);
-      sorted.pop(); // Remove highest
-      
-      // Sum remaining dice
-      return sorted.reduce((sum, roll) => sum + roll, 0);
+      setTimeout(() => {
+        rollAllButton.disabled = false;
+      }, 2000);
     }
     
-    function rollStat() {
-      const rolls = rollDice();
-      return calculateSunderResult(rolls);
+    // Trigger a roll for a specific roller
+    function triggerRoll(index) {
+      const roller = document.querySelector(`.roller-slot[data-index="${index}"] dice-roller`);
+      if (roller) {
+        roller.roll();
+      }
     }
     
-    // Roll all 8 stats
-    function rollAllStats() {
-      statPool = [];
-      assignedStats = {};
+    // Handle roll completion from dice-roller
+    function handleRollComplete(index, event) {
+      const result = event.detail.result;
+      rollerResults[index] = {
+        value: result,
+        assigned: rollerResults[index]?.assigned || false
+      };
       
-      // Use counter for unique IDs to avoid collisions
-      const baseId = Date.now();
-      for (let i = 0; i < 8; i++) {
-        statPool.push({
-          value: rollStat(),
-          assigned: false,
-          id: baseId + (i * 1000) + Math.floor(Math.random() * 1000)
-        });
+      // Display the result below the roller
+      displayRollerResult(index, result);
+      
+      // Save to localStorage
+      saveRollerResults();
+    }
+    
+    // Display the rolled result with drag/click functionality
+    function displayRollerResult(index, value) {
+      const slot = document.querySelector(`.roller-slot[data-index="${index}"]`);
+      if (!slot) return;
+      
+      // Remove old result if exists
+      const oldResult = slot.querySelector('.stat-result-display');
+      if (oldResult) oldResult.remove();
+      
+      // Create new result display
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'stat-result-display';
+      if (rollerResults[index]?.assigned) {
+        resultDiv.classList.add('assigned');
+      }
+      if (selectedRollerIndex === index) {
+        resultDiv.classList.add('selected');
+      }
+      resultDiv.textContent = value;
+      resultDiv.dataset.rollerIndex = index;
+      resultDiv.draggable = !rollerResults[index]?.assigned;
+      
+      // Add event listeners
+      if (!rollerResults[index]?.assigned) {
+        resultDiv.addEventListener('dragstart', handleDragStart);
+        resultDiv.addEventListener('dragend', handleDragEnd);
+        resultDiv.addEventListener('click', () => handleResultClick(index));
       }
       
-      renderStatPool();
-      updateAllClearButtons();
-      localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
-      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+      slot.appendChild(resultDiv);
+      slot.classList.add('has-result');
     }
     
-    // Render the stat pool
-    function renderStatPool() {
-      const poolContainer = document.getElementById('stat-pool');
-      poolContainer.innerHTML = '';
+    // Click to select result
+    function handleResultClick(index) {
+      if (rollerResults[index]?.assigned) return;
       
-      statPool.forEach((stat, index) => {
-        const card = document.createElement('div');
-        card.className = `stat-value-card ${stat.assigned ? 'assigned' : ''}`;
-        card.draggable = !stat.assigned;
-        card.dataset.poolIndex = index;
-        card.innerHTML = `<div class="stat-value">${stat.value}</div>`;
-        
-        if (!stat.assigned) {
-          card.addEventListener('dragstart', handleDragStart);
-          card.addEventListener('dragend', handleDragEnd);
-          // Add click handler for easier assignment
-          card.addEventListener('click', () => handleCardClick(index));
-          if (selectedCardIndex === index) {
-            card.classList.add('selected');
-          }
+      if (selectedRollerIndex === index) {
+        selectedRollerIndex = null;
+      } else {
+        selectedRollerIndex = index;
+      }
+      updateResultDisplays();
+    }
+    
+    // Update all result displays to show selection state
+    function updateResultDisplays() {
+      document.querySelectorAll('.stat-result-display').forEach(resultDiv => {
+        const index = parseInt(resultDiv.dataset.rollerIndex);
+        if (selectedRollerIndex === index) {
+          resultDiv.classList.add('selected');
+        } else {
+          resultDiv.classList.remove('selected');
         }
-        
-        poolContainer.appendChild(card);
       });
     }
     
-    // Click-to-assign mechanism
-    let selectedCardIndex = null;
-    
-    function handleCardClick(index) {
-      if (selectedCardIndex === index) {
-        // Deselect
-        selectedCardIndex = null;
-      } else {
-        // Select
-        selectedCardIndex = index;
-      }
-      renderStatPool();
-    }
-    
     // Drag and drop handlers
-    let draggedPoolIndex = null;
+    let draggedRollerIndex = null;
     
     function handleDragStart(e) {
-      draggedPoolIndex = parseInt(e.target.dataset.poolIndex);
+      draggedRollerIndex = parseInt(e.target.dataset.rollerIndex);
       e.target.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', draggedPoolIndex.toString());
+      e.dataTransfer.setData('text/plain', draggedRollerIndex.toString());
     }
     
     function handleDragEnd(e) {
@@ -559,13 +619,13 @@
       group.classList.remove('drop-active');
       
       const statName = group.dataset.stat;
-      if (draggedPoolIndex !== null && statPool[draggedPoolIndex]) {
-        assignStatToInput(statName, draggedPoolIndex);
+      if (draggedRollerIndex !== null && rollerResults[draggedRollerIndex]) {
+        assignStatToInput(statName, draggedRollerIndex);
       }
     }
     
-    // Assign a stat from pool to an input
-    function assignStatToInput(statName, poolIndex) {
+    // Assign a rolled value to a stat input
+    function assignStatToInput(statName, rollerIndex) {
       const input = document.getElementById(statName);
       const clearButton = document.querySelector(`.clear-stat-button[data-stat="${statName}"]`);
       
@@ -573,16 +633,16 @@
       if (assignedStats[statName] !== undefined) {
         // Free up the old assignment
         const oldIndex = assignedStats[statName];
-        if (statPool[oldIndex]) {
-          statPool[oldIndex].assigned = false;
+        if (rollerResults[oldIndex]) {
+          rollerResults[oldIndex].assigned = false;
         }
       }
       
       // Assign new value
-      statPool[poolIndex].assigned = true;
-      assignedStats[statName] = poolIndex;
+      rollerResults[rollerIndex].assigned = true;
+      assignedStats[statName] = rollerIndex;
       
-      const validValue = validateStatValue(statPool[poolIndex].value);
+      const validValue = validateStatValue(rollerResults[rollerIndex].value);
       if (validValue !== null) {
         input.value = validValue;
         input.classList.add('has-pool-value');
@@ -594,22 +654,25 @@
         clearButton.style.display = 'block';
       }
       
-      renderStatPool();
-      localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
-      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+      // Update displays
+      updateResultDisplays();
+      displayRollerResult(rollerIndex, rollerResults[rollerIndex].value);
+      saveRollerResults();
+      
+      // Clear selection
+      selectedRollerIndex = null;
     }
     
-    // Helper function to free up a pool assignment
-    function freePoolAssignment(statName) {
+    // Helper function to free up a roller assignment
+    function freeRollerAssignment(statName) {
       if (assignedStats[statName] !== undefined) {
-        const poolIndex = assignedStats[statName];
-        if (statPool[poolIndex]) {
-          statPool[poolIndex].assigned = false;
+        const rollerIndex = assignedStats[statName];
+        if (rollerResults[rollerIndex]) {
+          rollerResults[rollerIndex].assigned = false;
+          displayRollerResult(rollerIndex, rollerResults[rollerIndex].value);
         }
         delete assignedStats[statName];
-        renderStatPool();
-        localStorage.setItem('character_stat_pool', JSON.stringify(statPool));
-        localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
+        saveRollerResults();
       }
     }
     
@@ -618,7 +681,7 @@
       const input = document.getElementById(statName);
       const clearButton = document.querySelector(`.clear-stat-button[data-stat="${statName}"]`);
       
-      freePoolAssignment(statName);
+      freeRollerAssignment(statName);
       
       input.value = 10;
       input.classList.remove('has-pool-value');
@@ -645,24 +708,27 @@
       });
     }
     
-    // Shared validation function for stat values
-    function validateStatValue(value) {
-      const numValue = parseInt(value, 10);
-      return !isNaN(numValue) && numValue >= 1 && numValue <= 18 ? numValue : null;
+    // Save/load functions
+    function saveRollerResults() {
+      localStorage.setItem('character_roller_results', JSON.stringify(rollerResults));
+      localStorage.setItem('character_assigned_stats', JSON.stringify(assignedStats));
     }
     
-    // Load saved stats from localStorage
-    function loadStats() {
-      // Load stat pool
-      const savedPool = localStorage.getItem('character_stat_pool');
+    function loadRollerResults() {
+      const saved = localStorage.getItem('character_roller_results');
       const savedAssignments = localStorage.getItem('character_assigned_stats');
       
-      if (savedPool) {
+      if (saved) {
         try {
-          statPool = JSON.parse(savedPool);
-          renderStatPool();
+          rollerResults = JSON.parse(saved);
+          // Display all saved results
+          rollerResults.forEach((result, index) => {
+            if (result !== null) {
+              displayRollerResult(index, result.value);
+            }
+          });
         } catch (e) {
-          console.error('Failed to load stat pool:', e);
+          console.error('Failed to load roller results:', e);
         }
       }
       
@@ -674,7 +740,16 @@
           console.error('Failed to load assignments:', e);
         }
       }
-      
+    }
+    
+    // Shared validation function for stat values
+    function validateStatValue(value) {
+      const numValue = parseInt(value, 10);
+      return !isNaN(numValue) && numValue >= 1 && numValue <= 18 ? numValue : null;
+    }
+    
+    // Load saved stats from localStorage
+    function loadStats() {
       // Load individual stat values
       STATS.forEach(stat => {
         const savedValue = localStorage.getItem(`character_${stat}`);
@@ -684,7 +759,7 @@
             const validValue = validateStatValue(savedValue);
             if (validValue !== null) {
               input.value = validValue;
-              // Check if this was from pool assignment
+              // Check if this was from roller assignment
               if (assignedStats[stat] !== undefined) {
                 input.classList.add('has-pool-value');
               }
@@ -711,6 +786,11 @@
         rollAllButton.addEventListener('click', rollAllStats);
       }
       
+      // Listen for roll-complete events from dice-rollers
+      document.querySelectorAll('.stat-roller').forEach((roller, index) => {
+        roller.addEventListener('roll-complete', (e) => handleRollComplete(index, e));
+      });
+      
       // Stat input groups for drag and drop AND click-to-assign
       document.querySelectorAll('.stat-input-group').forEach(group => {
         group.addEventListener('dragover', handleDragOver);
@@ -721,10 +801,8 @@
         // Add click handler for click-to-assign
         group.addEventListener('click', (e) => {
           const statName = group.dataset.stat;
-          if (selectedCardIndex !== null && statPool[selectedCardIndex] && !statPool[selectedCardIndex].assigned) {
-            assignStatToInput(statName, selectedCardIndex);
-            selectedCardIndex = null;
-            renderStatPool();
+          if (selectedRollerIndex !== null && rollerResults[selectedRollerIndex] && !rollerResults[selectedRollerIndex].assigned) {
+            assignStatToInput(statName, selectedRollerIndex);
           }
         });
       });
@@ -748,9 +826,9 @@
               // Clear any error styling
               e.target.style.borderColor = '';
               
-              // If manually entered, remove pool assignment
+              // If manually entered, remove roller assignment
               if (assignedStats[stat] !== undefined) {
-                freePoolAssignment(stat);
+                freeRollerAssignment(stat);
                 e.target.classList.remove('has-pool-value');
                 updateAllClearButtons();
               }
@@ -777,6 +855,7 @@
     // Initialize on page load
     initializeEventListeners();
     loadStats();
+    loadRollerResults();
   </script>
 </body>
 </html>

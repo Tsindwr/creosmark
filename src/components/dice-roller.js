@@ -73,6 +73,13 @@ class DiceRoller extends HTMLElement {
   }
 
   /**
+   * Public method to trigger a roll programmatically
+   */
+  roll() {
+    this.performRoll();
+  }
+
+  /**
    * Roll a single die
    * @returns {number} Random number between 1 and sides
    */
