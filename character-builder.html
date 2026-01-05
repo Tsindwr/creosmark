@@ -308,6 +308,22 @@
           const value = parseInt(e.target.value, 10);
           if (!isNaN(value) && value >= 1 && value <= 18) {
             saveStat(stat, value);
+            // Clear any error styling
+            e.target.style.borderColor = '';
+          } else if (e.target.value !== '') {
+            // Show error styling for invalid values
+            e.target.style.borderColor = '#ff4444';
+          }
+        });
+        
+        // Also validate on blur to provide feedback
+        input.addEventListener('blur', (e) => {
+          const value = parseInt(e.target.value, 10);
+          if (isNaN(value) || value < 1 || value > 18) {
+            // Reset to last saved value or default
+            const savedValue = localStorage.getItem(`character_${stat}`) || '10';
+            e.target.value = savedValue;
+            e.target.style.borderColor = '';
           }
         });
       }

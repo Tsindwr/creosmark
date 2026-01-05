@@ -99,6 +99,16 @@ class DiceRoller extends HTMLElement {
    * @returns {number} Final calculated result
    */
   calculateSunderResult(rolls) {
+    // Input validation
+    if (!Array.isArray(rolls) || rolls.length === 0) {
+      return 0;
+    }
+    
+    // Validate all values are numbers
+    if (rolls.some(roll => typeof roll !== 'number' || isNaN(roll))) {
+      return 0;
+    }
+    
     // Special case: all dice are 1
     if (rolls.every(roll => roll === 1)) {
       return 1;
@@ -172,14 +182,21 @@ class DiceRoller extends HTMLElement {
    */
   displayDice(rolls, isAnimating) {
     const diceElements = this.shadowRoot.querySelectorAll('.die');
+    const allOnes = rolls.every(r => r === 1);
+    const maxValue = Math.max(...rolls);
+    let droppedIndex = -1;
+    
+    // Find the first occurrence of the highest value to mark as dropped
+    if (!allOnes) {
+      droppedIndex = rolls.indexOf(maxValue);
+    }
+    
     rolls.forEach((value, index) => {
       if (diceElements[index]) {
         diceElements[index].textContent = value;
         if (!isAnimating) {
-          // Highlight dropped die
-          const isHighest = value === Math.max(...rolls);
-          const allOnes = rolls.every(r => r === 1);
-          if (isHighest && !allOnes) {
+          // Only mark the first highest die as dropped
+          if (index === droppedIndex) {
             diceElements[index].classList.add('dropped');
           } else {
             diceElements[index].classList.remove('dropped');

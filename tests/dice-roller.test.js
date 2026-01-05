@@ -220,10 +220,15 @@ describe('Sunder Roll Calculation (3d6 drop highest)', () => {
 });
 
 describe('Edge Cases', () => {
-  it('should handle single die (nothing to drop)', () => {
+  it('should handle single die (special case: return 1 if die is 1, otherwise drop it)', () => {
     const roller = new DiceRollerLogic(1, 6);
-    const result = roller.calculateSunderResult([5]);
-    expect(result).toBe(0); // Single die gets dropped, nothing left
+    // Single die showing 1 should return 1 (special case)
+    let result = roller.calculateSunderResult([1]);
+    expect(result).toBe(1);
+    
+    // Single die showing any other value gets dropped, sum is 0
+    result = roller.calculateSunderResult([5]);
+    expect(result).toBe(0);
   });
   
   it('should handle two dice', () => {

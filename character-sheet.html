@@ -227,6 +227,8 @@
     
     // Load stats from localStorage
     function loadStats() {
+      let hasCorruptedData = false;
+      
       STATS.forEach(stat => {
         const savedValue = localStorage.getItem(`character_${stat}`);
         const track = document.getElementById(`${stat}-track`);
@@ -235,9 +237,18 @@
           const value = parseInt(savedValue, 10);
           if (!isNaN(value) && value >= 1 && value <= 18) {
             track.setAttribute('score', value);
+          } else {
+            hasCorruptedData = true;
+            // Clear corrupted value
+            localStorage.removeItem(`character_${stat}`);
           }
         }
       });
+      
+      // Log warning if corrupted data was found
+      if (hasCorruptedData) {
+        console.warn('Some character stats had invalid values and were reset to defaults.');
+      }
     }
     
     // Save stress and resistance to localStorage
@@ -254,11 +265,24 @@
         const savedResistance = localStorage.getItem(`character_${stat}_resistance`);
         
         if (track) {
+          // Validate stress value
           if (savedStress) {
-            track.setAttribute('stress', savedStress);
+            const stressValue = parseInt(savedStress, 10);
+            if (!isNaN(stressValue) && stressValue >= 0) {
+              track.setAttribute('stress', stressValue);
+            } else {
+              localStorage.removeItem(`character_${stat}_stress`);
+            }
           }
+          
+          // Validate resistance value
           if (savedResistance) {
-            track.setAttribute('resistance', savedResistance);
+            const resistanceValue = parseInt(savedResistance, 10);
+            if (!isNaN(resistanceValue) && resistanceValue >= 0) {
+              track.setAttribute('resistance', resistanceValue);
+            } else {
+              localStorage.removeItem(`character_${stat}_resistance`);
+            }
           }
         }
       });
