@@ -126,7 +126,7 @@ class CharacterStorage {
   }
 
   _generateId() {
-    return 'char_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return 'char_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
   }
 
   // ============ Supabase Methods (Placeholder) ============
