@@ -100,7 +100,7 @@
     /* Main Stats Layout */
     .stats-layout {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 350px 1fr;
       gap: 25px;
       margin-bottom: 25px;
     }
@@ -117,56 +117,112 @@
       }
     }
 
-    /* Left Sidebar - Core Stats */
-    .core-stats-sidebar {
+    /* Left Sidebar - Skills */
+    .skills-sidebar {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
     }
 
-    .stat-card {
+    .skills-section {
       background: rgba(30, 30, 50, 0.8);
       border: 2px solid #4a4a6a;
       border-radius: 12px;
       padding: 15px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
     }
 
-    .stat-card:hover {
-      border-color: #6a6a9a;
-      transform: translateX(5px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .stat-card-header {
+    .skills-section-title {
       font-family: 'Georgia', serif;
-      font-size: 0.9rem;
-      color: #a0a0b0;
+      font-size: 1rem;
+      color: #ffd700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 10px;
+      margin: 0 0 12px 0;
       font-weight: bold;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+      padding-bottom: 8px;
     }
 
-    .stat-card-content {
+    .skill-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .skill-item {
+      display: grid;
+      grid-template-columns: 30px 1fr 60px;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      background: rgba(40, 40, 60, 0.4);
+      border-radius: 6px;
+      border: 1px solid rgba(74, 74, 106, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .skill-item:hover {
+      background: rgba(50, 50, 70, 0.5);
+      border-color: #6a6a9a;
+    }
+
+    .skill-proficiency {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #6a6a9a;
       display: flex;
       align-items: center;
-      gap: 15px;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.75rem;
     }
 
-    .stat-modifier {
-      font-family: 'Georgia', serif;
-      font-size: 2.5rem;
+    .skill-proficiency.proficient {
+      background: #4a9a4a;
+      border-color: #5aaa5a;
+      color: white;
+    }
+
+    .skill-proficiency.expert {
+      background: #9a4a9a;
+      border-color: #aa5aaa;
+      color: white;
+    }
+
+    .skill-proficiency:hover {
+      transform: scale(1.1);
+    }
+
+    .skill-name {
+      font-size: 0.9rem;
+      color: #e0e0e0;
+      font-weight: 500;
+    }
+
+    .skill-roll-button {
+      padding: 6px 12px;
+      font-size: 0.85rem;
       font-weight: bold;
-      color: #ffd700;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-      min-width: 80px;
-      text-align: center;
+      color: #fff;
+      background: linear-gradient(135deg, #4a4a9a 0%, #5a5aaa 100%);
+      border: 1px solid #5a5aaa;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Georgia', serif;
     }
 
-    .stat-track-container {
-      flex: 1;
+    .skill-roll-button:hover {
+      background: linear-gradient(135deg, #5a5aaa 0%, #6a6aba 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(74, 74, 154, 0.4);
+    }
+
+    .skill-roll-button:active {
+      transform: translateY(0);
     }
 
     /* Main Content Area - Potentials Grid */
@@ -331,40 +387,9 @@
 
     <!-- Main Stats Layout -->
     <div class="stats-layout">
-      <!-- Left Sidebar: Core stats with modifiers -->
-      <div class="core-stats-sidebar">
-        <!-- Body -->
-        <div class="stat-card">
-          <div class="stat-card-header">Body</div>
-          <div class="stat-card-content">
-            <div class="stat-modifier" id="body-modifier">+0</div>
-            <div class="stat-track-container">
-              <potential-track id="body-track" label="Body" score="10" stress="0" resistance="0" class="small"></potential-track>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mind -->
-        <div class="stat-card">
-          <div class="stat-card-header">Mind</div>
-          <div class="stat-card-content">
-            <div class="stat-modifier" id="mind-modifier">+0</div>
-            <div class="stat-track-container">
-              <potential-track id="mind-track" label="Mind" score="10" stress="0" resistance="0" class="small"></potential-track>
-            </div>
-          </div>
-        </div>
-
-        <!-- Soul -->
-        <div class="stat-card">
-          <div class="stat-card-header">Soul</div>
-          <div class="stat-card-content">
-            <div class="stat-modifier" id="soul-modifier">+0</div>
-            <div class="stat-track-container">
-              <potential-track id="soul-track" label="Soul" score="10" stress="0" resistance="0" class="small"></potential-track>
-            </div>
-          </div>
-        </div>
+      <!-- Left Sidebar: Skills organized by potential -->
+      <div class="skills-sidebar" id="skills-sidebar">
+        <!-- Skills will be dynamically generated -->
       </div>
 
       <!-- Main Content: Potentials -->
@@ -424,8 +449,10 @@
         <li><strong>Potential Tracks:</strong> Each track shows your character's potential score with stress (red) and resistance (green)</li>
         <li><strong>Adding Stress/Resistance:</strong> Click the center circle to add stress (left-click) or resistance (right-click)</li>
         <li><strong>Modifying Nodes:</strong> Click individual nodes to increment/decrement stress or resistance</li>
+        <li><strong>Skills:</strong> Click the circle next to a skill to cycle proficiency (none → proficient ● → expert ◆)</li>
+        <li><strong>Skill Checks:</strong> Click "Roll" to make a skill check (1d20 + potential modifier + proficiency bonus)</li>
         <li><strong>Keyboard Navigation:</strong> Use <code>Tab</code> to navigate, <code>Enter/Space</code> for stress, <code>R</code> for resistance</li>
-        <li><strong>Activity Log:</strong> See a history of all changes made to your character's potentials</li>
+        <li><strong>Activity Log:</strong> See a history of skill rolls and changes made to your character's potentials</li>
         <li><strong>Edit Character:</strong> Click "Edit Character" to modify base stats, name, and avatar</li>
       </ul>
     </div>
@@ -437,6 +464,19 @@
     import characterStorage from './src/services/character-storage.js';
 
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
+    
+    // Skills organized by potential
+    const SKILLS_BY_POTENTIAL = {
+      'might': ['Force', 'Brace', 'Feat'],
+      'finesse': ['Sleight', 'Grace', 'Squirm'],
+      'nerve': ['Bear', 'Steel', 'Grit'],
+      'seep': ['Frame', 'Draw', 'Form'],
+      'instinct': ['Reflex', 'Read', 'Sense'],
+      'wit': ['Reason', 'Recall', 'Esoterica'],
+      'heart': ['Aura', 'Sway', 'Hope'],
+      'tether': ['Anchor', 'Grasp', 'Weave']
+    };
+
     let currentCharacter = null;
 
     // Get character ID from URL
@@ -505,54 +545,109 @@
         }
       });
 
-      // Calculate and display composite stats (Body, Mind, Soul)
-      updateCompositeStats();
+      // Render skills sidebar
+      renderSkills();
     }
 
-    // Calculate composite stats from individual potentials
-    function updateCompositeStats() {
-      // Body = average of Might, Finesse, Nerve, Seep
-      const body = Math.floor(
-        (getStatValue('might') + getStatValue('finesse') + 
-         getStatValue('nerve') + getStatValue('seep')) / 4
-      );
+    // Render skills organized by potential
+    function renderSkills() {
+      const sidebar = document.getElementById('skills-sidebar');
+      sidebar.innerHTML = '';
 
-      // Mind = average of Instinct, Wit, Heart, Tether  
-      const mind = Math.floor(
-        (getStatValue('instinct') + getStatValue('wit') + 
-         getStatValue('heart') + getStatValue('tether')) / 4
-      );
+      STATS.forEach(stat => {
+        const section = document.createElement('div');
+        section.className = 'skills-section';
 
-      // Soul = average of all 8
-      const soul = Math.floor(
-        (getStatValue('might') + getStatValue('finesse') + 
-         getStatValue('nerve') + getStatValue('seep') +
-         getStatValue('instinct') + getStatValue('wit') + 
-         getStatValue('heart') + getStatValue('tether')) / 8
-      );
+        const title = document.createElement('h3');
+        title.className = 'skills-section-title';
+        title.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
+        section.appendChild(title);
 
-      // Update tracks
-      const bodyTrack = document.getElementById('body-track');
-      const mindTrack = document.getElementById('mind-track');
-      const soulTrack = document.getElementById('soul-track');
+        const skillList = document.createElement('div');
+        skillList.className = 'skill-list';
 
-      if (bodyTrack) bodyTrack.setAttribute('score', body);
-      if (mindTrack) mindTrack.setAttribute('score', mind);
-      if (soulTrack) soulTrack.setAttribute('score', soul);
+        SKILLS_BY_POTENTIAL[stat].forEach(skillName => {
+          const skillId = `${stat}_${skillName.toLowerCase()}`;
+          const proficiency = currentCharacter.skills?.[skillId]?.proficiency || 'none';
 
-      // Update modifiers (D&D style: (score - 10) / 2)
-      document.getElementById('body-modifier').textContent = formatModifier(body);
-      document.getElementById('mind-modifier').textContent = formatModifier(mind);
-      document.getElementById('soul-modifier').textContent = formatModifier(soul);
+          const skillItem = document.createElement('div');
+          skillItem.className = 'skill-item';
+
+          // Proficiency indicator
+          const profIcon = document.createElement('div');
+          profIcon.className = `skill-proficiency ${proficiency !== 'none' ? proficiency : ''}`;
+          profIcon.title = 'Click to cycle proficiency';
+          profIcon.dataset.skillId = skillId;
+          if (proficiency === 'proficient') profIcon.textContent = '●';
+          else if (proficiency === 'expert') profIcon.textContent = '◆';
+          profIcon.addEventListener('click', () => cycleProficiency(skillId));
+
+          // Skill name
+          const skillLabel = document.createElement('div');
+          skillLabel.className = 'skill-name';
+          skillLabel.textContent = skillName;
+
+          // Roll button
+          const rollButton = document.createElement('button');
+          rollButton.className = 'skill-roll-button';
+          rollButton.textContent = 'Roll';
+          rollButton.addEventListener('click', () => rollSkillCheck(stat, skillName));
+
+          skillItem.appendChild(profIcon);
+          skillItem.appendChild(skillLabel);
+          skillItem.appendChild(rollButton);
+          skillList.appendChild(skillItem);
+        });
+
+        section.appendChild(skillList);
+        sidebar.appendChild(section);
+      });
     }
 
-    function getStatValue(stat) {
-      return currentCharacter.stats?.[stat] || 10;
+    // Cycle proficiency: none -> proficient -> expert -> none
+    function cycleProficiency(skillId) {
+      if (!currentCharacter.skills) currentCharacter.skills = {};
+      if (!currentCharacter.skills[skillId]) currentCharacter.skills[skillId] = { proficiency: 'none' };
+
+      const current = currentCharacter.skills[skillId].proficiency;
+      let next;
+      if (current === 'none') next = 'proficient';
+      else if (current === 'proficient') next = 'expert';
+      else next = 'none';
+
+      currentCharacter.skills[skillId].proficiency = next;
+      characterStorage.saveCharacter(currentCharacter);
+      renderSkills();
     }
 
-    function formatModifier(score) {
-      const mod = Math.floor((score - 10) / 2);
-      return mod >= 0 ? `+${mod}` : `${mod}`;
+    // Roll a skill check
+    function rollSkillCheck(potential, skillName) {
+      const potentialScore = currentCharacter.stats?.[potential] || 10;
+      const skillId = `${potential}_${skillName.toLowerCase()}`;
+      const proficiency = currentCharacter.skills?.[skillId]?.proficiency || 'none';
+      
+      // Roll 1d20
+      const roll = Math.floor(Math.random() * 20) + 1;
+      
+      // Calculate modifier from potential score (D&D style)
+      const modifier = Math.floor((potentialScore - 10) / 2);
+      
+      // Add proficiency bonus if applicable
+      let bonus = 0;
+      if (proficiency === 'proficient') bonus = 2;
+      else if (proficiency === 'expert') bonus = 4;
+      
+      const total = roll + modifier + bonus;
+      
+      // Log the roll
+      logActivity(
+        `${skillName} Check`,
+        'roll',
+        { roll, modifier, bonus, total, potential }
+      );
+      
+      // Show result with animation
+      alert(`${skillName} Check\n\nRoll: ${roll}\nModifier: ${modifier >= 0 ? '+' : ''}${modifier}\nProficiency: ${bonus >= 0 ? '+' : ''}${bonus}\n\nTotal: ${total}`);
     }
 
     // Load stress and resistance states
@@ -627,8 +722,19 @@
       entry.className = 'activity-log-entry';
       
       const message = document.createElement('span');
-      message.className = type === 'stress' ? 'activity-stress' : 'activity-resistance';
-      message.textContent = `${trackName}: ${type === 'stress' ? 'Stress' : 'Resistance'} ${detail.stress}/${detail.resistance}`;
+      
+      // Handle different types of activities
+      if (type === 'roll') {
+        message.className = 'activity-roll';
+        message.style.color = '#66aaff';
+        message.textContent = `${trackName}: ${detail.roll} + ${detail.modifier} + ${detail.bonus} = ${detail.total}`;
+      } else if (type === 'stress') {
+        message.className = 'activity-stress';
+        message.textContent = `${trackName}: Stress ${detail.stress}/${detail.resistance}`;
+      } else {
+        message.className = 'activity-resistance';
+        message.textContent = `${trackName}: Resistance ${detail.stress}/${detail.resistance}`;
+      }
       
       const timestamp = document.createElement('span');
       timestamp.className = 'activity-timestamp';
