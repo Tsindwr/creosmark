@@ -447,26 +447,38 @@
 
     // Initialize page
     async function init() {
-      await characterStorage.initialize();
-      
-      const characterId = getCharacterId();
-      if (!characterId) {
-        // No character ID, redirect to chooser
-        window.location.href = 'character-chooser.html';
-        return;
-      }
+      try {
+        await characterStorage.initialize();
+        
+        const characterId = getCharacterId();
+        console.log('Character ID from URL:', characterId);
+        
+        if (!characterId) {
+          // No character ID, redirect to chooser
+          console.log('No character ID, redirecting to chooser');
+          window.location.href = 'character-chooser.html';
+          return;
+        }
 
-      // Load character
-      currentCharacter = await characterStorage.getCharacter(characterId);
-      if (!currentCharacter) {
-        alert('Character not found!');
-        window.location.href = 'character-chooser.html';
-        return;
-      }
+        // Load character
+        currentCharacter = await characterStorage.getCharacter(characterId);
+        console.log('Loaded character:', currentCharacter);
+        
+        if (!currentCharacter) {
+          console.error('Character not found for ID:', characterId);
+          alert('Character not found!');
+          window.location.href = 'character-chooser.html';
+          return;
+        }
 
-      loadCharacterData();
-      setupEventListeners();
-      loadTrackStates();
+        loadCharacterData();
+        setupEventListeners();
+        loadTrackStates();
+      } catch (error) {
+        console.error('Error initializing character sheet:', error);
+        alert('Error loading character: ' + error.message);
+        window.location.href = 'character-chooser.html';
+      }
     }
 
     // Load character data into the page
