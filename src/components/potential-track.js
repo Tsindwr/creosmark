@@ -162,42 +162,25 @@ class PotentialTrack extends HTMLElement {
     // Left half handles stress (0 to midpoint-1)
     // Right half handles resistance (midpoint to score-1)
     if (index < midpoint) {
-      // Clicking on the left side toggles stress
-      const stressIndex = index;
-      if (stressIndex < this._stress) {
-        // Remove stress up to this point
-        this._stress = stressIndex;
+      // Clicking on the left side increments or decrements stress by 1
+      if (index < this._stress) {
+        // Node is already filled with stress - decrement by 1
+        this.removeStress();
       } else {
-        // Add stress up to this point (if room available)
-        const newStress = stressIndex + 1;
-        if (newStress + this._resistance <= this._score) {
-          this._stress = newStress;
-        }
+        // Node is empty - increment stress by 1
+        this.addStress();
       }
-      this.setAttribute('stress', this._stress);
-      this.dispatchEvent(new CustomEvent('stress-changed', { 
-        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
-      }));
     } else {
-      // Clicking on the right side toggles resistance
-      const resistanceIndex = this._score - 1 - index;
-      if (resistanceIndex < this._resistance) {
-        // Remove resistance up to this point
-        this._resistance = resistanceIndex;
+      // Clicking on the right side increments or decrements resistance by 1
+      const resistanceStartIndex = this._score - this._resistance;
+      if (index >= resistanceStartIndex) {
+        // Node is already filled with resistance - decrement by 1
+        this.removeResistance();
       } else {
-        // Add resistance up to this point (if room available)
-        const newResistance = resistanceIndex + 1;
-        if (this._stress + newResistance <= this._score) {
-          this._resistance = newResistance;
-        }
+        // Node is empty - increment resistance by 1
+        this.addResistance();
       }
-      this.setAttribute('resistance', this._resistance);
-      this.dispatchEvent(new CustomEvent('resistance-changed', { 
-        detail: { stress: this._stress, resistance: this._resistance, score: this._score }
-      }));
     }
-    
-    this.render();
   }
 
   /**
