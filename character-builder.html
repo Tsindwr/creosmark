@@ -289,7 +289,15 @@
         if (savedValue) {
           const input = document.getElementById(stat);
           if (input) {
-            input.value = savedValue;
+            const value = parseInt(savedValue, 10);
+            // Validate before setting
+            if (!isNaN(value) && value >= 1 && value <= 18) {
+              input.value = value;
+            } else {
+              // Clear corrupted data and use default
+              localStorage.removeItem(`character_${stat}`);
+              input.value = 10;
+            }
           }
         }
       });
