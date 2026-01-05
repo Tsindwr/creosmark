@@ -218,6 +218,23 @@ class DiceRoller extends HTMLElement {
   }
 
   /**
+   * Get CSS class for die shape based on sides
+   * @returns {string} CSS class name for the die shape
+   */
+  getDieShapeClass() {
+    switch(this._sides) {
+      case 2: return 'die-d2'; // circle
+      case 4: return 'die-d4'; // triangle
+      case 6: return 'die-d6'; // square
+      case 8: return 'die-d8'; // diamond
+      case 10: return 'die-d10'; // d10 shape
+      case 12: return 'die-d12'; // pentagon
+      case 20: return 'die-d20'; // hexagon
+      default: return 'die-d6'; // default to square
+    }
+  }
+
+  /**
    * Sleep helper for animation
    * @param {number} ms - Milliseconds to sleep
    */
@@ -226,8 +243,9 @@ class DiceRoller extends HTMLElement {
   }
 
   render() {
+    const shapeClass = this.getDieShapeClass();
     const diceHTML = Array.from({ length: this._dice }, (_, i) => `
-      <div class="die" data-index="${i}">?</div>
+      <div class="die ${shapeClass}" data-index="${i}">?</div>
     `).join('');
 
     this.shadowRoot.innerHTML = `
@@ -240,16 +258,16 @@ class DiceRoller extends HTMLElement {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 15px;
-          padding: 15px;
+          gap: 10px;
+          padding: 10px;
           background: var(--dice-roller-bg, rgba(30, 30, 50, 0.6));
           border-radius: 10px;
           border: 2px solid var(--dice-roller-border, #4a4a6a);
         }
         
         .roll-button {
-          padding: 10px 20px;
-          font-size: 16px;
+          padding: 8px 16px;
+          font-size: 14px;
           font-weight: bold;
           color: var(--dice-roller-button-color, #fff);
           background: var(--dice-roller-button-bg, #4a4a9a);
@@ -279,8 +297,8 @@ class DiceRoller extends HTMLElement {
         
         .dice-container {
           display: flex;
-          gap: 10px;
-          min-height: 60px;
+          gap: 8px;
+          min-height: 50px;
           align-items: center;
         }
         
@@ -288,21 +306,76 @@ class DiceRoller extends HTMLElement {
           animation: shake 0.1s infinite;
         }
         
+        /* Base die styling */
         .die {
-          width: 50px;
-          height: 50px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 24px;
+          font-size: 18px;
           font-weight: bold;
           background: var(--dice-roller-die-bg, #fff);
           color: var(--dice-roller-die-color, #000);
           border: 2px solid var(--dice-roller-die-border, #333);
-          border-radius: 8px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
           transition: all 0.3s ease;
           font-family: var(--dice-roller-font, 'Georgia', serif);
+        }
+        
+        /* d2 - Circle */
+        .die-d2 {
+          border-radius: 50%;
+        }
+        
+        /* d4 - Triangle */
+        .die-d4 {
+          width: 0;
+          height: 0;
+          border-left: 20px solid transparent;
+          border-right: 20px solid transparent;
+          border-bottom: 35px solid var(--dice-roller-die-bg, #fff);
+          background: transparent;
+          border-top: none;
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding-bottom: 5px;
+        }
+        
+        /* d6 - Square */
+        .die-d6 {
+          border-radius: 8px;
+        }
+        
+        /* d8 - Diamond (rotated square) */
+        .die-d8 {
+          transform: rotate(45deg);
+          border-radius: 4px;
+        }
+        
+        .die-d8::before {
+          content: attr(data-value);
+          transform: rotate(-45deg);
+        }
+        
+        /* d10 - Pentagon-like shape */
+        .die-d10 {
+          clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+          border-radius: 3px;
+        }
+        
+        /* d12 - Pentagon */
+        .die-d12 {
+          clip-path: polygon(50% 0%, 100% 35%, 85% 100%, 15% 100%, 0% 35%);
+          border-radius: 3px;
+        }
+        
+        /* d20 - Hexagon */
+        .die-d20 {
+          clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+          border-radius: 2px;
         }
         
         .die.dropped {
@@ -312,10 +385,10 @@ class DiceRoller extends HTMLElement {
         }
         
         .result-display {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: bold;
           color: var(--dice-roller-result-color, #ffd700);
-          min-height: 24px;
+          min-height: 20px;
           opacity: 0;
           transition: opacity 0.3s ease;
           font-family: var(--dice-roller-font, 'Georgia', serif);

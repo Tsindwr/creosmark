@@ -364,7 +364,7 @@ class PotentialTrack extends HTMLElement {
         }
         
         .title-label {
-          fill: var(--potential-label-color, #c0c0d0);
+          fill: var(--potential-label-color, #cd853f);
           font-size: 14px;
           font-weight: bold;
           text-transform: uppercase;
