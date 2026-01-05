@@ -16,7 +16,7 @@ class DiceRoller extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this._dice = 3;
-    this._sides = 6;
+    this._sides = 4; // Changing dice equation to keep the average closer to 5 for initial stats of a level 1 character
     this._label = 'Roll';
     this._isRolling = false;
     this._results = [];
