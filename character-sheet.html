@@ -16,295 +16,625 @@
       color: #e0e0e0;
       min-height: 100vh;
       margin: 0;
+      padding: 0;
+    }
+
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
       padding: 20px;
     }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
+
+    /* Character Header Card */
+    .character-header-card {
+      background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(40, 40, 60, 0.95) 100%);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 25px;
+      align-items: center;
     }
-    
-    .header h1 {
+
+    .character-portrait {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #ffd700;
+      background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .character-info {
+      flex: 1;
+    }
+
+    .character-name {
       font-family: 'Georgia', serif;
       font-size: 2.5rem;
       color: #ffd700;
+      margin: 0 0 5px 0;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-      margin-bottom: 10px;
     }
-    
-    .header p {
+
+    .character-meta {
+      font-size: 1rem;
       color: #a0a0b0;
-      font-size: 1.1rem;
+      margin: 5px 0;
     }
-    
-    .view-switch {
-      text-align: center;
-      margin-bottom: 20px;
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
     }
-    
-    .view-switch-button {
-      padding: 12px 30px;
-      font-size: 16px;
+
+    .action-button {
+      padding: 12px 25px;
+      font-size: 14px;
       font-weight: bold;
       color: #fff;
-      background: #4a4a9a;
+      background: linear-gradient(135deg, #4a4a9a 0%, #5a5aaa 100%);
       border: 2px solid #5a5aaa;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
       font-family: 'Georgia', serif;
+      text-decoration: none;
+      text-align: center;
     }
-    
-    .view-switch-button:hover {
-      background: #5a5aaa;
-      border-color: #6a6aba;
+
+    .action-button:hover {
+      background: linear-gradient(135deg, #5a5aaa 0%, #6a6aba 100%);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(74, 74, 154, 0.4);
     }
-    
-    .character-sheet {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: rgba(30, 30, 50, 0.8);
-      border-radius: 15px;
-      padding: 30px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    }
-    
-    .section-title {
-      font-family: 'Georgia', serif;
-      color: #ffd700;
-      border-bottom: 2px solid #4a4a6a;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-      font-size: 1.8rem;
-    }
-    
-    .subsection-title {
-      font-family: 'Georgia', serif;
-      color: #a0a0d0;
-      margin-top: 30px;
-      margin-bottom: 15px;
-      font-size: 1.3rem;
-    }
-    
-    .stats-row {
+
+    /* Main Stats Layout */
+    .stats-layout {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 30px;
-      margin-bottom: 40px;
+      grid-template-columns: 300px 1fr;
+      gap: 25px;
+      margin-bottom: 25px;
     }
-    
+
     @media (max-width: 1024px) {
-      .stats-row {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    
-    @media (max-width: 600px) {
-      .stats-row {
+      .stats-layout {
         grid-template-columns: 1fr;
       }
+
+      .character-header-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        justify-items: center;
+      }
     }
-    
-    .potential-stat {
+
+    /* Left Sidebar - Core Stats */
+    .core-stats-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .stat-card {
+      background: rgba(30, 30, 50, 0.8);
+      border: 2px solid #4a4a6a;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      border-color: #6a6a9a;
+      transform: translateX(5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card-header {
+      font-family: 'Georgia', serif;
+      font-size: 0.9rem;
+      color: #a0a0b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .stat-card-content {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .stat-modifier {
+      font-family: 'Georgia', serif;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .stat-track-container {
+      flex: 1;
+    }
+
+    /* Main Content Area - Potentials Grid */
+    .potentials-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .potential-group {
+      background: rgba(30, 30, 50, 0.8);
+      border: 2px solid #4a4a6a;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .potential-group-title {
+      font-family: 'Georgia', serif;
+      font-size: 1.5rem;
+      color: #ffd700;
+      margin: 0 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .potentials-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .potential-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
-      background: rgba(40, 40, 60, 0.6);
+      padding: 15px;
+      background: rgba(40, 40, 60, 0.4);
       border-radius: 10px;
-      border: 1px solid #4a4a6a;
+      border: 1px solid rgba(74, 74, 106, 0.5);
       transition: all 0.3s ease;
     }
-    
-    .potential-stat:hover {
-      background: rgba(50, 50, 70, 0.7);
-      border-color: #5a5a8a;
+
+    .potential-item:hover {
+      background: rgba(50, 50, 70, 0.5);
+      border-color: #6a6a9a;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-    
-    .instructions {
-      margin-top: 40px;
+
+    /* Activity Log */
+    .activity-log-section {
+      background: rgba(30, 30, 50, 0.8);
+      border: 2px solid #4a4a6a;
+      border-radius: 12px;
       padding: 20px;
-      background: rgba(40, 40, 60, 0.4);
-      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      margin-top: 25px;
     }
-    
+
+    .activity-log-title {
+      font-family: 'Georgia', serif;
+      font-size: 1.3rem;
+      color: #ffd700;
+      margin: 0 0 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .activity-log {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      max-height: 250px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+    }
+
+    .activity-log-entry {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .activity-log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .activity-timestamp {
+      color: #808090;
+      font-size: 0.8rem;
+    }
+
+    .activity-stress {
+      color: #ff6666;
+    }
+
+    .activity-resistance {
+      color: #66ff66;
+    }
+
+    .empty-log {
+      text-align: center;
+      color: #808090;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    /* Instructions */
+    .instructions {
+      background: rgba(30, 30, 50, 0.6);
+      border: 2px solid rgba(74, 74, 106, 0.5);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 25px;
+    }
+
     .instructions h3 {
+      font-family: 'Georgia', serif;
       color: #ffd700;
       margin-top: 0;
+      font-size: 1.2rem;
     }
-    
+
     .instructions ul {
       line-height: 1.8;
+      margin: 0;
+      padding-left: 25px;
     }
-    
+
     .instructions code {
       background: rgba(0, 0, 0, 0.3);
       padding: 2px 6px;
       border-radius: 3px;
       font-family: 'Consolas', monospace;
+      color: #ffd700;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>⚔️ Creosmark ⚔️</h1>
-    <p>Character Sheet</p>
-  </div>
-  
-  <div class="view-switch">
-    <button class="view-switch-button" onclick="window.location.href='character-builder.html'">
-      🎲 Edit Character Stats
-    </button>
-  </div>
-  
-  <div class="character-sheet">
-    <h2 class="section-title">📊 Character Potentials</h2>
-    
-    <!-- Physical Stats -->
-    <h3 class="subsection-title">💪 Physical Potentials</h3>
-    <div class="stats-row">
-      <div class="potential-stat">
-        <potential-track id="might-track" label="Might" score="10" stress="0" resistance="0"></potential-track>
+  <app-header></app-header>
+
+  <div class="main-content">
+    <!-- Character Header -->
+    <div class="character-header-card">
+      <div class="character-portrait" id="character-avatar">🧙</div>
+      <div class="character-info">
+        <h1 class="character-name" id="character-name">Loading...</h1>
+        <p class="character-meta">Last Updated: <span id="character-updated">-</span></p>
       </div>
-      
-      <div class="potential-stat">
-        <potential-track id="finesse-track" label="Finesse" score="10" stress="0" resistance="0"></potential-track>
-      </div>
-      
-      <div class="potential-stat">
-        <potential-track id="nerve-track" label="Nerve" score="10" stress="0" resistance="0"></potential-track>
-      </div>
-      
-      <div class="potential-stat">
-        <potential-track id="seep-track" label="Seep" score="10" stress="0" resistance="0"></potential-track>
+      <div class="action-buttons">
+        <a href="#" id="edit-character-button" class="action-button">✏️ Edit Character</a>
       </div>
     </div>
-    
-    <!-- Mental Stats -->
-    <h3 class="subsection-title">🧠 Mental Potentials</h3>
-    <div class="stats-row">
-      <div class="potential-stat">
-        <potential-track id="instinct-track" label="Instinct" score="10" stress="0" resistance="0"></potential-track>
+
+    <!-- Main Stats Layout -->
+    <div class="stats-layout">
+      <!-- Left Sidebar: Core stats with modifiers -->
+      <div class="core-stats-sidebar">
+        <!-- Body -->
+        <div class="stat-card">
+          <div class="stat-card-header">Body</div>
+          <div class="stat-card-content">
+            <div class="stat-modifier" id="body-modifier">+0</div>
+            <div class="stat-track-container">
+              <potential-track id="body-track" label="Body" score="10" stress="0" resistance="0" class="small"></potential-track>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mind -->
+        <div class="stat-card">
+          <div class="stat-card-header">Mind</div>
+          <div class="stat-card-content">
+            <div class="stat-modifier" id="mind-modifier">+0</div>
+            <div class="stat-track-container">
+              <potential-track id="mind-track" label="Mind" score="10" stress="0" resistance="0" class="small"></potential-track>
+            </div>
+          </div>
+        </div>
+
+        <!-- Soul -->
+        <div class="stat-card">
+          <div class="stat-card-header">Soul</div>
+          <div class="stat-card-content">
+            <div class="stat-modifier" id="soul-modifier">+0</div>
+            <div class="stat-track-container">
+              <potential-track id="soul-track" label="Soul" score="10" stress="0" resistance="0" class="small"></potential-track>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div class="potential-stat">
-        <potential-track id="wit-track" label="Wit" score="10" stress="0" resistance="0"></potential-track>
-      </div>
-      
-      <div class="potential-stat">
-        <potential-track id="heart-track" label="Heart" score="10" stress="0" resistance="0"></potential-track>
-      </div>
-      
-      <div class="potential-stat">
-        <potential-track id="tether-track" label="Tether" score="10" stress="0" resistance="0"></potential-track>
+
+      <!-- Main Content: Potentials -->
+      <div class="potentials-grid">
+        <!-- Physical Potentials -->
+        <div class="potential-group">
+          <h2 class="potential-group-title">💪 Physical Potentials</h2>
+          <div class="potentials-row">
+            <div class="potential-item">
+              <potential-track id="might-track" label="Might" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+            <div class="potential-item">
+              <potential-track id="finesse-track" label="Finesse" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+            <div class="potential-item">
+              <potential-track id="nerve-track" label="Nerve" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+            <div class="potential-item">
+              <potential-track id="seep-track" label="Seep" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mental Potentials -->
+        <div class="potential-group">
+          <h2 class="potential-group-title">🧠 Mental Potentials</h2>
+          <div class="potentials-row">
+            <div class="potential-item">
+              <potential-track id="instinct-track" label="Instinct" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+            <div class="potential-item">
+              <potential-track id="wit-track" label="Wit" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+            <div class="potential-item">
+              <potential-track id="heart-track" label="Heart" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+            <div class="potential-item">
+              <potential-track id="tether-track" label="Tether" score="10" stress="0" resistance="0"></potential-track>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    
+
+    <!-- Activity Log -->
+    <div class="activity-log-section">
+      <h3 class="activity-log-title">📝 Activity Log</h3>
+      <div id="activity-log" class="activity-log">
+        <div class="empty-log">No activity yet. Interact with potential tracks to see events here.</div>
+      </div>
+    </div>
+
     <!-- Instructions -->
     <div class="instructions">
-      <h3>📖 How to Use</h3>
+      <h3>📖 How to Use the Character Sheet</h3>
       <ul>
-        <li><strong>Center circle</strong>: Left-click (or tap) to add stress, right-click (or long-press) to add resistance</li>
-        <li><strong>Nodes</strong>: Click to increment/decrement by 1 on that side</li>
-        <li><strong>Stress</strong> (red) fills from the left - represents damage, exhaustion, or strain</li>
-        <li><strong>Resistance</strong> (green) fills from the right - represents armor, protection, or buffs</li>
-        <li>The center number shows your <strong>potential score</strong> for that stat</li>
-        <li>Total stress + resistance can never exceed your score</li>
-        <li>Keyboard accessible: <code>Tab</code> to navigate, <code>Enter</code>/<code>Space</code> for stress, <code>R</code> for resistance</li>
-        <li><strong>Edit Stats:</strong> Click "Edit Character Stats" to modify your base scores or roll new values</li>
+        <li><strong>Potential Tracks:</strong> Each track shows your character's potential score with stress (red) and resistance (green)</li>
+        <li><strong>Adding Stress/Resistance:</strong> Click the center circle to add stress (left-click) or resistance (right-click)</li>
+        <li><strong>Modifying Nodes:</strong> Click individual nodes to increment/decrement stress or resistance</li>
+        <li><strong>Keyboard Navigation:</strong> Use <code>Tab</code> to navigate, <code>Enter/Space</code> for stress, <code>R</code> for resistance</li>
+        <li><strong>Activity Log:</strong> See a history of all changes made to your character's potentials</li>
+        <li><strong>Edit Character:</strong> Click "Edit Character" to modify base stats, name, and avatar</li>
       </ul>
     </div>
   </div>
-  
+
+  <script type="module" src="src/components/app-header.js"></script>
   <script type="module" src="src/components/potential-track.js"></script>
   <script type="module">
-    // Character stats
+    import characterStorage from './src/services/character-storage.js';
+
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
-    
-    // Load stats from localStorage
-    function loadStats() {
-      let hasCorruptedData = false;
+    let currentCharacter = null;
+
+    // Get character ID from URL
+    function getCharacterId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    // Initialize page
+    async function init() {
+      await characterStorage.initialize();
       
+      const characterId = getCharacterId();
+      if (!characterId) {
+        // No character ID, redirect to chooser
+        window.location.href = 'character-chooser.html';
+        return;
+      }
+
+      // Load character
+      currentCharacter = await characterStorage.getCharacter(characterId);
+      if (!currentCharacter) {
+        alert('Character not found!');
+        window.location.href = 'character-chooser.html';
+        return;
+      }
+
+      loadCharacterData();
+      setupEventListeners();
+      loadTrackStates();
+    }
+
+    // Load character data into the page
+    function loadCharacterData() {
+      // Set character name and avatar
+      document.getElementById('character-name').textContent = currentCharacter.name || 'Unnamed Character';
+      document.getElementById('character-avatar').textContent = currentCharacter.avatar || '🧙';
+      
+      // Set updated date
+      if (currentCharacter.updatedAt) {
+        const date = new Date(currentCharacter.updatedAt);
+        document.getElementById('character-updated').textContent = date.toLocaleString();
+      }
+
+      // Set edit button link
+      document.getElementById('edit-character-button').href = `character-builder.html?id=${currentCharacter.id}`;
+
+      // Load stats
       STATS.forEach(stat => {
-        const savedValue = localStorage.getItem(`character_${stat}`);
         const track = document.getElementById(`${stat}-track`);
-        
-        if (track && savedValue) {
-          const value = parseInt(savedValue, 10);
-          if (!isNaN(value) && value >= 1 && value <= 18) {
-            track.setAttribute('score', value);
-          } else {
-            hasCorruptedData = true;
-            // Clear corrupted value
-            localStorage.removeItem(`character_${stat}`);
-          }
+        const value = currentCharacter.stats?.[stat] || 10;
+        if (track) {
+          track.setAttribute('score', value);
         }
       });
-      
-      // Log warning if corrupted data was found
-      if (hasCorruptedData) {
-        console.warn('Some character stats had invalid values and were reset to defaults.');
-      }
+
+      // Calculate and display composite stats (Body, Mind, Soul)
+      updateCompositeStats();
     }
-    
-    // Save stress and resistance to localStorage
-    function saveTrackState(statName, stress, resistance) {
-      localStorage.setItem(`character_${statName}_stress`, stress);
-      localStorage.setItem(`character_${statName}_resistance`, resistance);
+
+    // Calculate composite stats from individual potentials
+    function updateCompositeStats() {
+      // Body = average of Might, Finesse, Nerve, Seep
+      const body = Math.floor(
+        (getStatValue('might') + getStatValue('finesse') + 
+         getStatValue('nerve') + getStatValue('seep')) / 4
+      );
+
+      // Mind = average of Instinct, Wit, Heart, Tether  
+      const mind = Math.floor(
+        (getStatValue('instinct') + getStatValue('wit') + 
+         getStatValue('heart') + getStatValue('tether')) / 4
+      );
+
+      // Soul = average of all 8
+      const soul = Math.floor(
+        (getStatValue('might') + getStatValue('finesse') + 
+         getStatValue('nerve') + getStatValue('seep') +
+         getStatValue('instinct') + getStatValue('wit') + 
+         getStatValue('heart') + getStatValue('tether')) / 8
+      );
+
+      // Update tracks
+      const bodyTrack = document.getElementById('body-track');
+      const mindTrack = document.getElementById('mind-track');
+      const soulTrack = document.getElementById('soul-track');
+
+      if (bodyTrack) bodyTrack.setAttribute('score', body);
+      if (mindTrack) mindTrack.setAttribute('score', mind);
+      if (soulTrack) soulTrack.setAttribute('score', soul);
+
+      // Update modifiers (D&D style: (score - 10) / 2)
+      document.getElementById('body-modifier').textContent = formatModifier(body);
+      document.getElementById('mind-modifier').textContent = formatModifier(mind);
+      document.getElementById('soul-modifier').textContent = formatModifier(soul);
     }
-    
-    // Load track states from localStorage
+
+    function getStatValue(stat) {
+      return currentCharacter.stats?.[stat] || 10;
+    }
+
+    function formatModifier(score) {
+      const mod = Math.floor((score - 10) / 2);
+      return mod >= 0 ? `+${mod}` : `${mod}`;
+    }
+
+    // Load stress and resistance states
     function loadTrackStates() {
       STATS.forEach(stat => {
         const track = document.getElementById(`${stat}-track`);
-        const savedStress = localStorage.getItem(`character_${stat}_stress`);
-        const savedResistance = localStorage.getItem(`character_${stat}_resistance`);
+        const stress = currentCharacter.stress?.[stat] || 0;
+        const resistance = currentCharacter.resistance?.[stat] || 0;
         
         if (track) {
-          // Validate stress value
-          if (savedStress) {
-            const stressValue = parseInt(savedStress, 10);
-            if (!isNaN(stressValue) && stressValue >= 0) {
-              track.setAttribute('stress', stressValue);
-            } else {
-              localStorage.removeItem(`character_${stat}_stress`);
-            }
-          }
-          
-          // Validate resistance value
-          if (savedResistance) {
-            const resistanceValue = parseInt(savedResistance, 10);
-            if (!isNaN(resistanceValue) && resistanceValue >= 0) {
-              track.setAttribute('resistance', resistanceValue);
-            } else {
-              localStorage.removeItem(`character_${stat}_resistance`);
-            }
-          }
+          track.setAttribute('stress', stress);
+          track.setAttribute('resistance', resistance);
         }
       });
     }
-    
-    // Add event listeners to save state changes
-    STATS.forEach(stat => {
-      const track = document.getElementById(`${stat}-track`);
-      if (track) {
-        track.addEventListener('stress-changed', (e) => {
-          saveTrackState(stat, e.detail.stress, e.detail.resistance);
-        });
-        
-        track.addEventListener('resistance-changed', (e) => {
-          saveTrackState(stat, e.detail.stress, e.detail.resistance);
-        });
+
+    // Save track state when changed
+    function saveTrackState(statName, stress, resistance) {
+      if (!currentCharacter.stress) currentCharacter.stress = {};
+      if (!currentCharacter.resistance) currentCharacter.resistance = {};
+
+      currentCharacter.stress[statName] = stress;
+      currentCharacter.resistance[statName] = resistance;
+
+      characterStorage.saveCharacter(currentCharacter);
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Header navigation
+      document.querySelector('app-header').addEventListener('navigate-home', () => {
+        window.location.href = 'character-chooser.html';
+      });
+
+      // Login/logout (placeholder)
+      document.querySelector('app-header').addEventListener('login-request', () => {
+        alert('Supabase login coming soon!');
+      });
+
+      document.querySelector('app-header').addEventListener('logout-request', () => {
+        alert('Logout functionality coming soon!');
+      });
+
+      // Track change listeners
+      STATS.forEach(stat => {
+        const track = document.getElementById(`${stat}-track`);
+        if (track) {
+          track.addEventListener('stress-changed', (e) => {
+            saveTrackState(stat, e.detail.stress, e.detail.resistance);
+            logActivity(stat, 'stress', e.detail);
+          });
+          
+          track.addEventListener('resistance-changed', (e) => {
+            saveTrackState(stat, e.detail.stress, e.detail.resistance);
+            logActivity(stat, 'resistance', e.detail);
+          });
+        }
+      });
+    }
+
+    // Log activity
+    function logActivity(trackName, type, detail) {
+      const log = document.getElementById('activity-log');
+      
+      // Remove empty state if present
+      const emptyLog = log.querySelector('.empty-log');
+      if (emptyLog) {
+        emptyLog.remove();
       }
-    });
-    
-    // Load stats and track states on page load
-    loadStats();
-    loadTrackStates();
+
+      const entry = document.createElement('div');
+      entry.className = 'activity-log-entry';
+      
+      const message = document.createElement('span');
+      message.className = type === 'stress' ? 'activity-stress' : 'activity-resistance';
+      message.textContent = `${trackName}: ${type === 'stress' ? 'Stress' : 'Resistance'} ${detail.stress}/${detail.resistance}`;
+      
+      const timestamp = document.createElement('span');
+      timestamp.className = 'activity-timestamp';
+      timestamp.textContent = new Date().toLocaleTimeString();
+      
+      entry.appendChild(message);
+      entry.appendChild(timestamp);
+      
+      log.insertBefore(entry, log.firstChild);
+      
+      // Keep only last 50 entries
+      while (log.children.length > 50) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    // Initialize on load
+    init();
   </script>
 </body>
 </html>

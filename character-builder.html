@@ -16,30 +16,90 @@
       color: #e0e0e0;
       min-height: 100vh;
       margin: 0;
+      padding: 0;
+    }
+
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
       padding: 20px;
     }
-    
-    .header {
+
+    .character-meta-section {
+      background: rgba(30, 30, 50, 0.8);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .avatar-picker {
       text-align: center;
-      margin-bottom: 40px;
     }
-    
-    .header h1 {
-      font-family: 'Georgia', serif;
-      font-size: 2.5rem;
-      color: #ffd700;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-      margin-bottom: 10px;
+
+    .avatar-display {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #ffd700;
+      background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 0 auto 10px;
     }
-    
-    .header p {
+
+    .avatar-display:hover {
+      transform: scale(1.05);
+      border-color: #fff;
+    }
+
+    .avatar-input {
+      font-size: 0.8rem;
       color: #a0a0b0;
-      font-size: 1.1rem;
     }
-    
+
+    .name-section {
+      flex: 1;
+    }
+
+    .name-label {
+      font-size: 0.9rem;
+      color: #a0a0b0;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .name-input {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      font-family: 'Georgia', serif;
+      background: rgba(20, 20, 40, 0.8);
+      color: #ffd700;
+      border: 2px solid #4a4a6a;
+      border-radius: 8px;
+    }
+
+    .name-input:focus {
+      outline: none;
+      border-color: #6a6a9a;
+      box-shadow: 0 0 10px rgba(106, 106, 154, 0.5);
+    }
+
     .view-switch {
       text-align: center;
-      margin-bottom: 20px;
     }
     
     .view-switch-button {
@@ -348,18 +408,29 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>⚔️ Creosmark ⚔️</h1>
-    <p>Character Builder</p>
-  </div>
-  
-  <div class="view-switch">
-    <button class="view-switch-button" onclick="window.location.href='character-sheet.html'">
-      📋 View Character Sheet
-    </button>
-  </div>
-  
-  <div class="character-builder">
+  <app-header></app-header>
+
+  <div class="main-content">
+    <!-- Character Meta Information -->
+    <div class="character-meta-section">
+      <div class="meta-grid">
+        <div class="avatar-picker">
+          <div class="avatar-display" id="avatar-display" title="Click to change avatar">🧙</div>
+          <input type="text" id="avatar-input" class="avatar-input" placeholder="Enter emoji avatar" maxlength="2" value="🧙">
+        </div>
+        <div class="name-section">
+          <div class="name-label">Character Name</div>
+          <input type="text" id="character-name" class="name-input" placeholder="Enter character name..." value="New Character">
+        </div>
+        <div class="view-switch">
+          <button class="view-switch-button" id="view-sheet-button">
+            📋 View Sheet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="character-builder">
     <h2 class="section-title">🎲 Build Your Character</h2>
     
     <!-- Physical Stats -->
