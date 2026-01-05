@@ -100,7 +100,7 @@ class DiceRoller extends HTMLElement {
   }
 
   /**
-   * Calculate result using Sunder rules: 3d6 drop the highest
+   * Calculate result using Sunder rules: 3d4 drop the highest
    * Special case: if all 3 dice roll 1, the result is 1
    * @param {Array<number>} rolls - Array of dice rolls
    * @returns {number} Final calculated result
