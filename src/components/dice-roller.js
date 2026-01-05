@@ -328,20 +328,10 @@ class DiceRoller extends HTMLElement {
           border-radius: 50%;
         }
         
-        /* d4 - Triangle */
+        /* d4 - Triangle - using clip-path */
         .die-d4 {
-          width: 0;
-          height: 0;
-          border-left: 20px solid transparent;
-          border-right: 20px solid transparent;
-          border-bottom: 35px solid var(--dice-roller-die-bg, #fff);
-          background: transparent;
-          border-top: none;
-          position: relative;
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          padding-bottom: 5px;
+          clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+          border-radius: 3px;
         }
         
         /* d6 - Square */
@@ -349,15 +339,24 @@ class DiceRoller extends HTMLElement {
           border-radius: 8px;
         }
         
-        /* d8 - Diamond (rotated square) */
+        /* d8 - Diamond (rotated square) - keep text upright */
         .die-d8 {
-          transform: rotate(45deg);
           border-radius: 4px;
+          position: relative;
         }
         
         .die-d8::before {
-          content: attr(data-value);
-          transform: rotate(-45deg);
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          border: 2px solid var(--dice-roller-die-border, #333);
+          transform: rotate(45deg);
+          border-radius: 4px;
+          z-index: -1;
+          background: var(--dice-roller-die-bg, #fff);
         }
         
         /* d10 - Pentagon-like shape */
