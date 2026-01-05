@@ -273,6 +273,7 @@ class PotentialTrack extends HTMLElement {
     }).join('');
 
     this.shadowRoot.innerHTML = `
+      <link rel="stylesheet" href="src/css/potential-track.css">
       <style>
         :host {
           display: inline-block;
@@ -363,11 +364,12 @@ class PotentialTrack extends HTMLElement {
         }
         
         .title-label {
-          fill: var(--potential-label-color, #c0c0d0);
+          fill: var(--potential-label-color, #cd853f);
           font-size: 14px;
           font-weight: bold;
           text-transform: uppercase;
           letter-spacing: 2px;
+          transition: font-size 0.2s ease;
         }
       </style>
       
@@ -470,6 +472,47 @@ class PotentialTrack extends HTMLElement {
         this.addResistance();
       }
     });
+    
+    // Adjust label font size based on available space
+    if (this._label) {
+      this.adjustLabelSize();
+    }
+  }
+  
+  /**
+   * Adjust label font size to prevent overlap with nodes
+   */
+  adjustLabelSize() {
+    const labelElement = this.shadowRoot.querySelector('.title-label');
+    if (!labelElement) return;
+    
+    // Constants for font sizing
+    const DEFAULT_FONT_SIZE = 14;
+    const MIN_FONT_SIZE = 8;
+    const NODE_RADIUS = 12;
+    const NODE_MARGIN_MULTIPLIER = 4; // Extra margin to account for node radius and spacing
+    
+    // Get the label's bounding box
+    const bbox = labelElement.getBBox();
+    const labelWidth = bbox.width;
+    
+    // Calculate available space between the leftmost and rightmost nodes
+    const positions = this.calculateNodePositions();
+    
+    if (positions.length >= 2) {
+      const leftNode = positions[0];
+      const rightNode = positions[positions.length - 1];
+      
+      // Available space is between the right edge of left node and left edge of right node
+      const availableSpace = rightNode.x - leftNode.x - (NODE_RADIUS * NODE_MARGIN_MULTIPLIER);
+      
+      // If label is too wide, scale it down proportionally
+      if (labelWidth > availableSpace) {
+        const scaleFactor = availableSpace / labelWidth;
+        const newFontSize = Math.max(MIN_FONT_SIZE, DEFAULT_FONT_SIZE * scaleFactor);
+        labelElement.style.fontSize = `${newFontSize}px`;
+      }
+    }
   }
 }
 

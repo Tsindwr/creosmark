@@ -5,6 +5,49 @@
  * of the potential-track element from outside the shadow DOM.
  */
 
+sunder-theme {
+  --sunder-purple-50:  hsl(240 95% 98%); /* very pale tint */
+  --sunder-purple-100: hsl(240 90% 93%);
+  --sunder-purple-200: hsl(240 80% 83%);
+  --sunder-purple-300: hsl(240 75% 73%);
+  --sunder-purple-400: hsl(240 70% 63%); /* base */
+  --sunder-purple-highlight: #4040ff; /* original */
+  --sunder-purple-500: hsl(240 95% 53%);
+  --sunder-purple-600: hsl(240 90% 44%);
+  --sunder-purple-700: hsl(240 80% 34%);
+  --sunder-purple-800: hsl(240 70% 24%);
+  --sunder-purple-900: hsl(240 60% 16%); /* deep shade */
+  --sunder-purple-muted:  hsl(240 15% 60%); /* desaturated variant */
+  --sunder-purple-accent: hsl(280 80% 60%); /* complementary magenta-ish */
+  --sunder-purple-on-dark: #ffffff;
+  --sunder-purple-on-light: #1b1b1b;
+
+  /* variations of the yellow for shadows, dark complements, etc */
+  /* Tints (lighter) */
+  --sunder-yellow-50:  hsl(30 90% 95%); /* very pale */
+  --sunder-yellow-100: hsl(30 80% 88%);
+  --sunder-yellow-200: hsl(30 70% 78%);
+  --sunder-yellow-300: hsl(30 62% 68%);
+
+  /* Base */
+  --sunder-yellow-400: hsl(30 59% 58%);
+  --sunder-yellow-highlight: hsl(30 59% 53%); /* original ~ #cd853f */
+
+  /* Shades (darker) */
+  --sunder-yellow-600: hsl(30 59% 44%);
+  --sunder-yellow-700: hsl(30 59% 34%);
+  --sunder-yellow-800: hsl(30 59% 24%);
+  --sunder-yellow-900: hsl(30 60% 16%);
+
+  /* Utility */
+  --sunder-yellow-muted: hsl(30 20% 60%); /* desaturated variant */
+  --sunder-yellow-accent: hsl(210 80% 50%); /* complementary blue for accents */
+
+  /* Contrast suggestions */
+  --sunder-yellow-on-dark: #ffffff;
+  --sunder-yellow-on-light: #1b1b1b;
+}
+
 /* Default theme (dark) */
 potential-track {
   /* Center circle */
@@ -27,7 +70,7 @@ potential-track {
   --potential-resistance-stroke: #44ff44;
   
   /* Labels */
-  --potential-label-color: #888;
+  --potential-label-color: var(--sunder-yellow-highlight);
   
   /* Font */
   --potential-font: 'Georgia', serif;
@@ -50,7 +93,7 @@ potential-track.light-theme {
   --potential-resistance-fill: #66ff66;
   --potential-resistance-stroke: #00cc00;
   
-  --potential-label-color: #555;
+  --potential-label-color: var(--sunder-yellow-600);
 }
 
 /* Fantasy/parchment theme */
@@ -70,7 +113,7 @@ potential-track.fantasy-theme {
   --potential-resistance-fill: #228b22;
   --potential-resistance-stroke: #32cd32;
   
-  --potential-label-color: #654321;
+  --potential-label-color: var(--sunder-yellow-accent);
   --potential-font: 'Cinzel', serif;
 }
 
