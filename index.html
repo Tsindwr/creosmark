@@ -72,58 +72,6 @@
       border: 1px solid #4a4a6a;
     }
     
-    .potential-stat h3 {
-      margin: 0 0 15px 0;
-      color: #c0c0d0;
-      font-size: 1.1rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-    }
-    
-    .btn-stress {
-      background: #8b0000;
-      color: white;
-    }
-    
-    .btn-stress:hover {
-      background: #a00000;
-    }
-    
-    .btn-resistance {
-      background: #004d00;
-      color: white;
-    }
-    
-    .btn-resistance:hover {
-      background: #006600;
-    }
-    
-    .btn-reset {
-      background: #4a4a6a;
-      color: white;
-    }
-    
-    .btn-reset:hover {
-      background: #5a5a8a;
-    }
-    
     .demo-section {
       margin-top: 40px;
       padding: 20px;
@@ -227,38 +175,17 @@
     <div class="potential-section">
       <!-- Body Potential -->
       <div class="potential-stat">
-        <h3>Body</h3>
-        <potential-track id="body-track" score="8" stress="0" resistance="0"></potential-track>
-        <div class="controls">
-          <button class="btn btn-stress" onclick="bodyTrack.addStress()">+ Stress</button>
-          <button class="btn btn-stress" onclick="bodyTrack.removeStress()">- Stress</button>
-          <button class="btn btn-resistance" onclick="bodyTrack.addResistance()">+ Resistance</button>
-          <button class="btn btn-resistance" onclick="bodyTrack.removeResistance()">- Resistance</button>
-        </div>
+        <potential-track id="body-track" label="Body" score="8" stress="0" resistance="0"></potential-track>
       </div>
       
       <!-- Mind Potential -->
       <div class="potential-stat">
-        <h3>Mind</h3>
-        <potential-track id="mind-track" score="10" stress="2" resistance="1"></potential-track>
-        <div class="controls">
-          <button class="btn btn-stress" onclick="mindTrack.addStress()">+ Stress</button>
-          <button class="btn btn-stress" onclick="mindTrack.removeStress()">- Stress</button>
-          <button class="btn btn-resistance" onclick="mindTrack.addResistance()">+ Resistance</button>
-          <button class="btn btn-resistance" onclick="mindTrack.removeResistance()">- Resistance</button>
-        </div>
+        <potential-track id="mind-track" label="Mind" score="10" stress="2" resistance="1"></potential-track>
       </div>
       
       <!-- Soul Potential -->
       <div class="potential-stat">
-        <h3>Soul</h3>
-        <potential-track id="soul-track" score="6" stress="0" resistance="2"></potential-track>
-        <div class="controls">
-          <button class="btn btn-stress" onclick="soulTrack.addStress()">+ Stress</button>
-          <button class="btn btn-stress" onclick="soulTrack.removeStress()">- Stress</button>
-          <button class="btn btn-resistance" onclick="soulTrack.addResistance()">+ Resistance</button>
-          <button class="btn btn-resistance" onclick="soulTrack.removeResistance()">- Resistance</button>
-        </div>
+        <potential-track id="soul-track" label="Soul" score="6" stress="0" resistance="2"></potential-track>
       </div>
     </div>
     
@@ -293,13 +220,13 @@
     <div class="instructions">
       <h3>📖 How to Use</h3>
       <ul>
-        <li><strong>Click on nodes</strong> to toggle stress (left side) or resistance (right side)</li>
+        <li><strong>Center circle</strong>: Left-click (or tap) to add stress, right-click (or long-press) to add resistance</li>
+        <li><strong>Nodes</strong>: Click to increment/decrement by 1 on that side</li>
         <li><strong>Stress</strong> (red) fills from the left - represents damage, exhaustion, or strain</li>
         <li><strong>Resistance</strong> (green) fills from the right - represents armor, protection, or buffs</li>
         <li>The center number shows your <strong>total potential score</strong></li>
         <li>Total stress + resistance can never exceed your score</li>
-        <li>Use the buttons below each track or click directly on nodes</li>
-        <li>Keyboard accessible: use <code>Tab</code> to navigate and <code>Enter</code>/<code>Space</code> to toggle</li>
+        <li>Keyboard accessible: <code>Tab</code> to navigate, <code>Enter</code>/<code>Space</code> for stress, <code>R</code> for resistance</li>
       </ul>
       
       <h3>💻 Developer Usage</h3>
@@ -308,7 +235,7 @@
 &lt;link rel="stylesheet" href="src/css/potential-track.css"&gt;
 
 &lt;!-- Use the component --&gt;
-&lt;potential-track score="10" stress="0" resistance="0"&gt;&lt;/potential-track&gt;
+&lt;potential-track label="Body" score="10" stress="0" resistance="0"&gt;&lt;/potential-track&gt;
 
 &lt;!-- JavaScript API --&gt;
 &lt;script&gt;

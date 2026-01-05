@@ -10,7 +10,7 @@
  */
 class PotentialTrack extends HTMLElement {
   static get observedAttributes() {
-    return ['score', 'stress', 'resistance'];
+    return ['score', 'stress', 'resistance', 'label'];
   }
 
   constructor() {
@@ -19,6 +19,9 @@ class PotentialTrack extends HTMLElement {
     this._score = 10;
     this._stress = 0;
     this._resistance = 0;
+    this._label = '';
+    this._longPressTimer = null;
+    this._isLongPress = false;
   }
 
   connectedCallback() {
@@ -27,6 +30,12 @@ class PotentialTrack extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue === newValue) return;
+    
+    if (name === 'label') {
+      this._label = newValue || '';
+      this.render();
+      return;
+    }
     
     const numValue = parseInt(newValue, 10);
     if (isNaN(numValue) || numValue < 0) return;
@@ -53,6 +62,14 @@ class PotentialTrack extends HTMLElement {
     }
     
     this.render();
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  set label(value) {
+    this.setAttribute('label', value);
   }
 
   get score() {
@@ -278,6 +295,17 @@ class PotentialTrack extends HTMLElement {
           fill: var(--potential-center-bg, #1a1a2e);
           stroke: var(--potential-center-stroke, #4a4a6a);
           stroke-width: 3;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .center-circle:hover {
+          stroke: var(--potential-center-hover-stroke, #6a6a9a);
+          stroke-width: 4;
+        }
+        
+        .center-circle:active {
+          fill: var(--potential-center-active-bg, #2a2a4e);
         }
         
         .score-text {
@@ -333,6 +361,14 @@ class PotentialTrack extends HTMLElement {
         .resistance-label {
           fill: var(--potential-resistance-stroke, #44ff44);
         }
+        
+        .title-label {
+          fill: var(--potential-label-color, #c0c0d0);
+          font-size: 14px;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+        }
       </style>
       
       <div class="potential-track-container">
@@ -340,9 +376,15 @@ class PotentialTrack extends HTMLElement {
           <!-- Semi-circle arc of nodes -->
           ${nodesHTML}
           
-          <!-- Center circle with score -->
-          <circle class="center-circle" cx="100" cy="100" r="40" />
-          <text class="score-text" x="100" y="100">${this._score}</text>
+          <!-- Center circle with score (interactive) -->
+          <circle class="center-circle" cx="100" cy="100" r="40" 
+                  role="button" 
+                  tabindex="0"
+                  aria-label="Add stress (left click) or resistance (right click)" />
+          <text class="score-text" x="100" y="100" style="pointer-events: none;">${this._score}</text>
+          
+          <!-- Title label below the stat, between nodes -->
+          ${this._label ? `<text class="label title-label" x="100" y="165">${this._label}</text>` : ''}
           
           <!-- Labels -->
           <text class="label stress-label" x="30" y="190">Stress: ${this._stress}</text>
@@ -366,6 +408,66 @@ class PotentialTrack extends HTMLElement {
           this.handleNodeClick(index);
         }
       });
+    });
+    
+    // Add event listeners to center circle
+    const centerCircle = this.shadowRoot.querySelector('.center-circle');
+    
+    // Left click - add stress
+    centerCircle.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!this._isLongPress) {
+        this.addStress();
+      }
+    });
+    
+    // Right click - add resistance
+    centerCircle.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      this.addResistance();
+    });
+    
+    // Touch events for mobile
+    centerCircle.addEventListener('touchstart', (e) => {
+      this._isLongPress = false;
+      this._longPressTimer = setTimeout(() => {
+        this._isLongPress = true;
+        this.addResistance();
+        // Haptic feedback if available
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }, 500); // 500ms for long press
+    });
+    
+    centerCircle.addEventListener('touchend', (e) => {
+      if (this._longPressTimer) {
+        clearTimeout(this._longPressTimer);
+      }
+      if (!this._isLongPress) {
+        this.addStress();
+      }
+      this._isLongPress = false;
+    });
+    
+    centerCircle.addEventListener('touchcancel', (e) => {
+      if (this._longPressTimer) {
+        clearTimeout(this._longPressTimer);
+      }
+      this._isLongPress = false;
+    });
+    
+    // Keyboard accessibility for center circle
+    centerCircle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        // Default to adding stress on keyboard
+        this.addStress();
+      } else if (e.key === 'r' || e.key === 'R') {
+        // Allow 'R' key to add resistance
+        e.preventDefault();
+        this.addResistance();
+      }
     });
   }
 }
