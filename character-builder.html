@@ -756,7 +756,8 @@
       STATS.forEach(stat => {
         const input = document.getElementById(stat);
         if (input) {
-          currentCharacter.stats[stat] = parseInt(input.value, 10) || 10;
+          const value = validateStatValue(input.value);
+          currentCharacter.stats[stat] = value !== null ? value : 10;
         }
       });
 
@@ -1104,7 +1105,8 @@
     
     // Save stat to character storage
     function saveStat(statName, value) {
-      if (currentCharacter && currentCharacter.stats) {
+      if (currentCharacter) {
+        if (!currentCharacter.stats) currentCharacter.stats = {};
         currentCharacter.stats[statName] = value;
         saveCharacter();
       }
