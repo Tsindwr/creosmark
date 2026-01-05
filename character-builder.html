@@ -146,6 +146,103 @@
       font-size: 1.1rem;
       margin: 15px 0 10px 0;
     }
+
+    /* Skills Proficiency Section */
+    .skills-proficiency-section {
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.6);
+      border-radius: 10px;
+      border: 2px solid #5a5a8a;
+    }
+
+    .skills-instructions {
+      color: #a0a0b0;
+      font-size: 0.9rem;
+      margin: 0 0 15px 0;
+      text-align: center;
+    }
+
+    .skill-potential-group {
+      margin-bottom: 15px;
+      padding: 12px;
+      background: rgba(30, 30, 50, 0.5);
+      border-radius: 8px;
+      border: 1px solid #4a4a6a;
+    }
+
+    .skill-potential-title {
+      font-size: 1rem;
+      color: #ffd700;
+      margin: 0 0 10px 0;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .skill-items {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .skill-items {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .skill-prof-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      background: rgba(40, 40, 60, 0.4);
+      border-radius: 6px;
+      border: 1px solid rgba(74, 74, 106, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .skill-prof-item:hover {
+      background: rgba(50, 50, 70, 0.5);
+      border-color: #6a6a9a;
+    }
+
+    .skill-prof-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #6a6a9a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .skill-prof-circle.proficient {
+      background: #4a9a4a;
+      border-color: #5aaa5a;
+      color: white;
+    }
+
+    .skill-prof-circle.expert {
+      background: #9a4a9a;
+      border-color: #aa5aaa;
+      color: white;
+    }
+
+    .skill-prof-circle:hover {
+      transform: scale(1.1);
+    }
+
+    .skill-prof-name {
+      font-size: 0.9rem;
+      color: #e0e0e0;
+      font-weight: 500;
+      flex: 1;
+    }
     
     .dice-pool-section {
       margin: 20px 0;
@@ -504,6 +601,13 @@
         <button class="clear-stat-button" data-stat="tether" style="display: none;">Clear</button>
       </div>
     </div>
+
+    <!-- Skills Proficiency Section -->
+    <h3 class="subsection-title">🎯 Skills Proficiency</h3>
+    <div class="skills-proficiency-section">
+      <p class="skills-instructions">Set proficiency for each skill. Click the circle to cycle: none → proficient (●) → expert (◆)</p>
+      <div id="skills-proficiency-grid"></div>
+    </div>
     
     <!-- Dice Pool Section with Visual Rollers -->
     <div class="dice-pool-section">
@@ -565,14 +669,164 @@
   </div>
   
   <script type="module" src="src/components/dice-roller.js"></script>
+  <script type="module" src="src/components/app-header.js"></script>
   <script type="module">
+    import characterStorage from './src/services/character-storage.js';
+
     // Character stats storage
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
+    
+    // Skills organized by potential
+    const SKILLS_BY_POTENTIAL = {
+      'might': ['Force', 'Brace', 'Feat'],
+      'finesse': ['Sleight', 'Grace', 'Squirm'],
+      'nerve': ['Bear', 'Steel', 'Grit'],
+      'seep': ['Frame', 'Draw', 'Form'],
+      'instinct': ['Reflex', 'Read', 'Sense'],
+      'wit': ['Reason', 'Recall', 'Esoterica'],
+      'heart': ['Aura', 'Sway', 'Hope'],
+      'tether': ['Anchor', 'Grasp', 'Weave']
+    };
+
+    let currentCharacter = null;
     
     // State management for roller results
     let rollerResults = Array(8).fill(null); // Stores {value, assigned} for each roller
     let assignedStats = {}; // Maps stat name to roller index
     let selectedRollerIndex = null;
+
+    // Get character ID from URL
+    function getCharacterId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    // Initialize the builder with character data
+    async function init() {
+      await characterStorage.initialize();
+      
+      const characterId = getCharacterId();
+      if (!characterId) {
+        // No character ID, redirect to chooser
+        window.location.href = 'character-chooser.html';
+        return;
+      }
+
+      // Load character
+      currentCharacter = await characterStorage.getCharacter(characterId);
+      if (!currentCharacter) {
+        alert('Character not found!');
+        window.location.href = 'character-chooser.html';
+        return;
+      }
+
+      loadCharacterData();
+      renderSkillsProficiency();
+      initializeEventListeners();
+      loadRollerResults();
+    }
+
+    // Load character data into form
+    function loadCharacterData() {
+      // Set character name and avatar
+      document.getElementById('character-name').value = currentCharacter.name || 'New Character';
+      document.getElementById('avatar-input').value = currentCharacter.avatar || '🧙';
+      document.getElementById('avatar-display').textContent = currentCharacter.avatar || '🧙';
+
+      // Load stats
+      STATS.forEach(stat => {
+        const input = document.getElementById(stat);
+        const value = currentCharacter.stats?.[stat] || 10;
+        if (input) {
+          input.value = value;
+        }
+      });
+    }
+
+    // Save character data
+    function saveCharacter() {
+      if (!currentCharacter) return;
+
+      // Update character data
+      currentCharacter.name = document.getElementById('character-name').value;
+      currentCharacter.avatar = document.getElementById('avatar-input').value;
+
+      // Update stats
+      if (!currentCharacter.stats) currentCharacter.stats = {};
+      STATS.forEach(stat => {
+        const input = document.getElementById(stat);
+        if (input) {
+          currentCharacter.stats[stat] = parseInt(input.value, 10) || 10;
+        }
+      });
+
+      // Save to storage
+      characterStorage.saveCharacter(currentCharacter);
+    }
+
+    // Render skills proficiency section
+    function renderSkillsProficiency() {
+      const container = document.getElementById('skills-proficiency-grid');
+      container.innerHTML = '';
+
+      STATS.forEach(potential => {
+        const group = document.createElement('div');
+        group.className = 'skill-potential-group';
+
+        const title = document.createElement('div');
+        title.className = 'skill-potential-title';
+        title.textContent = potential.charAt(0).toUpperCase() + potential.slice(1);
+        group.appendChild(title);
+
+        const skillsDiv = document.createElement('div');
+        skillsDiv.className = 'skill-items';
+
+        SKILLS_BY_POTENTIAL[potential].forEach(skillName => {
+          const skillId = `${potential}_${skillName.toLowerCase()}`;
+          const proficiency = currentCharacter.skills?.[skillId]?.proficiency || 'none';
+
+          const skillItem = document.createElement('div');
+          skillItem.className = 'skill-prof-item';
+
+          // Proficiency circle
+          const circle = document.createElement('div');
+          circle.className = `skill-prof-circle ${proficiency !== 'none' ? proficiency : ''}`;
+          if (proficiency === 'proficient') circle.textContent = '●';
+          else if (proficiency === 'expert') circle.textContent = '◆';
+          circle.dataset.skillId = skillId;
+          circle.title = 'Click to cycle proficiency';
+          circle.addEventListener('click', () => cycleSkillProficiency(skillId));
+
+          // Skill name
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'skill-prof-name';
+          nameSpan.textContent = skillName;
+
+          skillItem.appendChild(circle);
+          skillItem.appendChild(nameSpan);
+          skillsDiv.appendChild(skillItem);
+        });
+
+        group.appendChild(skillsDiv);
+        container.appendChild(group);
+      });
+    }
+
+    // Cycle skill proficiency
+    function cycleSkillProficiency(skillId) {
+      if (!currentCharacter.skills) currentCharacter.skills = {};
+      if (!currentCharacter.skills[skillId]) currentCharacter.skills[skillId] = { proficiency: 'none' };
+
+      const current = currentCharacter.skills[skillId].proficiency;
+      let next;
+      if (current === 'none') next = 'proficient';
+      else if (current === 'proficient') next = 'expert';
+      else next = 'none';
+
+      currentCharacter.skills[skillId].proficiency = next;
+      saveCharacter();
+      renderSkillsProficiency();
+    }
     
     // Roll all 8 stats at once
     async function rollAllStats() {
@@ -848,38 +1102,72 @@
       return !isNaN(numValue) && numValue >= 1 && numValue <= 18 ? numValue : null;
     }
     
-    // Load saved stats from localStorage
-    function loadStats() {
-      // Load individual stat values
-      STATS.forEach(stat => {
-        const savedValue = localStorage.getItem(`character_${stat}`);
-        if (savedValue) {
-          const input = document.getElementById(stat);
-          if (input) {
-            const validValue = validateStatValue(savedValue);
-            if (validValue !== null) {
-              input.value = validValue;
-              // Check if this was from roller assignment
-              if (assignedStats[stat] !== undefined) {
-                input.classList.add('has-pool-value');
-              }
-            } else {
-              // Clear corrupted data and use default
-              localStorage.removeItem(`character_${stat}`);
-              input.value = 10;
-            }
-          }
-        }
-      });
-    }
-    
-    // Save stat to localStorage
+    // Save stat to character storage
     function saveStat(statName, value) {
-      localStorage.setItem(`character_${statName}`, value);
+      if (currentCharacter && currentCharacter.stats) {
+        currentCharacter.stats[statName] = value;
+        saveCharacter();
+      }
     }
     
     // Initialize event listeners
     function initializeEventListeners() {
+      // Header navigation
+      document.querySelector('app-header').addEventListener('navigate-home', () => {
+        window.location.href = 'character-chooser.html';
+      });
+
+      // Login/logout (placeholder)
+      document.querySelector('app-header').addEventListener('login-request', () => {
+        alert('Supabase login coming soon!');
+      });
+
+      document.querySelector('app-header').addEventListener('logout-request', () => {
+        alert('Logout functionality coming soon!');
+      });
+
+      // Character name and avatar changes
+      const nameInput = document.getElementById('character-name');
+      const avatarInput = document.getElementById('avatar-input');
+      const avatarDisplay = document.getElementById('avatar-display');
+
+      if (nameInput) {
+        nameInput.addEventListener('input', () => {
+          saveCharacter();
+        });
+      }
+
+      if (avatarInput) {
+        avatarInput.addEventListener('input', (e) => {
+          const avatar = e.target.value.trim();
+          if (avatar) {
+            avatarDisplay.textContent = avatar;
+            saveCharacter();
+          }
+        });
+      }
+
+      if (avatarDisplay) {
+        avatarDisplay.addEventListener('click', () => {
+          const newAvatar = prompt('Enter emoji avatar:', currentCharacter.avatar || '🧙');
+          if (newAvatar) {
+            avatarInput.value = newAvatar;
+            avatarDisplay.textContent = newAvatar;
+            saveCharacter();
+          }
+        });
+      }
+
+      // View Sheet button
+      const viewSheetButton = document.getElementById('view-sheet-button');
+      if (viewSheetButton) {
+        viewSheetButton.addEventListener('click', () => {
+          if (currentCharacter) {
+            window.location.href = `character-sheet.html?id=${currentCharacter.id}`;
+          }
+        });
+      }
+
       // Roll all button
       const rollAllButton = document.getElementById('roll-all-button');
       if (rollAllButton) {
@@ -953,9 +1241,7 @@
     }
     
     // Initialize on page load
-    initializeEventListeners();
-    loadStats();
-    loadRollerResults();
+    init();
   </script>
 </body>
 </html>
