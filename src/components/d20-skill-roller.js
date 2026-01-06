@@ -3,14 +3,15 @@
  * 
  * Features:
  * - D20 rolling with visual animation
- * - Success level determination based on Sunder rules
- * - Color-coded results (Crit, Miff, Success, Fail, Success with Cost, Mixed)
+ * - Success level determination based on Sunder "Roll Under" rules
+ * - Color-coded results (Crit, Miff, Success, Mixed, Fail)
+ * - Resistance-based thresholds
  * - Volatility dice support (future feature)
  * - Event dispatching for roll results
  */
 class D20SkillRoller extends HTMLElement {
   static get observedAttributes() {
-    return ['skill-name', 'potential', 'volatility'];
+    return ['skill-name', 'potential', 'resistance', 'volatility'];
   }
 
   constructor() {
@@ -18,6 +19,7 @@ class D20SkillRoller extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this._skillName = 'Skill';
     this._potential = 10;
+    this._resistance = 0;
     this._volatility = 0; // For future implementation
     this._isRolling = false;
     this._lastRoll = null;
@@ -36,6 +38,9 @@ class D20SkillRoller extends HTMLElement {
         break;
       case 'potential':
         this._potential = parseInt(newValue, 10) || 10;
+        break;
+      case 'resistance':
+        this._resistance = parseInt(newValue, 10) || 0;
         break;
       case 'volatility':
         this._volatility = parseInt(newValue, 10) || 0;
@@ -59,6 +64,14 @@ class D20SkillRoller extends HTMLElement {
 
   set potential(value) {
     this.setAttribute('potential', value);
+  }
+
+  get resistance() {
+    return this._resistance;
+  }
+
+  set resistance(value) {
+    this.setAttribute('resistance', value);
   }
 
   get volatility() {
@@ -89,84 +102,93 @@ class D20SkillRoller extends HTMLElement {
   }
 
   /**
-   * Determine success level based on Sunder D20 resolution rules
+   * Determine success level based on Sunder D20 "Roll Under" resolution rules
    * 
-   * Success Levels:
-   * - CRIT: Natural 20 (automatic critical success)
-   * - MIFF: Natural 1 (automatic critical failure)
-   * - SUCCESS: Roll >= Potential
-   * - SUCCESS_WITH_COST: Roll >= (Potential - 3) but < Potential
-   * - MIXED: Roll >= (Potential - 6) but < (Potential - 3) 
-   * - FAIL: Roll < (Potential - 6)
+   * Sunder uses a variant "Roll Under" system with Resistance thresholds:
+   * - Crit: Roll equals Potential (P)
+   * - Success: Roll is between Resistance (R) and Potential (P), exclusive: R < roll < P
+   * - Mixed: Roll is between 1 and Resistance (R), inclusive: 1 ≤ roll ≤ R
+   * - Fail: Roll is between Potential (P) and 20, exclusive: P < roll < 20
+   * - Miff: Roll equals 20 (critical failure)
+   * 
+   * Note: Success levels with asterisk (Mixed*, Fail*, Success*) involve some cost/caveat
+   * related to the action, which may come in the form of stress, fallout, or narrative costs.
    * 
    * @param {number} roll - The D20 roll result (1-20)
-   * @param {number} potential - The potential score (target)
+   * @param {number} potential - The potential score (P)
+   * @param {number} resistance - The resistance value (R)
    * @returns {Object} Result object with level, color, and description
    */
-  determineSuccess(roll, potential) {
-    // Critical results override everything
+  determineSuccess(roll, potential, resistance) {
+    // Critical failures take priority - MIFF always triggers on natural 20
     if (roll === 20) {
-      return {
-        level: 'CRIT',
-        color: '#FFD700', // Sunder Yellow (gold)
-        bgColor: 'rgba(255, 215, 0, 0.2)',
-        description: 'Critical Success!',
-        emoji: '⭐'
-      };
-    }
-    
-    if (roll === 1) {
       return {
         level: 'MIFF',
         color: '#9966CC', // Sunder Purple
         bgColor: 'rgba(153, 102, 204, 0.2)',
         description: 'Critical Failure!',
-        emoji: '💀'
+        emoji: '💀',
+        hasCost: true // Miff has double cost
       };
     }
     
-    // Calculate success thresholds
-    const successThreshold = potential;
-    const costThreshold = potential - 3;
-    const mixedThreshold = potential - 6;
+    // Critical success - roll equals potential (but not 20)
+    if (roll === potential) {
+      return {
+        level: 'CRIT',
+        color: '#FFD700', // Sunder Yellow (gold)
+        bgColor: 'rgba(255, 215, 0, 0.2)',
+        description: 'Critical Success!',
+        emoji: '⭐',
+        hasCost: false
+      };
+    }
     
-    if (roll >= successThreshold) {
+    // Success: R < roll < P
+    if (roll > resistance && roll < potential) {
       return {
         level: 'SUCCESS',
         color: '#44ff44', // Green
         bgColor: 'rgba(68, 255, 68, 0.2)',
         description: 'Success!',
-        emoji: '✓'
+        emoji: '✓',
+        hasCost: false
       };
     }
     
-    if (roll >= costThreshold) {
-      return {
-        level: 'SUCCESS_WITH_COST',
-        color: '#FFA500', // Orange
-        bgColor: 'rgba(255, 165, 0, 0.2)',
-        description: 'Success with Cost',
-        emoji: '⚠'
-      };
-    }
-    
-    if (roll >= mixedThreshold) {
+    // Mixed: 1 ≤ roll ≤ R
+    if (roll >= 1 && roll <= resistance) {
       return {
         level: 'MIXED',
         color: '#FFA500', // Orange (will flash)
         bgColor: 'rgba(255, 165, 0, 0.2)',
         description: 'Mixed Success',
         emoji: '~',
-        flash: true
+        flash: true,
+        hasCost: true
       };
     }
     
+    // Fail: P < roll < 20
+    if (roll > potential && roll < 20) {
+      return {
+        level: 'FAIL',
+        color: '#ff4444', // Red
+        bgColor: 'rgba(255, 68, 68, 0.2)',
+        description: 'Failure',
+        emoji: '✗',
+        hasCost: true
+      };
+    }
+    
+    // Fallback (should not happen with valid inputs)
     return {
-      level: 'FAIL',
-      color: '#ff4444', // Red
-      bgColor: 'rgba(255, 68, 68, 0.2)',
-      description: 'Failure',
-      emoji: '✗'
+      level: 'UNKNOWN',
+      color: '#888888',
+      bgColor: 'rgba(136, 136, 136, 0.2)',
+      description: 'Unknown Result',
+      emoji: '?',
+      hasCost: false
     };
   }
 
@@ -201,11 +223,12 @@ class D20SkillRoller extends HTMLElement {
     
     // Final roll
     const roll = this.rollD20();
-    const result = this.determineSuccess(roll, this._potential);
+    const result = this.determineSuccess(roll, this._potential, this._resistance);
     
     this._lastRoll = {
       roll,
       potential: this._potential,
+      resistance: this._resistance,
       result
     };
     
@@ -223,6 +246,7 @@ class D20SkillRoller extends HTMLElement {
         skillName: this._skillName,
         roll,
         potential: this._potential,
+        resistance: this._resistance,
         result
       },
       bubbles: true,
@@ -262,7 +286,7 @@ class D20SkillRoller extends HTMLElement {
     // Update info display
     const infoDisplay = this.shadowRoot.querySelector('.info-display');
     if (infoDisplay) {
-      infoDisplay.textContent = `Roll: ${roll} vs Potential: ${this._potential}`;
+      infoDisplay.textContent = `Roll: ${roll} | P: ${this._potential} | R: ${this._resistance}`;
     }
   }
 
@@ -423,7 +447,7 @@ class D20SkillRoller extends HTMLElement {
       <div class="skill-roller-container">
         <div class="skill-header">
           <span class="skill-name">${this._skillName}</span>
-          <span class="potential-badge">Potential: ${this._potential}</span>
+          <span class="potential-badge">P: ${this._potential} | R: ${this._resistance}</span>
         </div>
         
         <div class="d20-display">
