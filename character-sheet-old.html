@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Sheet - Creosmark</title>
+  <link rel="stylesheet" href="src/css/potential-track.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-family: 'Georgia', serif;
+      font-size: 2.5rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #a0a0b0;
+      font-size: 1.1rem;
+    }
+    
+    .view-switch {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .view-switch-button {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      background: #4a4a9a;
+      border: 2px solid #5a5aaa;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+    }
+    
+    .view-switch-button:hover {
+      background: #5a5aaa;
+      border-color: #6a6aba;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(74, 74, 154, 0.4);
+    }
+    
+    .character-sheet {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(30, 30, 50, 0.8);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .section-title {
+      font-family: 'Georgia', serif;
+      color: #ffd700;
+      border-bottom: 2px solid #4a4a6a;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+    
+    .subsection-title {
+      font-family: 'Georgia', serif;
+      color: #a0a0d0;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    
+    @media (max-width: 1024px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .potential-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.6);
+      border-radius: 10px;
+      border: 1px solid #4a4a6a;
+      transition: all 0.3s ease;
+    }
+    
+    .potential-stat:hover {
+      background: rgba(50, 50, 70, 0.7);
+      border-color: #5a5a8a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .instructions {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(40, 40, 60, 0.4);
+      border-radius: 10px;
+    }
+    
+    .instructions h3 {
+      color: #ffd700;
+      margin-top: 0;
+    }
+    
+    .instructions ul {
+      line-height: 1.8;
+    }
+    
+    .instructions code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Consolas', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚔️ Creosmark ⚔️</h1>
+    <p>Character Sheet</p>
+  </div>
+  
+  <div class="view-switch">
+    <button class="view-switch-button" onclick="window.location.href='character-builder.html'">
+      🎲 Edit Character Stats
+    </button>
+  </div>
+  
+  <div class="character-sheet">
+    <h2 class="section-title">📊 Character Potentials</h2>
+    
+    <!-- Physical Stats -->
+    <h3 class="subsection-title">💪 Physical Potentials</h3>
+    <div class="stats-row">
+      <div class="potential-stat">
+        <potential-track id="might-track" label="Might" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+      
+      <div class="potential-stat">
+        <potential-track id="finesse-track" label="Finesse" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+      
+      <div class="potential-stat">
+        <potential-track id="nerve-track" label="Nerve" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+      
+      <div class="potential-stat">
+        <potential-track id="seep-track" label="Seep" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+    </div>
+    
+    <!-- Mental Stats -->
+    <h3 class="subsection-title">🧠 Mental Potentials</h3>
+    <div class="stats-row">
+      <div class="potential-stat">
+        <potential-track id="instinct-track" label="Instinct" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+      
+      <div class="potential-stat">
+        <potential-track id="wit-track" label="Wit" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+      
+      <div class="potential-stat">
+        <potential-track id="heart-track" label="Heart" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+      
+      <div class="potential-stat">
+        <potential-track id="tether-track" label="Tether" score="10" stress="0" resistance="0"></potential-track>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="instructions">
+      <h3>📖 How to Use</h3>
+      <ul>
+        <li><strong>Center circle</strong>: Left-click (or tap) to add stress, right-click (or long-press) to add resistance</li>
+        <li><strong>Nodes</strong>: Click to increment/decrement by 1 on that side</li>
+        <li><strong>Stress</strong> (red) fills from the left - represents damage, exhaustion, or strain</li>
+        <li><strong>Resistance</strong> (green) fills from the right - represents armor, protection, or buffs</li>
+        <li>The center number shows your <strong>potential score</strong> for that stat</li>
+        <li>Total stress + resistance can never exceed your score</li>
+        <li>Keyboard accessible: <code>Tab</code> to navigate, <code>Enter</code>/<code>Space</code> for stress, <code>R</code> for resistance</li>
+        <li><strong>Edit Stats:</strong> Click "Edit Character Stats" to modify your base scores or roll new values</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script type="module" src="src/components/potential-track.js"></script>
+  <script type="module">
+    // Character stats
+    const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
+    
+    // Load stats from localStorage
+    function loadStats() {
+      let hasCorruptedData = false;
+      
+      STATS.forEach(stat => {
+        const savedValue = localStorage.getItem(`character_${stat}`);
+        const track = document.getElementById(`${stat}-track`);
+        
+        if (track && savedValue) {
+          const value = parseInt(savedValue, 10);
+          if (!isNaN(value) && value >= 1 && value <= 18) {
+            track.setAttribute('score', value);
+          } else {
+            hasCorruptedData = true;
+            // Clear corrupted value
+            localStorage.removeItem(`character_${stat}`);
+          }
+        }
+      });
+      
+      // Log warning if corrupted data was found
+      if (hasCorruptedData) {
+        console.warn('Some character stats had invalid values and were reset to defaults.');
+      }
+    }
+    
+    // Save stress and resistance to localStorage
+    function saveTrackState(statName, stress, resistance) {
+      localStorage.setItem(`character_${statName}_stress`, stress);
+      localStorage.setItem(`character_${statName}_resistance`, resistance);
+    }
+    
+    // Load track states from localStorage
+    function loadTrackStates() {
+      STATS.forEach(stat => {
+        const track = document.getElementById(`${stat}-track`);
+        const savedStress = localStorage.getItem(`character_${stat}_stress`);
+        const savedResistance = localStorage.getItem(`character_${stat}_resistance`);
+        
+        if (track) {
+          // Validate stress value
+          if (savedStress) {
+            const stressValue = parseInt(savedStress, 10);
+            if (!isNaN(stressValue) && stressValue >= 0) {
+              track.setAttribute('stress', stressValue);
+            } else {
+              localStorage.removeItem(`character_${stat}_stress`);
+            }
+          }
+          
+          // Validate resistance value
+          if (savedResistance) {
+            const resistanceValue = parseInt(savedResistance, 10);
+            if (!isNaN(resistanceValue) && resistanceValue >= 0) {
+              track.setAttribute('resistance', resistanceValue);
+            } else {
+              localStorage.removeItem(`character_${stat}_resistance`);
+            }
+          }
+        }
+      });
+    }
+    
+    // Add event listeners to save state changes
+    STATS.forEach(stat => {
+      const track = document.getElementById(`${stat}-track`);
+      if (track) {
+        track.addEventListener('stress-changed', (e) => {
+          saveTrackState(stat, e.detail.stress, e.detail.resistance);
+        });
+        
+        track.addEventListener('resistance-changed', (e) => {
+          saveTrackState(stat, e.detail.stress, e.detail.resistance);
+        });
+      }
+    });
+    
+    // Load stats and track states on page load
+    loadStats();
+    loadTrackStates();
+  </script>
+</body>
+</html>
