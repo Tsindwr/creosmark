@@ -151,20 +151,25 @@
     }
 
     .skill-item {
-      display: grid;
-      grid-template-columns: 30px 1fr 60px;
+      display: flex;
+      flex-direction: column;
       gap: 10px;
-      align-items: center;
-      padding: 8px;
-      background: rgba(40, 40, 60, 0.4);
-      border-radius: 6px;
-      border: 1px solid rgba(74, 74, 106, 0.3);
-      transition: all 0.2s ease;
+      padding: 12px;
+      background: rgba(40, 40, 60, 0.5);
+      border-radius: 8px;
+      border: 2px solid rgba(74, 74, 106, 0.3);
+      transition: all 0.3s ease;
     }
 
     .skill-item:hover {
-      background: rgba(50, 50, 70, 0.5);
+      background: rgba(50, 50, 70, 0.6);
       border-color: #6a6a9a;
+    }
+
+    .skill-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .skill-proficiency {
@@ -178,6 +183,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       font-size: 0.75rem;
+      flex-shrink: 0;
     }
 
     .skill-proficiency.proficient {
@@ -197,32 +203,15 @@
     }
 
     .skill-name {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: #e0e0e0;
-      font-weight: 500;
+      font-weight: 600;
+      flex: 1;
     }
 
-    .skill-roll-button {
-      padding: 6px 12px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #fff;
-      background: linear-gradient(135deg, #4a4a9a 0%, #5a5aaa 100%);
-      border: 1px solid #5a5aaa;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: 'Georgia', serif;
-    }
-
-    .skill-roll-button:hover {
-      background: linear-gradient(135deg, #5a5aaa 0%, #6a6aba 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(74, 74, 154, 0.4);
-    }
-
-    .skill-roll-button:active {
-      transform: translateY(0);
+    /* D20 Skill Roller in sidebar */
+    .skill-item d20-skill-roller {
+      width: 100%;
     }
 
     /* Main Content Area - Potentials Grid */
@@ -450,7 +439,8 @@
         <li><strong>Adding Stress/Resistance:</strong> Click the center circle to add stress (left-click) or resistance (right-click)</li>
         <li><strong>Modifying Nodes:</strong> Click individual nodes to increment/decrement stress or resistance</li>
         <li><strong>Skills:</strong> Click the circle next to a skill to cycle proficiency (none → proficient ● → expert ◆)</li>
-        <li><strong>Skill Checks:</strong> Click "Roll" to make a skill check (1d20 + potential modifier + proficiency bonus)</li>
+        <li><strong>Skill Checks:</strong> Click "🎲 Roll D20" to make a skill check using the Sunder "Roll Under" system</li>
+        <li><strong>Roll Results:</strong> Results are color-coded: ⭐ Crit (yellow), ✓ Success (green), ~ Mixed (orange), ✗ Fail (red), 💀 Miff (purple)</li>
         <li><strong>Keyboard Navigation:</strong> Use <code>Tab</code> to navigate, <code>Enter/Space</code> for stress, <code>R</code> for resistance</li>
         <li><strong>Activity Log:</strong> See a history of skill rolls and changes made to your character's potentials</li>
         <li><strong>Edit Character:</strong> Click "Edit Character" to modify base stats, name, and avatar</li>
@@ -460,6 +450,7 @@
 
   <script type="module" src="src/components/app-header.js"></script>
   <script type="module" src="src/components/potential-track.js"></script>
+  <script type="module" src="src/components/d20-skill-roller.js"></script>
   <script type="module">
     import characterStorage from './src/services/character-storage.js';
 
@@ -569,9 +560,18 @@
         SKILLS_BY_POTENTIAL[stat].forEach(skillName => {
           const skillId = `${stat}_${skillName.toLowerCase()}`;
           const proficiency = currentCharacter.skills?.[skillId]?.proficiency || 'none';
+          
+          // Get potential score and resistance for this stat
+          const track = document.getElementById(`${stat}-track`);
+          const potentialScore = track ? parseInt(track.getAttribute('score')) : 10;
+          const resistance = track ? parseInt(track.getAttribute('resistance')) : 0;
 
           const skillItem = document.createElement('div');
           skillItem.className = 'skill-item';
+
+          // Skill header with proficiency and name
+          const skillHeader = document.createElement('div');
+          skillHeader.className = 'skill-header';
 
           // Proficiency indicator
           const profIcon = document.createElement('div');
@@ -587,15 +587,33 @@
           skillLabel.className = 'skill-name';
           skillLabel.textContent = skillName;
 
-          // Roll button
-          const rollButton = document.createElement('button');
-          rollButton.className = 'skill-roll-button';
-          rollButton.textContent = 'Roll';
-          rollButton.addEventListener('click', () => rollSkillCheck(stat, skillName));
+          skillHeader.appendChild(profIcon);
+          skillHeader.appendChild(skillLabel);
+          skillItem.appendChild(skillHeader);
 
-          skillItem.appendChild(profIcon);
-          skillItem.appendChild(skillLabel);
-          skillItem.appendChild(rollButton);
+          // D20 Skill Roller component
+          const roller = document.createElement('d20-skill-roller');
+          roller.setAttribute('skill-name', skillName);
+          roller.setAttribute('potential', potentialScore);
+          roller.setAttribute('resistance', resistance);
+          
+          // Listen for roll results and log them
+          roller.addEventListener('roll-complete', (e) => {
+            const { roll, result } = e.detail;
+            logActivity(
+              `${skillName} Check`,
+              'roll',
+              { 
+                roll, 
+                potential: potentialScore, 
+                resistance, 
+                result: result.level,
+                proficiency
+              }
+            );
+          });
+
+          skillItem.appendChild(roller);
           skillList.appendChild(skillItem);
         });
 
@@ -618,37 +636,6 @@
       currentCharacter.skills[skillId].proficiency = next;
       characterStorage.saveCharacter(currentCharacter);
       renderSkills();
-    }
-
-    // Roll a skill check
-    function rollSkillCheck(potential, skillName) {
-      const potentialScore = currentCharacter.stats?.[potential] || 10;
-      const skillId = `${potential}_${skillName.toLowerCase()}`;
-      const proficiency = currentCharacter.skills?.[skillId]?.proficiency || 'none';
-      
-      // Roll 1d20
-      const roll = Math.floor(Math.random() * 20) + 1;
-      
-      // Calculate modifier from potential score (D&D style)
-      const modifier = Math.floor((potentialScore - 10) / 2);
-      
-      // Add proficiency bonus if applicable
-      let bonus = 0;
-      if (proficiency === 'proficient') bonus = 2;
-      else if (proficiency === 'expert') bonus = 4;
-      
-      const total = roll + modifier + bonus;
-      
-      // Log the roll
-      logActivity(
-        `${skillName} Check`,
-        'roll',
-        { roll, modifier, bonus, total, potential }
-      );
-      
-      // TODO: Replace alert with custom modal that matches app design
-      // Show result with animation
-      alert(`${skillName} Check\n\nRoll: ${roll}\nModifier: ${modifier >= 0 ? '+' : ''}${modifier}\nProficiency: ${bonus >= 0 ? '+' : ''}${bonus}\n\nTotal: ${total}`);
     }
 
     // Load stress and resistance states
