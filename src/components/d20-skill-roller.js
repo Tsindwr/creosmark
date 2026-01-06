@@ -199,15 +199,11 @@ class D20SkillRoller extends HTMLElement {
     if (this._isRolling) return;
     
     this._isRolling = true;
-    const button = this.shadowRoot.querySelector('.roll-button');
     const d20Display = this.shadowRoot.querySelector('.d20-display');
-    const resultDisplay = this.shadowRoot.querySelector('.result-display');
     
-    if (button) button.disabled = true;
-    if (d20Display) d20Display.classList.add('rolling');
-    if (resultDisplay) {
-      resultDisplay.textContent = '';
-      resultDisplay.className = 'result-display';
+    if (d20Display) {
+      d20Display.classList.add('rolling');
+      d20Display.style.pointerEvents = 'none'; // Disable clicking during roll
     }
     
     // Animate rolling for 1 second
@@ -236,8 +232,10 @@ class D20SkillRoller extends HTMLElement {
     this.displayD20(roll);
     this.displayResult(roll, result);
     
-    if (d20Display) d20Display.classList.remove('rolling');
-    if (button) button.disabled = false;
+    if (d20Display) {
+      d20Display.classList.remove('rolling');
+      d20Display.style.pointerEvents = ''; // Re-enable clicking
+    }
     this._isRolling = false;
     
     // Dispatch event with results
@@ -271,23 +269,23 @@ class D20SkillRoller extends HTMLElement {
    * @param {Object} result - The result object
    */
   displayResult(roll, result) {
-    const resultDisplay = this.shadowRoot.querySelector('.result-display');
-    if (resultDisplay) {
-      resultDisplay.textContent = `${result.emoji} ${result.description}`;
-      resultDisplay.style.color = result.color;
-      resultDisplay.style.backgroundColor = result.bgColor;
-      resultDisplay.classList.add('show');
-      
-      if (result.flash) {
-        resultDisplay.classList.add('flash');
-      }
-    }
+    const d20Display = this.shadowRoot.querySelector('.d20-display');
+    const d20Value = this.shadowRoot.querySelector('.d20-value');
     
-    // Update info display
-    const infoDisplay = this.shadowRoot.querySelector('.info-display');
-    if (infoDisplay) {
-      infoDisplay.textContent = `Roll: ${roll} | P: ${this._potential} | R: ${this._resistance}`;
-    }
+    if (!d20Display || !d20Value) return;
+    
+    // Remove any previous result classes
+    d20Display.classList.remove('result-crit', 'result-success', 'result-mixed', 'result-fail', 'result-miff');
+    
+    // Add the appropriate result class
+    const resultClass = `result-${result.level.toLowerCase().replace('_', '-')}`;
+    d20Display.classList.add(resultClass);
+    
+    // Reset to default after 2.5 seconds
+    setTimeout(() => {
+      d20Display.classList.remove('result-crit', 'result-success', 'result-mixed', 'result-fail', 'result-miff');
+      d20Value.textContent = '?';
+    }, 2500);
   }
 
   /**
@@ -302,63 +300,26 @@ class D20SkillRoller extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
-        }
-        
-        .skill-roller-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 15px;
-          padding: 20px;
-          background: var(--skill-roller-bg, rgba(30, 30, 50, 0.8));
-          border-radius: 15px;
-          border: 2px solid var(--skill-roller-border, #4a4a6a);
-          transition: all 0.3s ease;
-        }
-        
-        .skill-roller-container:hover {
-          border-color: var(--skill-roller-border-hover, #6a6a9a);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        }
-        
-        .skill-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: 100%;
-          gap: 10px;
-        }
-        
-        .skill-name {
-          font-size: 18px;
-          font-weight: bold;
-          color: var(--skill-roller-name-color, #ffd700);
-          font-family: var(--skill-roller-font, 'Georgia', serif);
-        }
-        
-        .potential-badge {
-          padding: 4px 12px;
-          background: var(--skill-roller-badge-bg, rgba(70, 70, 110, 0.8));
-          border: 1px solid var(--skill-roller-badge-border, #5a5a8a);
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: bold;
-          color: var(--skill-roller-badge-color, #a0a0d0);
-          font-family: var(--skill-roller-font, 'Georgia', serif);
+          display: inline-block;
         }
         
         .d20-display {
           position: relative;
-          width: 120px;
-          height: 120px;
+          width: 60px;
+          height: 60px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+          background: rgba(255, 255, 255, 0.9);
           clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+          cursor: pointer;
           transition: all 0.3s ease;
+          border: 3px solid rgba(100, 100, 120, 0.5);
+        }
+        
+        .d20-display:hover {
+          transform: scale(1.05);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         
         .d20-display.rolling {
@@ -366,71 +327,58 @@ class D20SkillRoller extends HTMLElement {
         }
         
         .d20-value {
-          font-size: 48px;
+          font-size: 28px;
           font-weight: bold;
+          color: #2a2a4a;
+          font-family: 'Georgia', serif;
+          transition: color 0.3s ease;
+        }
+        
+        /* Result state colors - applied dynamically */
+        .d20-display.result-crit {
+          background: rgba(255, 215, 0, 0.9);
+          border-color: #FFD700;
+        }
+        
+        .d20-display.result-crit .d20-value {
           color: #1a1a2e;
-          font-family: var(--skill-roller-font, 'Georgia', serif);
-          text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
         }
         
-        .roll-button {
-          padding: 12px 30px;
-          font-size: 16px;
-          font-weight: bold;
-          color: var(--skill-roller-button-color, #fff);
-          background: var(--skill-roller-button-bg, #4a4a9a);
-          border: 2px solid var(--skill-roller-button-border, #6a6aba);
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          font-family: var(--skill-roller-font, 'Georgia', serif);
-          text-transform: uppercase;
-          letter-spacing: 1px;
+        .d20-display.result-success {
+          background: rgba(68, 255, 68, 0.9);
+          border-color: #44ff44;
         }
         
-        .roll-button:hover:not(:disabled) {
-          background: var(--skill-roller-button-hover-bg, #5a5aaa);
-          border-color: var(--skill-roller-button-hover-border, #7a7aca);
-          transform: translateY(-2px);
-          box-shadow: 0 6px 12px rgba(74, 74, 154, 0.4);
+        .d20-display.result-success .d20-value {
+          color: #1a1a2e;
         }
         
-        .roll-button:active:not(:disabled) {
-          transform: translateY(0);
-          box-shadow: 0 3px 6px rgba(74, 74, 154, 0.4);
+        .d20-display.result-mixed {
+          background: rgba(255, 165, 0, 0.9);
+          border-color: #FFA500;
+          animation: flash 0.5s ease-in-out 4;
         }
         
-        .roll-button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+        .d20-display.result-mixed .d20-value {
+          color: #1a1a2e;
         }
         
-        .result-display {
-          min-height: 40px;
-          padding: 10px 20px;
-          font-size: 20px;
-          font-weight: bold;
-          border-radius: 8px;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-          font-family: var(--skill-roller-font, 'Georgia', serif);
-          text-align: center;
-          border: 2px solid currentColor;
+        .d20-display.result-fail {
+          background: rgba(255, 68, 68, 0.9);
+          border-color: #ff4444;
         }
         
-        .result-display.show {
-          opacity: 1;
+        .d20-display.result-fail .d20-value {
+          color: #fff;
         }
         
-        .result-display.flash {
-          animation: flash 0.5s ease-in-out infinite;
+        .d20-display.result-miff {
+          background: rgba(153, 102, 204, 0.9);
+          border-color: #9966CC;
         }
         
-        .info-display {
-          font-size: 14px;
-          color: var(--skill-roller-info-color, #a0a0b0);
-          font-family: var(--skill-roller-font, 'Georgia', serif);
-          text-align: center;
+        .d20-display.result-miff .d20-value {
+          color: #fff;
         }
         
         @keyframes spin {
@@ -440,30 +388,24 @@ class D20SkillRoller extends HTMLElement {
         
         @keyframes flash {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          50% { opacity: 0.7; }
         }
       </style>
       
-      <div class="skill-roller-container">
-        <div class="skill-header">
-          <span class="skill-name">${this._skillName}</span>
-          <span class="potential-badge">P: ${this._potential} | R: ${this._resistance}</span>
-        </div>
-        
-        <div class="d20-display">
-          <div class="d20-value">?</div>
-        </div>
-        
-        <button class="roll-button" aria-label="Roll ${this._skillName}">🎲 Roll D20</button>
-        
-        <div class="result-display" role="status" aria-live="polite"></div>
-        <div class="info-display"></div>
+      <div class="d20-display" role="button" tabindex="0" aria-label="Roll ${this._skillName}">
+        <div class="d20-value">?</div>
       </div>
     `;
 
-    // Add event listener to button
-    const button = this.shadowRoot.querySelector('.roll-button');
-    button.addEventListener('click', () => this.performRoll());
+    // Add event listeners for clicking the die itself
+    const display = this.shadowRoot.querySelector('.d20-display');
+    display.addEventListener('click', () => this.performRoll());
+    display.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.performRoll();
+      }
+    });
   }
 }
 

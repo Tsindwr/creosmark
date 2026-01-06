@@ -127,54 +127,57 @@
     .skills-section {
       background: rgba(30, 30, 50, 0.8);
       border: 2px solid #4a4a6a;
-      border-radius: 12px;
-      padding: 15px;
+      border-radius: 10px;
+      padding: 10px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
 
     .skills-section-title {
       font-family: 'Georgia', serif;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #ffd700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin: 0 0 12px 0;
+      margin: 0 0 8px 0;
       font-weight: bold;
       border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-      padding-bottom: 8px;
+      padding-bottom: 6px;
     }
 
     .skill-list {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 8px;
     }
 
     .skill-item {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 12px;
-      background: rgba(40, 40, 60, 0.5);
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      background: rgba(40, 40, 60, 0.4);
       border-radius: 8px;
-      border: 2px solid rgba(74, 74, 106, 0.3);
-      transition: all 0.3s ease;
+      border: 1px solid rgba(74, 74, 106, 0.3);
+      transition: all 0.2s ease;
     }
 
     .skill-item:hover {
-      background: rgba(50, 50, 70, 0.6);
+      background: rgba(50, 50, 70, 0.5);
       border-color: #6a6a9a;
     }
 
     .skill-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+      width: 100%;
+      justify-content: center;
     }
 
     .skill-proficiency {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       border: 2px solid #6a6a9a;
       display: flex;
@@ -182,7 +185,7 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       flex-shrink: 0;
     }
 
@@ -199,70 +202,63 @@
     }
 
     .skill-proficiency:hover {
-      transform: scale(1.1);
+      transform: scale(1.15);
     }
 
     .skill-name {
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       color: #e0e0e0;
       font-weight: 600;
-      flex: 1;
+      text-align: center;
     }
 
-    /* D20 Skill Roller in sidebar */
+    /* D20 Skill Roller in sidebar - compact */
     .skill-item d20-skill-roller {
-      width: 100%;
+      display: flex;
+      justify-content: center;
     }
 
     /* Main Content Area - Potentials Grid */
     .potentials-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .potential-group {
       background: rgba(30, 30, 50, 0.8);
       border: 2px solid #4a4a6a;
       border-radius: 12px;
-      padding: 20px;
+      padding: 15px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
 
-    .potential-group-title {
+    .potentials-grid-title {
       font-family: 'Georgia', serif;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       color: #ffd700;
-      margin: 0 0 20px 0;
-      padding-bottom: 10px;
+      margin: 0 0 15px 0;
+      padding-bottom: 8px;
       border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      text-align: center;
     }
 
-    .potentials-row {
+    .potentials-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
     }
 
     .potential-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 15px;
+      padding: 10px;
       background: rgba(40, 40, 60, 0.4);
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid rgba(74, 74, 106, 0.5);
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
     }
 
     .potential-item:hover {
       background: rgba(50, 50, 70, 0.5);
       border-color: #6a6a9a;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
     }
 
     /* Activity Log */
@@ -270,33 +266,33 @@
       background: rgba(30, 30, 50, 0.8);
       border: 2px solid #4a4a6a;
       border-radius: 12px;
-      padding: 20px;
+      padding: 15px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      margin-top: 25px;
+      margin-top: 20px;
     }
 
     .activity-log-title {
       font-family: 'Georgia', serif;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       color: #ffd700;
-      margin: 0 0 15px 0;
+      margin: 0 0 10px 0;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .activity-log {
       background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      padding: 15px;
-      max-height: 250px;
+      border-radius: 6px;
+      padding: 10px;
+      max-height: 200px;
       overflow-y: auto;
       font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
     .activity-log-entry {
-      padding: 8px 0;
+      padding: 6px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       justify-content: space-between;
@@ -327,26 +323,57 @@
       padding: 20px;
     }
 
-    /* Instructions */
+    /* Instructions - Collapsible */
     .instructions {
       background: rgba(30, 30, 50, 0.6);
       border: 2px solid rgba(74, 74, 106, 0.5);
       border-radius: 12px;
-      padding: 20px;
-      margin-top: 25px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    .instructions-header {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0;
+      margin: 0;
     }
 
     .instructions h3 {
       font-family: 'Georgia', serif;
       color: #ffd700;
-      margin-top: 0;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .instructions-toggle {
+      color: #ffd700;
       font-size: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .instructions-toggle.open {
+      transform: rotate(180deg);
+    }
+
+    .instructions-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .instructions-content.open {
+      max-height: 500px;
+      margin-top: 10px;
     }
 
     .instructions ul {
-      line-height: 1.8;
+      line-height: 1.6;
       margin: 0;
       padding-left: 25px;
+      font-size: 0.9rem;
     }
 
     .instructions code {
@@ -383,41 +410,31 @@
 
       <!-- Main Content: Potentials -->
       <div class="potentials-grid">
-        <!-- Physical Potentials -->
-        <div class="potential-group">
-          <h2 class="potential-group-title">💪 Physical Potentials</h2>
-          <div class="potentials-row">
-            <div class="potential-item">
-              <potential-track id="might-track" label="Might" score="10" stress="0" resistance="0"></potential-track>
-            </div>
-            <div class="potential-item">
-              <potential-track id="finesse-track" label="Finesse" score="10" stress="0" resistance="0"></potential-track>
-            </div>
-            <div class="potential-item">
-              <potential-track id="nerve-track" label="Nerve" score="10" stress="0" resistance="0"></potential-track>
-            </div>
-            <div class="potential-item">
-              <potential-track id="seep-track" label="Seep" score="10" stress="0" resistance="0"></potential-track>
-            </div>
+        <h2 class="potentials-grid-title">⚡ Potentials</h2>
+        <div class="potentials-container">
+          <div class="potential-item">
+            <potential-track id="might-track" label="Might" score="10" stress="0" resistance="0"></potential-track>
           </div>
-        </div>
-
-        <!-- Mental Potentials -->
-        <div class="potential-group">
-          <h2 class="potential-group-title">🧠 Mental Potentials</h2>
-          <div class="potentials-row">
-            <div class="potential-item">
-              <potential-track id="instinct-track" label="Instinct" score="10" stress="0" resistance="0"></potential-track>
-            </div>
-            <div class="potential-item">
-              <potential-track id="wit-track" label="Wit" score="10" stress="0" resistance="0"></potential-track>
-            </div>
-            <div class="potential-item">
-              <potential-track id="heart-track" label="Heart" score="10" stress="0" resistance="0"></potential-track>
-            </div>
-            <div class="potential-item">
-              <potential-track id="tether-track" label="Tether" score="10" stress="0" resistance="0"></potential-track>
-            </div>
+          <div class="potential-item">
+            <potential-track id="finesse-track" label="Finesse" score="10" stress="0" resistance="0"></potential-track>
+          </div>
+          <div class="potential-item">
+            <potential-track id="nerve-track" label="Nerve" score="10" stress="0" resistance="0"></potential-track>
+          </div>
+          <div class="potential-item">
+            <potential-track id="seep-track" label="Seep" score="10" stress="0" resistance="0"></potential-track>
+          </div>
+          <div class="potential-item">
+            <potential-track id="instinct-track" label="Instinct" score="10" stress="0" resistance="0"></potential-track>
+          </div>
+          <div class="potential-item">
+            <potential-track id="wit-track" label="Wit" score="10" stress="0" resistance="0"></potential-track>
+          </div>
+          <div class="potential-item">
+            <potential-track id="heart-track" label="Heart" score="10" stress="0" resistance="0"></potential-track>
+          </div>
+          <div class="potential-item">
+            <potential-track id="tether-track" label="Tether" score="10" stress="0" resistance="0"></potential-track>
           </div>
         </div>
       </div>
@@ -433,18 +450,18 @@
 
     <!-- Instructions -->
     <div class="instructions">
-      <h3>📖 How to Use the Character Sheet</h3>
-      <ul>
-        <li><strong>Potential Tracks:</strong> Each track shows your character's potential score with stress (red) and resistance (green)</li>
-        <li><strong>Adding Stress/Resistance:</strong> Click the center circle to add stress (left-click) or resistance (right-click)</li>
-        <li><strong>Modifying Nodes:</strong> Click individual nodes to increment/decrement stress or resistance</li>
-        <li><strong>Skills:</strong> Click the circle next to a skill to cycle proficiency (none → proficient ● → expert ◆)</li>
-        <li><strong>Skill Checks:</strong> Click "🎲 Roll D20" to make a skill check using the Sunder "Roll Under" system</li>
-        <li><strong>Roll Results:</strong> Results are color-coded: ⭐ Crit (yellow), ✓ Success (green), ~ Mixed (orange), ✗ Fail (red), 💀 Miff (purple)</li>
-        <li><strong>Keyboard Navigation:</strong> Use <code>Tab</code> to navigate, <code>Enter/Space</code> for stress, <code>R</code> for resistance</li>
-        <li><strong>Activity Log:</strong> See a history of skill rolls and changes made to your character's potentials</li>
-        <li><strong>Edit Character:</strong> Click "Edit Character" to modify base stats, name, and avatar</li>
-      </ul>
+      <div class="instructions-header" onclick="toggleInstructions()">
+        <h3>📖 How to Use the Character Sheet</h3>
+        <span class="instructions-toggle" id="instructions-toggle">▼</span>
+      </div>
+      <div class="instructions-content" id="instructions-content">
+        <ul>
+          <li><strong>Skills:</strong> Click hexagon D20 to roll. Color shows result (yellow=crit, green=success, orange=mixed, red=fail, purple=miff)</li>
+          <li><strong>Proficiency:</strong> Click circle next to skill name to cycle (none → proficient ● → expert ◆)</li>
+          <li><strong>Potentials:</strong> Click center to add stress/resistance. Click nodes to modify.</li>
+          <li><strong>Activity Log:</strong> See history of rolls and changes</li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -469,6 +486,23 @@
     };
 
     let currentCharacter = null;
+
+    // Toggle instructions visibility
+    function toggleInstructions() {
+      const content = document.getElementById('instructions-content');
+      const toggle = document.getElementById('instructions-toggle');
+      
+      if (content.classList.contains('open')) {
+        content.classList.remove('open');
+        toggle.classList.remove('open');
+      } else {
+        content.classList.add('open');
+        toggle.classList.add('open');
+      }
+    }
+    
+    // Make function globally accessible
+    window.toggleInstructions = toggleInstructions;
 
     // Get character ID from URL
     function getCharacterId() {
