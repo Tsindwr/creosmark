@@ -221,7 +221,18 @@ class CharacterStorage {
         tether: 10
       },
       stress: {},
-      resistance: {}
+      resistance: {},
+      volatilityDice: {
+        might: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        finesse: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        nerve: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        seep: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        instinct: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        wit: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        heart: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] },
+        tether: { dieSize: 'd4', perkSlots: {}, isCharged: false, purchasedPerks: [] }
+      },
+      beats: 0 // Currency for purchasing perks
     };
 
     return this._saveLocalCharacter(character);
