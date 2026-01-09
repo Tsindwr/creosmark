@@ -98,6 +98,23 @@ potential-track {
 }
 ```
 
+## Features
+
+### Volatility Dice & Perks System
+
+The Volatility System allows players to enhance their Test rolls with special dice that can have perks assigned to them:
+
+- **Die Progression**: D4 → D6 → D8 → D10 → D12 with increasing perk slots (2, 4, 6, 8, 10)
+- **Six Perk Types**:
+  - **Refresh** (2 Beats): Remove 1 Stress
+  - **Implode** (2 Beats): Roll one die level below
+  - **Cleave** (3 Beats): Roll 2 dice, take furthest from middle
+  - **Drive** (3 Beats): Reroll the die
+  - **Burn** (5 Beats): Spend 1 Resistance for max value
+  - **Fracture** (5 Beats): Conditional min/max based on jinx threshold
+- **Charge System**: Exploding dice that level up when conditions are met
+- **Jinx Threshold**: Risk/reward mechanic tied to stress levels
+
 ## Running the Demo
 
 Start a local server to view the demo:
@@ -107,6 +124,10 @@ npm start
 ```
 
 Then open `http://localhost:3000` in your browser.
+
+**Available Demos:**
+- `index.html` - Main character sheet demo
+- `volatility-demo.html` - Interactive volatility dice & perks demonstration
 
 ## Running Tests
 
@@ -118,16 +139,33 @@ npm test
 
 ```
 creosmark/
-├── index.html                    # Demo page
-├── package.json                  # Project configuration
-├── README.md                     # This file
+├── index.html                           # Main demo page
+├── volatility-demo.html                 # Volatility system demo
+├── character-sheet.html                 # Character sheet interface
+├── package.json                         # Project configuration
+├── README.md                            # This file
 ├── src/
 │   ├── components/
-│   │   └── potential-track.js   # The Potential Track web component
+│   │   ├── potential-track.js          # Potential Track web component
+│   │   ├── d20-skill-roller.js         # D20 skill test roller
+│   │   ├── dice-roller.js              # General dice rolling
+│   │   ├── volatility-roller.js        # Volatility die roller with perks
+│   │   └── app-header.js               # Application header
+│   ├── services/
+│   │   ├── character-storage.js        # Character data persistence
+│   │   ├── command-manager.js          # Undo/redo system
+│   │   ├── perk.js                     # Perk system implementation
+│   │   ├── volatility-die.js           # Volatility die management
+│   │   └── volatility-roller.js        # Rolling service
 │   └── css/
-│       └── potential-track.css  # Theme styles
+│       └── potential-track.css         # Theme styles
 └── tests/
-    └── potential-track.test.js  # Unit tests
+    ├── potential-track.test.js         # Potential track tests
+    ├── dice-roller.test.js             # Dice roller tests
+    ├── d20-skill-roller.test.js        # D20 roller tests
+    ├── command-manager.test.js         # Command system tests
+    ├── perk.test.js                    # Perk system tests (21 tests)
+    └── volatility-die.test.js          # Volatility die tests (33 tests)
 ```
 
 ## Browser Support
