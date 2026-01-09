@@ -2,36 +2,55 @@
 
 Campaign sessions allow players to connect and share roll results in real-time using peer-to-peer connections.
 
+## Important: Works Across Networks/Internet
+
+**This feature works for remote play, not just LAN!** The P2P connections use STUN servers for NAT traversal, allowing players to connect from anywhere on the internet. No server hosting or port forwarding required for basic functionality.
+
+## Getting Started
+
+### For Game Masters (GMs)
+
+1. Navigate to the **Campaigns** tab in the header
+2. Click **Create Campaign**
+3. Give your campaign a name
+4. (Optional) Associate a character as the GM
+5. Click **Start Campaign** to begin hosting
+6. Share the 6-character session code with your players
+7. The campaign stays saved - you can stop and restart it later with the same configuration
+
+### For Players
+
+1. Open your character sheet
+2. Click the **Connect to Campaign** button in the character header
+3. Enter the 6-character session code from your GM
+4. Click **Connect**
+5. Your rolls will now be shared with all connected players
+6. The connection persists as you navigate between pages
+
 ## Features
 
 - **Real-time Roll Sharing**: All skill roll results are automatically broadcast to connected players
+- **Campaign Management**: GMs can save campaigns and reuse session codes
+- **Separate GM Screen**: GMs manage campaigns from the dedicated Campaigns page
 - **Session Persistence**: Your connection persists as you navigate between pages
 - **No Server Required**: Uses WebRTC for direct peer-to-peer connections
+- **Works Across Networks**: Not limited to LAN - works for remote play over the internet
 - **Easy Session Codes**: Share simple 6-character codes to let players join
-
-## How to Use
-
-### As a Game Master (GM)
-
-1. Open your character sheet
-2. Click the "CAMPAIGN" button on the right side of the screen
-3. Click "Create Session (GM)"
-4. Share the 6-character session code with your players
-5. Players will appear in the player list as they join
-6. All roll results from connected players will appear in the activity log
-
-### As a Player
-
-1. Open your character sheet
-2. Click the "CAMPAIGN" button on the right side of the screen
-3. Enter the session code provided by your GM
-4. Click "Join Session"
-5. Your rolls will now be shared with all connected players
 
 ## Features in Detail
 
-### Player List
-Shows all connected players with their character names and avatars. The GM is marked with "Game Master" role.
+### Campaign Management (GMs)
+GMs can create, save, and manage multiple campaigns from the Campaigns page. Each campaign:
+- Has a unique name and optional GM character association
+- Can be started/stopped to host sessions
+- Retains its configuration for reuse
+- Generates a new session code each time it's started
+
+### Player Connection
+Players connect from their character sheet using a simple button in the header. The connection:
+- Shows a status indicator when connected
+- Persists across page navigation
+- Automatically broadcasts all skill rolls
 
 ### Activity Log
 Displays the most recent 100 roll results from all connected players, including:
