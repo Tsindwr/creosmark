@@ -172,9 +172,10 @@ class D20SkillRoller extends HTMLElement {
   }
 
   /**
-   * Apply volatility modifier to success level
-   * According to the rules, volatility can modify the success level.
-   * The specific mapping will depend on the volatility result and the base success level.
+   * Apply volatility information to the result
+   * Note: The actual success level modification based on volatility
+   * will be implemented when the perk system is complete.
+   * For now, this adds volatility info to the description.
    * 
    * @param {Object} result - The D20 roll result
    * @param {Object} volatility - The volatility roll result
@@ -186,8 +187,7 @@ class D20SkillRoller extends HTMLElement {
     // Create a copy of the result to modify
     const modifiedResult = { ...result };
     
-    // For now, we'll add the volatility info to the result
-    // The exact modification rules can be refined based on game mechanics
+    // Add volatility info to the result
     modifiedResult.volatility = volatility;
     
     // Add modifier info to description

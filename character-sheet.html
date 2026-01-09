@@ -580,6 +580,14 @@
 
     // Load character data into the page
     function loadCharacterData() {
+      // Initialize volatility data if not present
+      if (!currentCharacter.volatility) {
+        currentCharacter.volatility = {};
+        STATS.forEach(stat => {
+          currentCharacter.volatility[stat] = { dieSize: 4 }; // Default to d4
+        });
+      }
+      
       // Set character name and avatar
       document.getElementById('character-name').textContent = currentCharacter.name || 'Unnamed Character';
       document.getElementById('character-avatar').textContent = currentCharacter.avatar || '🧙';

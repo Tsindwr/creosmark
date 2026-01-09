@@ -137,7 +137,7 @@ class VolatilityDiceRoller extends HTMLElement {
    * A die explodes when:
    * - It rolls max value
    * - Jinx threshold equals die_size - 1
-   * - The character has the Charge perk for this die
+   * Note: Requires the Charge perk to be purchased (not yet implemented)
    * @returns {boolean} True if conditions allow exploding
    */
   canExplode() {
