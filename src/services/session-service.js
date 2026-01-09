@@ -77,7 +77,7 @@ class SessionService {
         this.playerInfo = playerInfo;
 
         // Generate unique player ID
-        const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+        const playerId = 'player_' + Math.random().toString(36).substring(2, 11);
 
         this.peer = new Peer(playerId, {
           config: {
@@ -207,7 +207,7 @@ class SessionService {
       isGM: this.isGM,
       playerInfo: this.playerInfo,
       connectedPlayers: Array.from(this.connections.keys()),
-      isConnected: this.peer && !this.peer.destroyed
+      isConnected: this.peer && !this.peer.destroyed && this.peer.disconnected === false
     };
   }
 
