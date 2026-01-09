@@ -986,14 +986,14 @@
         info.isGM
       );
 
-      // For now, just show current player
-      // This will be expanded when players send their info
+      // Get player list from session service
       if (info.isConnected) {
-        const players = [{
-          name: currentCharacter?.name || 'You',
-          avatar: currentCharacter?.avatar || '🧙',
-          isGM: info.isGM
-        }];
+        const playerList = sessionService.getPlayerList();
+        const players = playerList.map(p => ({
+          name: p.info?.name || 'Unknown',
+          avatar: p.info?.avatar || '🧙',
+          isGM: p.isGM
+        }));
         
         campaignPanel.updatePlayers(players);
       }

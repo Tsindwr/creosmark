@@ -8,6 +8,7 @@ class SessionService {
   constructor() {
     this.peer = null;
     this.connections = new Map(); // playerId -> connection
+    this.players = new Map(); // playerId -> player info
     this.isGM = false;
     this.sessionId = null;
     this.playerInfo = null;
@@ -143,6 +144,7 @@ class SessionService {
     // Close all connections
     this.connections.forEach(conn => conn.close());
     this.connections.clear();
+    this.players.clear();
 
     // Destroy peer
     if (this.peer) {
@@ -210,6 +212,16 @@ class SessionService {
   }
 
   /**
+   * Get list of all players in session (including self)
+   */
+  getPlayerList() {
+    if (!this.peer || this.peer.destroyed) {
+      return [];
+    }
+    return this._getPlayerList();
+  }
+
+  /**
    * Get activity log
    */
   getActivityLog() {
@@ -267,7 +279,16 @@ class SessionService {
     conn.on('close', () => {
       console.log('Connection closed with:', conn.peer);
       this.connections.delete(conn.peer);
+      this.players.delete(conn.peer);
       this._notifyListeners('player-left', { playerId: conn.peer });
+      
+      // GM broadcasts updated player list
+      if (this.isGM) {
+        this._broadcast({
+          type: 'player-list-update',
+          players: this._getPlayerList()
+        });
+      }
     });
 
     conn.on('error', (err) => {
@@ -280,17 +301,20 @@ class SessionService {
 
     switch (data.type) {
       case 'player-joined':
+        // Store player info
+        this.players.set(conn.peer, data.player);
+        
         this._notifyListeners('player-joined', { 
           playerId: conn.peer, 
           player: data.player 
         });
         
-        // GM broadcasts to all other players
+        // GM sends updated player list to everyone
         if (this.isGM) {
           this._broadcast({
             type: 'player-list-update',
             players: this._getPlayerList()
-          }, conn.peer);
+          });
         }
         break;
 
@@ -309,6 +333,13 @@ class SessionService {
         break;
 
       case 'player-list-update':
+        // Update local player list
+        if (data.players) {
+          this.players.clear();
+          data.players.forEach(p => {
+            this.players.set(p.id, p.info);
+          });
+        }
         this._notifyListeners('player-list-updated', data);
         break;
 
@@ -355,11 +386,11 @@ class SessionService {
       }
     ];
 
-    // Add connected players (this will be expanded when players send their info)
-    this.connections.forEach((conn, peerId) => {
+    // Add connected players with their info
+    this.players.forEach((info, peerId) => {
       players.push({
         id: peerId,
-        info: { name: 'Player' }, // Will be updated when player sends info
+        info: info,
         isGM: false
       });
     });
