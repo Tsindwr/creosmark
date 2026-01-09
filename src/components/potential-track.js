@@ -1,5 +1,4 @@
 import { 
-  VALID_DIE_SIZES, 
   getPerkSlotCount, 
   getAvailableSlots, 
   abbreviatePerk,

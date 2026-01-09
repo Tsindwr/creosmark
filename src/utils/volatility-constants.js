@@ -64,7 +64,7 @@ export function getPerkSlotCount(dieSize) {
 }
 
 /**
- * Get available slot numbers for a given die size (excluding min and max values)
+ * Get available slot numbers for a given die size (excluding values 1 and the die's maximum value)
  * @param {number} dieSize - The die size (4, 6, 8, 10, or 12)
  * @returns {Array<number>} Array of available slot numbers
  */

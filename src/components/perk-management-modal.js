@@ -218,7 +218,7 @@ class PerkManagementModal extends HTMLElement {
             ${perkName ? `
               <div class="assigned-perk">
                 <strong>${perkName}</strong>
-                <p class="perk-desc">${PERKS[perkName].description}</p>
+                <p class="perk-desc">${PERKS[perkName]?.description || 'Description not available'}</p>
               </div>
             ` : `
               <div class="empty-slot">
