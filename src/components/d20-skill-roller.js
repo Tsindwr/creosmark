@@ -6,12 +6,12 @@
  * - Success level determination based on Sunder "Roll Under" rules
  * - Color-coded results (Crit, Miff, Success, Mixed, Fail)
  * - Resistance-based thresholds
- * - Volatility dice support (future feature)
+ * - Volatility dice support with proficiency integration
  * - Event dispatching for roll results
  */
 class D20SkillRoller extends HTMLElement {
   static get observedAttributes() {
-    return ['skill-name', 'potential', 'resistance', 'volatility'];
+    return ['skill-name', 'potential', 'resistance', 'proficiency', 'volatility-die-size', 'stress'];
   }
 
   constructor() {
@@ -20,7 +20,10 @@ class D20SkillRoller extends HTMLElement {
     this._skillName = 'Skill';
     this._potential = 10;
     this._resistance = 0;
-    this._volatility = 0; // For future implementation
+    this._proficiency = 'none'; // 'none', 'proficient', 'expert'
+    this._volatilityDieSize = 4; // d4, d6, d8, d10, d12
+    this._stress = 0;
+    this._additionalVolatilityDice = 0; // User-selected additional dice
     this._isRolling = false;
     this._lastRoll = null;
   }
@@ -42,8 +45,19 @@ class D20SkillRoller extends HTMLElement {
       case 'resistance':
         this._resistance = parseInt(newValue, 10) || 0;
         break;
-      case 'volatility':
-        this._volatility = parseInt(newValue, 10) || 0;
+      case 'proficiency':
+        if (['none', 'proficient', 'expert'].includes(newValue)) {
+          this._proficiency = newValue;
+        }
+        break;
+      case 'volatility-die-size':
+        const size = parseInt(newValue, 10);
+        if ([4, 6, 8, 10, 12].includes(size)) {
+          this._volatilityDieSize = size;
+        }
+        break;
+      case 'stress':
+        this._stress = parseInt(newValue, 10) || 0;
         break;
     }
     
@@ -74,16 +88,132 @@ class D20SkillRoller extends HTMLElement {
     this.setAttribute('resistance', value);
   }
 
-  get volatility() {
-    return this._volatility;
+  get proficiency() {
+    return this._proficiency;
   }
 
-  set volatility(value) {
-    this.setAttribute('volatility', value);
+  set proficiency(value) {
+    this.setAttribute('proficiency', value);
+  }
+
+  get volatilityDieSize() {
+    return this._volatilityDieSize;
+  }
+
+  set volatilityDieSize(value) {
+    this.setAttribute('volatility-die-size', value);
+  }
+
+  get stress() {
+    return this._stress;
+  }
+
+  set stress(value) {
+    this.setAttribute('stress', value);
+  }
+
+  get additionalVolatilityDice() {
+    return this._additionalVolatilityDice;
+  }
+
+  set additionalVolatilityDice(value) {
+    this._additionalVolatilityDice = Math.max(0, parseInt(value, 10) || 0);
+    this.updateVolatilityDisplay();
   }
 
   get lastRoll() {
     return this._lastRoll;
+  }
+
+  /**
+   * Calculate the total volatility pool size based on proficiency and additional dice
+   * @returns {number} Total number of volatility dice to roll
+   */
+  getVolatilityPoolSize() {
+    let poolSize = 0;
+    
+    // Add dice from proficiency
+    if (this._proficiency === 'proficient') {
+      poolSize += 1;
+    } else if (this._proficiency === 'expert') {
+      poolSize += 2;
+    }
+    
+    // Add additional dice selected by user
+    poolSize += this._additionalVolatilityDice;
+    
+    return poolSize;
+  }
+
+  /**
+   * Roll volatility dice
+   * @returns {Object|null} Volatility roll result or null if no volatility dice
+   */
+  rollVolatility() {
+    const poolSize = this.getVolatilityPoolSize();
+    if (poolSize === 0) return null;
+    
+    const rolls = [];
+    for (let i = 0; i < poolSize; i++) {
+      rolls.push(Math.floor(Math.random() * this._volatilityDieSize) + 1);
+    }
+    
+    const highestValue = Math.max(...rolls);
+    const jinxThreshold = Math.min(this._stress, this._volatilityDieSize - 1);
+    const isJinxed = highestValue <= jinxThreshold && highestValue > 0;
+    
+    return {
+      rolls,
+      highestValue,
+      jinxThreshold,
+      isJinxed,
+      dieSize: this._volatilityDieSize
+    };
+  }
+
+  /**
+   * Apply volatility modifier to success level
+   * According to the rules, volatility can modify the success level.
+   * The specific mapping will depend on the volatility result and the base success level.
+   * 
+   * @param {Object} result - The D20 roll result
+   * @param {Object} volatility - The volatility roll result
+   * @returns {Object} Modified result
+   */
+  applyVolatilityModifier(result, volatility) {
+    if (!volatility) return result;
+    
+    // Create a copy of the result to modify
+    const modifiedResult = { ...result };
+    
+    // For now, we'll add the volatility info to the result
+    // The exact modification rules can be refined based on game mechanics
+    modifiedResult.volatility = volatility;
+    
+    // Add modifier info to description
+    if (volatility.isJinxed) {
+      modifiedResult.description += ` (Volatility Jinxed: ${volatility.highestValue})`;
+    } else {
+      modifiedResult.description += ` (Volatility: ${volatility.highestValue})`;
+    }
+    
+    return modifiedResult;
+  }
+
+  /**
+   * Update the volatility display in the UI
+   */
+  updateVolatilityDisplay() {
+    const display = this.shadowRoot.querySelector('.volatility-info');
+    if (display) {
+      const poolSize = this.getVolatilityPoolSize();
+      if (poolSize > 0) {
+        display.textContent = `${poolSize}d${this._volatilityDieSize}`;
+        display.style.display = 'block';
+      } else {
+        display.style.display = 'none';
+      }
+    }
   }
 
   /**
@@ -217,15 +347,22 @@ class D20SkillRoller extends HTMLElement {
       await this.sleep(frameInterval);
     }
     
-    // Final roll
+    // Final D20 roll
     const roll = this.rollD20();
-    const result = this.determineSuccess(roll, this._potential, this._resistance);
+    let result = this.determineSuccess(roll, this._potential, this._resistance);
+    
+    // Roll volatility if applicable
+    const volatility = this.rollVolatility();
+    if (volatility) {
+      result = this.applyVolatilityModifier(result, volatility);
+    }
     
     this._lastRoll = {
       roll,
       potential: this._potential,
       resistance: this._resistance,
-      result
+      result,
+      volatility
     };
     
     // Display results
@@ -245,7 +382,9 @@ class D20SkillRoller extends HTMLElement {
         roll,
         potential: this._potential,
         resistance: this._resistance,
-        result
+        result,
+        volatility,
+        proficiency: this._proficiency
       },
       bubbles: true,
       composed: true
@@ -297,10 +436,20 @@ class D20SkillRoller extends HTMLElement {
   }
 
   render() {
+    const poolSize = this.getVolatilityPoolSize();
+    const hasVolatility = poolSize > 0;
+    
     this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: inline-block;
+        }
+        
+        .skill-roller-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 5px;
         }
         
         .d20-display {
@@ -332,6 +481,45 @@ class D20SkillRoller extends HTMLElement {
           color: #2a2a4a;
           font-family: 'Georgia', serif;
           transition: color 0.3s ease;
+        }
+        
+        .volatility-controls {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 10px;
+          color: #9a7aca;
+        }
+        
+        .volatility-info {
+          font-weight: bold;
+          font-family: 'Georgia', serif;
+          display: ${hasVolatility ? 'block' : 'none'};
+        }
+        
+        .volatility-button {
+          width: 18px;
+          height: 18px;
+          font-size: 12px;
+          padding: 0;
+          background: rgba(154, 122, 202, 0.3);
+          border: 1px solid #9a7aca;
+          border-radius: 3px;
+          cursor: pointer;
+          color: #9a7aca;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .volatility-button:hover {
+          background: rgba(154, 122, 202, 0.5);
+          transform: scale(1.1);
+        }
+        
+        .volatility-button:active {
+          transform: scale(0.95);
         }
         
         /* Result state colors - applied dynamically */
@@ -392,8 +580,15 @@ class D20SkillRoller extends HTMLElement {
         }
       </style>
       
-      <div class="d20-display" role="button" tabindex="0" aria-label="Roll ${this._skillName}">
-        <div class="d20-value">?</div>
+      <div class="skill-roller-container">
+        <div class="d20-display" role="button" tabindex="0" aria-label="Roll ${this._skillName}">
+          <div class="d20-value">?</div>
+        </div>
+        <div class="volatility-controls">
+          <button class="volatility-button" data-action="decrease" aria-label="Remove volatility die" title="Remove volatility die">-</button>
+          <span class="volatility-info">${poolSize}d${this._volatilityDieSize}</span>
+          <button class="volatility-button" data-action="increase" aria-label="Add volatility die" title="Add volatility die">+</button>
+        </div>
       </div>
     `;
 
@@ -405,6 +600,24 @@ class D20SkillRoller extends HTMLElement {
         e.preventDefault();
         this.performRoll();
       }
+    });
+    
+    // Add event listeners for volatility buttons
+    const decreaseBtn = this.shadowRoot.querySelector('[data-action="decrease"]');
+    const increaseBtn = this.shadowRoot.querySelector('[data-action="increase"]');
+    
+    decreaseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this._additionalVolatilityDice > 0) {
+        this._additionalVolatilityDice--;
+        this.updateVolatilityDisplay();
+      }
+    });
+    
+    increaseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._additionalVolatilityDice++;
+      this.updateVolatilityDisplay();
     });
   }
 }
