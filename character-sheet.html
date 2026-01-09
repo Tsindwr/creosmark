@@ -631,6 +631,10 @@
           const track = document.getElementById(`${stat}-track`);
           const potentialScore = track ? parseInt(track.getAttribute('score')) : 10;
           const resistance = track ? parseInt(track.getAttribute('resistance')) : 0;
+          const stress = track ? parseInt(track.getAttribute('stress')) : 0;
+          
+          // Get volatility die size for this potential (default to d4)
+          const volatilityDieSize = currentCharacter.volatility?.[stat]?.dieSize || 4;
 
           const skillItem = document.createElement('div');
           skillItem.className = 'skill-item';
@@ -657,15 +661,18 @@
           skillHeader.appendChild(skillLabel);
           skillItem.appendChild(skillHeader);
 
-          // D20 Skill Roller component
+          // D20 Skill Roller component with volatility support
           const roller = document.createElement('d20-skill-roller');
           roller.setAttribute('skill-name', skillName);
           roller.setAttribute('potential', potentialScore);
           roller.setAttribute('resistance', resistance);
+          roller.setAttribute('proficiency', proficiency);
+          roller.setAttribute('volatility-die-size', volatilityDieSize);
+          roller.setAttribute('stress', stress);
           
           // Listen for roll results and log them
           roller.addEventListener('roll-complete', (e) => {
-            const { roll, result } = e.detail;
+            const { roll, result, volatility } = e.detail;
             logActivity(
               `${skillName} Check`,
               'roll',
@@ -674,7 +681,8 @@
                 potential: potentialScore, 
                 resistance, 
                 result: result.level,
-                proficiency
+                proficiency,
+                volatility
               }
             );
           });
@@ -839,7 +847,20 @@
       if (type === 'roll') {
         message.className = 'activity-roll';
         message.style.color = '#66aaff';
-        message.textContent = `${trackName}: ${detail.roll} + ${detail.modifier} + ${detail.bonus} = ${detail.total}`;
+        
+        // Format roll result
+        let rollText = `${trackName}: D20=${detail.roll} → ${detail.result}`;
+        
+        // Add volatility info if present
+        if (detail.volatility) {
+          const volRolls = detail.volatility.rolls.join(', ');
+          rollText += ` | Vol: [${volRolls}] → ${detail.volatility.highestValue}`;
+          if (detail.volatility.isJinxed) {
+            rollText += ' (Jinxed!)';
+          }
+        }
+        
+        message.textContent = rollText;
       } else if (type === 'stress') {
         message.className = 'activity-stress';
         message.textContent = `${trackName}: Stress ${detail.stress}/${detail.resistance}`;
