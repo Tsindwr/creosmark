@@ -4,6 +4,21 @@ A character sheet builder tool for Sunder players to use online.
 
 ## Features
 
+### Campaign Sessions (NEW!)
+
+Connect with other players in real-time to share roll results using peer-to-peer connections.
+
+**Key Features:**
+- **Session Creation**: GMs can create sessions with shareable 6-character codes
+- **Join Sessions**: Players join with a simple session code
+- **Real-time Roll Sharing**: All skill rolls are broadcast to connected players
+- **Player List**: See all connected players with their names and avatars
+- **Activity Log**: View recent rolls from all players
+- **Session Persistence**: Connection persists across page navigation
+- **No Server Required**: Direct peer-to-peer connections via WebRTC
+
+See [CAMPAIGN_SESSIONS.md](CAMPAIGN_SESSIONS.md) for detailed usage instructions.
+
 ### Potential Track Component
 
 A custom web element (`<potential-track>`) for tracking character potential scores with stress and resistance mechanics.
