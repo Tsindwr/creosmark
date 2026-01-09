@@ -47,6 +47,48 @@ class AppHeader extends HTMLElement {
           transform: translateY(-2px);
         }
 
+        .header-nav {
+          display: flex;
+          gap: 5px;
+          align-items: center;
+        }
+
+        .nav-tab {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 20px;
+          background: rgba(40, 40, 60, 0.4);
+          border: 2px solid rgba(74, 74, 106, 0.3);
+          border-radius: 8px;
+          color: #a0a0b0;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          font-family: 'Georgia', serif;
+          font-size: 0.95rem;
+        }
+
+        .nav-tab:hover {
+          background: rgba(50, 50, 70, 0.5);
+          border-color: rgba(106, 106, 154, 0.5);
+          color: #e0e0e0;
+          transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+          background: linear-gradient(135deg, rgba(74, 74, 154, 0.6) 0%, rgba(90, 90, 170, 0.6) 100%);
+          border-color: #ffd700;
+          color: #ffd700;
+        }
+
+        .nav-icon {
+          font-size: 1.2rem;
+        }
+
+        .nav-label {
+          font-weight: 600;
+        }
+
         .logo {
           font-size: 2rem;
           filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
@@ -145,6 +187,21 @@ class AppHeader extends HTMLElement {
           .subtitle {
             display: none;
           }
+
+          .header-nav {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .nav-label {
+            display: none;
+          }
+
+          .nav-tab {
+            flex: 1;
+            justify-content: center;
+            padding: 10px;
+          }
         }
       </style>
 
@@ -156,6 +213,17 @@ class AppHeader extends HTMLElement {
             <p class="subtitle">Character Management</p>
           </div>
         </div>
+
+        <nav class="header-nav" id="header-nav">
+          <a href="character-chooser.html" class="nav-tab" id="nav-characters">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Characters</span>
+          </a>
+          <a href="campaigns.html" class="nav-tab" id="nav-campaigns">
+            <span class="nav-icon">🎲</span>
+            <span class="nav-label">Campaigns</span>
+          </a>
+        </nav>
 
         <div class="header-right">
           <div class="storage-badge" id="storage-badge">Local Storage</div>
@@ -223,6 +291,20 @@ class AppHeader extends HTMLElement {
       logoutButton.style.display = 'none';
       storageBadge.textContent = 'Local Storage';
       storageBadge.style.borderColor = '#6a4a9a';
+    }
+  }
+
+  setActiveTab(tabName) {
+    const navCharacters = this.shadowRoot.getElementById('nav-characters');
+    const navCampaigns = this.shadowRoot.getElementById('nav-campaigns');
+    
+    navCharacters.classList.remove('active');
+    navCampaigns.classList.remove('active');
+    
+    if (tabName === 'characters') {
+      navCharacters.classList.add('active');
+    } else if (tabName === 'campaigns') {
+      navCampaigns.classList.add('active');
     }
   }
 }

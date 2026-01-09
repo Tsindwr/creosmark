@@ -390,6 +390,10 @@
     async function init() {
       await characterStorage.initialize();
       
+      // Set active tab in header
+      const header = document.querySelector('app-header');
+      header.setActiveTab('characters');
+
       // Try to migrate old character data
       const migrated = characterStorage.migrateCurrentCharacter();
       if (migrated) {

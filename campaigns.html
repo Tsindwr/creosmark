@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campaigns - Creosmark</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .page-title {
+      font-family: 'Georgia', serif;
+      font-size: 2.5rem;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .page-subtitle {
+      text-align: center;
+      color: #a0a0b0;
+      font-size: 1.1rem;
+      margin-bottom: 40px;
+    }
+
+    .campaigns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .campaign-card {
+      background: rgba(30, 30, 50, 0.8);
+      border: 2px solid #4a4a6a;
+      border-radius: 15px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .campaign-card:hover {
+      border-color: #6a6a9a;
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .campaign-card.active {
+      border-color: #4a9a4a;
+      background: rgba(30, 50, 30, 0.8);
+    }
+
+    .campaign-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .campaign-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      border: 3px solid #ffd700;
+      background: linear-gradient(135deg, #2a2a4a 0%, #3a3a6a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .campaign-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .campaign-name {
+      font-family: 'Georgia', serif;
+      font-size: 1.3rem;
+      color: #ffd700;
+      margin: 0 0 5px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .campaign-meta {
+      font-size: 0.85rem;
+      color: #a0a0b0;
+      margin: 0;
+    }
+
+    .campaign-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    .campaign-status.active {
+      background: rgba(74, 154, 74, 0.3);
+      border: 1px solid #4a9a4a;
+      color: #66ff66;
+    }
+
+    .campaign-status.inactive {
+      background: rgba(106, 106, 154, 0.3);
+      border: 1px solid #6a6a9a;
+      color: #a0a0b0;
+    }
+
+    .session-code-display {
+      font-family: 'Consolas', monospace;
+      font-size: 1.2rem;
+      color: #ffd700;
+      text-align: center;
+      letter-spacing: 3px;
+      padding: 10px;
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    .campaign-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: stretch;
+    }
+
+    .campaign-button {
+      flex: 1;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #fff;
+      border: 2px solid;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .start-button {
+      background: linear-gradient(135deg, #2a6a4a 0%, #3a7a5a 100%);
+      border-color: #3a7a5a;
+    }
+
+    .start-button:hover {
+      background: linear-gradient(135deg, #3a7a5a 0%, #4a8a6a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(42, 106, 74, 0.4);
+    }
+
+    .stop-button {
+      background: linear-gradient(135deg, #9a4a4a 0%, #aa5a5a 100%);
+      border-color: #aa5a5a;
+    }
+
+    .stop-button:hover {
+      background: linear-gradient(135deg, #aa5a5a 0%, #ba6a6a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(154, 74, 74, 0.4);
+    }
+
+    .edit-button {
+      background: linear-gradient(135deg, #4a4a9a 0%, #5a5aaa 100%);
+      border-color: #5a5aaa;
+    }
+
+    .edit-button:hover {
+      background: linear-gradient(135deg, #5a5aaa 0%, #6a6aba 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(74, 74, 154, 0.4);
+    }
+
+    .delete-button {
+      padding: 10px 15px;
+      font-size: 14px;
+      color: #ff6666;
+      background: rgba(139, 0, 0, 0.3);
+      border: 2px solid #ff4444;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .delete-button:hover {
+      background: rgba(139, 0, 0, 0.5);
+      border-color: #ff6666;
+      transform: translateY(-2px);
+    }
+
+    .new-campaign-card {
+      background: rgba(40, 40, 60, 0.4);
+      border: 3px dashed #6a6a9a;
+      border-radius: 15px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-height: 200px;
+    }
+
+    .new-campaign-card:hover {
+      background: rgba(50, 50, 70, 0.5);
+      border-color: #ffd700;
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .new-campaign-icon {
+      font-size: 4rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    }
+
+    .new-campaign-text {
+      font-family: 'Georgia', serif;
+      font-size: 1.3rem;
+      color: #e0e0e0;
+      text-align: center;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .empty-state-icon {
+      font-size: 5rem;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    }
+
+    .empty-state-title {
+      font-family: 'Georgia', serif;
+      font-size: 2rem;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    .empty-state-description {
+      font-size: 1.1rem;
+      color: #a0a0b0;
+      margin-bottom: 30px;
+    }
+
+    .create-first-button {
+      display: inline-block;
+      padding: 15px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(135deg, #4a4a9a 0%, #6a6aba 100%);
+      border: 2px solid #5a5aaa;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+      text-decoration: none;
+    }
+
+    .create-first-button:hover {
+      background: linear-gradient(135deg, #5a5aaa 0%, #7a7aca 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74, 74, 154, 0.5);
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: rgba(30, 30, 50, 0.95);
+      border: 2px solid #6a6a9a;
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-family: 'Georgia', serif;
+      font-size: 1.8rem;
+      color: #ffd700;
+      margin: 0 0 20px 0;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      color: #a0a0b0;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #4a4a6a;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 1rem;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #ffd700;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-button {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border: 2px solid;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+    }
+
+    .confirm-button {
+      color: #fff;
+      background: linear-gradient(135deg, #4a4a9a 0%, #5a5aaa 100%);
+      border-color: #5a5aaa;
+    }
+
+    .confirm-button:hover {
+      background: linear-gradient(135deg, #5a5aaa 0%, #6a6aba 100%);
+    }
+
+    .cancel-button {
+      color: #fff;
+      background: linear-gradient(135deg, #4a4a6a 0%, #5a5a7a 100%);
+      border-color: #5a5a7a;
+    }
+
+    .cancel-button:hover {
+      background: linear-gradient(135deg, #5a5a7a 0%, #6a6a8a 100%);
+    }
+
+    @media (max-width: 768px) {
+      .campaigns-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title {
+        font-size: 2rem;
+      }
+
+      .campaign-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <app-header></app-header>
+
+  <div class="main-content">
+    <h1 class="page-title">Campaign Management</h1>
+    <p class="page-subtitle">Create and manage your campaigns</p>
+
+    <div id="campaigns-container">
+      <!-- Campaigns will be loaded here -->
+    </div>
+  </div>
+
+  <!-- Edit Campaign Modal -->
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="modal-title" id="modal-title">Edit Campaign</h2>
+      <form id="campaign-form">
+        <div class="form-group">
+          <label for="campaign-name">Campaign Name</label>
+          <input type="text" id="campaign-name" required maxlength="50">
+        </div>
+        <div class="form-group">
+          <label for="gm-character">GM Character (Optional)</label>
+          <select id="gm-character">
+            <option value="">-- None --</option>
+          </select>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="modal-button cancel-button" id="cancel-edit">Cancel</button>
+          <button type="submit" class="modal-button confirm-button">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="modal-title">Delete Campaign?</h2>
+      <p>Are you sure you want to delete <strong id="delete-campaign-name"></strong>?</p>
+      <p style="color: #ff6666;">This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button class="modal-button cancel-button" id="cancel-delete">Cancel</button>
+        <button class="modal-button confirm-button stop-button" id="confirm-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PeerJS for P2P connections -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <script type="module" src="src/components/app-header.js"></script>
+  <script type="module">
+    import campaignStorage from './src/services/campaign-storage.js';
+    import characterStorage from './src/services/character-storage.js';
+    import sessionService from './src/services/session-service.js';
+
+    let campaigns = [];
+    let characters = [];
+    let editingCampaignId = null;
+    let deleteTargetId = null;
+
+    // Initialize
+    async function init() {
+      await characterStorage.initialize();
+      
+      // Set active tab in header
+      const header = document.querySelector('app-header');
+      header.setActiveTab('campaigns');
+
+      await loadCampaigns();
+      await loadCharacters();
+      setupEventListeners();
+    }
+
+    // Load campaigns
+    async function loadCampaigns() {
+      campaigns = campaignStorage.getCampaigns();
+      renderCampaigns();
+    }
+
+    // Load characters for GM selection
+    async function loadCharacters() {
+      characters = await characterStorage.getCharacters();
+    }
+
+    // Render campaign cards
+    function renderCampaigns() {
+      const container = document.getElementById('campaigns-container');
+      
+      if (campaigns.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🎲</div>
+            <h2 class="empty-state-title">No Campaigns Yet</h2>
+            <p class="empty-state-description">Create your first campaign to start hosting games</p>
+            <button class="create-first-button" onclick="createNewCampaign()">Create Campaign</button>
+          </div>
+        `;
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'campaigns-grid';
+
+      // Add existing campaigns
+      campaigns.forEach(campaign => {
+        const card = createCampaignCard(campaign);
+        grid.appendChild(card);
+      });
+
+      // Add "new campaign" card
+      const newCard = createNewCampaignCard();
+      grid.appendChild(newCard);
+
+      container.innerHTML = '';
+      container.appendChild(grid);
+    }
+
+    // Create campaign card
+    function createCampaignCard(campaign) {
+      const card = document.createElement('div');
+      card.className = `campaign-card ${campaign.isActive ? 'active' : ''}`;
+
+      const updatedDate = campaign.updatedAt ? new Date(campaign.updatedAt).toLocaleDateString() : 'Unknown';
+      const statusClass = campaign.isActive ? 'active' : 'inactive';
+      const statusText = campaign.isActive ? 'Active' : 'Inactive';
+
+      card.innerHTML = `
+        <div class="campaign-header">
+          <div class="campaign-icon">🎲</div>
+          <div class="campaign-info">
+            <h3 class="campaign-name">${escapeHtml(campaign.name || 'Unnamed Campaign')}</h3>
+            <p class="campaign-meta">Last updated: ${updatedDate}</p>
+            <span class="campaign-status ${statusClass}">${statusText}</span>
+          </div>
+        </div>
+        ${campaign.sessionCode ? `
+          <div class="session-code-display">${campaign.sessionCode}</div>
+        ` : ''}
+        <div class="campaign-actions">
+          ${campaign.isActive ? `
+            <button class="campaign-button stop-button" data-id="${campaign.id}">
+              🛑 Stop Campaign
+            </button>
+          ` : `
+            <button class="campaign-button start-button" data-id="${campaign.id}">
+              ▶️ Start Campaign
+            </button>
+          `}
+          <button class="campaign-button edit-button" data-id="${campaign.id}">
+            ✏️ Edit
+          </button>
+          <button class="delete-button" data-id="${campaign.id}" data-name="${escapeHtml(campaign.name || 'Unnamed Campaign')}">
+            🗑️
+          </button>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // Create "new campaign" card
+    function createNewCampaignCard() {
+      const card = document.createElement('div');
+      card.className = 'new-campaign-card';
+      card.innerHTML = `
+        <div class="new-campaign-icon">➕</div>
+        <div class="new-campaign-text">Create New Campaign</div>
+      `;
+      card.addEventListener('click', createNewCampaign);
+      return card;
+    }
+
+    // Create new campaign
+    function createNewCampaign() {
+      const campaign = campaignStorage.createDefaultCampaign();
+      editingCampaignId = null;
+      showEditModal(campaign);
+    }
+
+    // Show edit modal
+    function showEditModal(campaign) {
+      const modal = document.getElementById('edit-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const nameInput = document.getElementById('campaign-name');
+      const characterSelect = document.getElementById('gm-character');
+
+      modalTitle.textContent = campaign.id ? 'Edit Campaign' : 'Create Campaign';
+      nameInput.value = campaign.name || '';
+      
+      // Populate character select
+      characterSelect.innerHTML = '<option value="">-- None --</option>';
+      characters.forEach(char => {
+        const option = document.createElement('option');
+        option.value = char.id;
+        option.textContent = char.name || 'Unnamed Character';
+        if (campaign.gmCharacterId === char.id) {
+          option.selected = true;
+        }
+        characterSelect.appendChild(option);
+      });
+
+      editingCampaignId = campaign.id || null;
+      modal.classList.add('active');
+    }
+
+    // Hide edit modal
+    function hideEditModal() {
+      document.getElementById('edit-modal').classList.remove('active');
+      editingCampaignId = null;
+    }
+
+    // Save campaign
+    function saveCampaign(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('campaign-name').value.trim();
+      const gmCharacterId = document.getElementById('gm-character').value || null;
+
+      let campaign;
+      if (editingCampaignId) {
+        campaign = campaignStorage.getCampaign(editingCampaignId);
+      } else {
+        campaign = campaignStorage.createDefaultCampaign();
+      }
+
+      campaign.name = name;
+      campaign.gmCharacterId = gmCharacterId;
+
+      campaignStorage.saveCampaign(campaign);
+      hideEditModal();
+      loadCampaigns();
+    }
+
+    // Start campaign
+    async function startCampaign(campaignId) {
+      const campaign = campaignStorage.getCampaign(campaignId);
+      if (!campaign) return;
+
+      try {
+        // Get GM character info if set
+        let playerInfo = { name: 'GM', avatar: '🎲' };
+        if (campaign.gmCharacterId) {
+          const gmChar = await characterStorage.getCharacter(campaign.gmCharacterId);
+          if (gmChar) {
+            playerInfo = {
+              name: gmChar.name || 'GM',
+              avatar: gmChar.avatar || '🎲'
+            };
+          }
+        }
+
+        // Initialize as GM
+        const sessionId = await sessionService.initAsGM(playerInfo);
+        
+        // Update campaign
+        campaign.sessionCode = sessionId;
+        campaign.isActive = true;
+        campaignStorage.saveCampaign(campaign);
+        campaignStorage.setActiveCampaign(campaignId);
+
+        loadCampaigns();
+      } catch (error) {
+        console.error('Error starting campaign:', error);
+        alert('Failed to start campaign: ' + error.message);
+      }
+    }
+
+    // Stop campaign
+    function stopCampaign(campaignId) {
+      const campaign = campaignStorage.getCampaign(campaignId);
+      if (!campaign) return;
+
+      // Leave session
+      sessionService.leaveSession();
+
+      // Update campaign
+      campaign.isActive = false;
+      campaign.sessionCode = null;
+      campaignStorage.saveCampaign(campaign);
+
+      loadCampaigns();
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Header navigation
+      document.querySelector('app-header').addEventListener('navigate-home', () => {
+        window.location.href = 'character-chooser.html';
+      });
+
+      // Login/logout (placeholder)
+      document.querySelector('app-header').addEventListener('login-request', () => {
+        alert('Supabase login coming soon!');
+      });
+
+      document.querySelector('app-header').addEventListener('logout-request', () => {
+        alert('Logout functionality coming soon!');
+      });
+
+      // Campaign form
+      document.getElementById('campaign-form').addEventListener('submit', saveCampaign);
+      document.getElementById('cancel-edit').addEventListener('click', hideEditModal);
+
+      // Delete modal
+      document.getElementById('cancel-delete').addEventListener('click', hideDeleteModal);
+      document.getElementById('confirm-delete').addEventListener('click', confirmDelete);
+
+      // Close modal on backdrop click
+      document.getElementById('edit-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'edit-modal') {
+          hideEditModal();
+        }
+      });
+
+      document.getElementById('delete-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'delete-modal') {
+          hideDeleteModal();
+        }
+      });
+
+      // Campaign action buttons (using event delegation)
+      document.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        const campaignId = target.dataset.id;
+        if (!campaignId) return;
+
+        if (target.classList.contains('start-button')) {
+          startCampaign(campaignId);
+        } else if (target.classList.contains('stop-button')) {
+          stopCampaign(campaignId);
+        } else if (target.classList.contains('edit-button')) {
+          const campaign = campaignStorage.getCampaign(campaignId);
+          if (campaign) showEditModal(campaign);
+        } else if (target.classList.contains('delete-button')) {
+          deleteTargetId = campaignId;
+          const campaignName = target.dataset.name;
+          showDeleteModal(campaignName);
+        }
+      });
+    }
+
+    // Show delete modal
+    function showDeleteModal(campaignName) {
+      document.getElementById('delete-campaign-name').textContent = campaignName;
+      document.getElementById('delete-modal').classList.add('active');
+    }
+
+    // Hide delete modal
+    function hideDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('active');
+      deleteTargetId = null;
+    }
+
+    // Confirm delete
+    function confirmDelete() {
+      if (deleteTargetId) {
+        const campaign = campaignStorage.getCampaign(deleteTargetId);
+        if (campaign && campaign.isActive) {
+          sessionService.leaveSession();
+        }
+        campaignStorage.deleteCampaign(deleteTargetId);
+        hideDeleteModal();
+        loadCampaigns();
+      }
+    }
+
+    // Utility function
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Make createNewCampaign available globally
+    window.createNewCampaign = createNewCampaign;
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

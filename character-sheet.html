@@ -97,6 +97,56 @@
       box-shadow: 0 4px 12px rgba(74, 74, 154, 0.4);
     }
 
+    .action-button.campaign-button {
+      background: linear-gradient(135deg, #2a6a4a 0%, #3a7a5a 100%);
+      border-color: #3a7a5a;
+    }
+
+    .action-button.campaign-button:hover {
+      background: linear-gradient(135deg, #3a7a5a 0%, #4a8a6a 100%);
+      box-shadow: 0 4px 12px rgba(42, 106, 74, 0.4);
+    }
+
+    .action-button.campaign-button.connected {
+      background: linear-gradient(135deg, #9a4a4a 0%, #aa5a5a 100%);
+      border-color: #aa5a5a;
+    }
+
+    .action-button.campaign-button.connected:hover {
+      background: linear-gradient(135deg, #aa5a5a 0%, #ba6a6a 100%);
+      box-shadow: 0 4px 12px rgba(154, 74, 74, 0.4);
+    }
+
+    .campaign-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(74, 154, 74, 0.2);
+      border: 1px solid #4a9a4a;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .campaign-status .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4a9a4a;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .campaign-status .status-text {
+      color: #66ff66;
+      font-weight: 600;
+    }
+
     /* Main Stats Layout */
     .stats-layout {
       display: grid;
@@ -387,7 +437,6 @@
 </head>
 <body>
   <app-header></app-header>
-  <campaign-panel id="campaign-panel"></campaign-panel>
 
   <div class="main-content">
     <!-- Character Header -->
@@ -396,8 +445,13 @@
       <div class="character-info">
         <h1 class="character-name" id="character-name">Loading...</h1>
         <p class="character-meta">Last Updated: <span id="character-updated">-</span></p>
+        <div id="campaign-status" class="campaign-status" style="display: none;">
+          <span class="status-indicator"></span>
+          <span class="status-text">Connected to Campaign</span>
+        </div>
       </div>
       <div class="action-buttons">
+        <button id="connect-campaign-button" class="action-button campaign-button">🎲 Connect to Campaign</button>
         <button id="undo-button" class="action-button" disabled style="opacity: 0.5;">↶ Undo</button>
         <a href="#" id="edit-character-button" class="action-button">✏️ Edit Character</a>
       </div>
@@ -467,17 +521,32 @@
     </div>
   </div>
 
+  <!-- Campaign Connection Modal -->
+  <div id="campaign-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: rgba(30, 30, 50, 0.95); border: 2px solid #6a6a9a; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+      <h2 style="font-family: 'Georgia', serif; font-size: 1.8rem; color: #ffd700; margin: 0 0 20px 0;">Connect to Campaign</h2>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.9rem; color: #a0a0b0; margin-bottom: 8px; font-weight: 600;">Session Code</label>
+        <input type="text" id="campaign-code-input" placeholder="ABC123" maxlength="6" style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.3); border: 1px solid #4a4a6a; border-radius: 6px; color: #e0e0e0; font-size: 1.2rem; font-family: 'Consolas', monospace; text-transform: uppercase; letter-spacing: 2px; text-align: center;">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button id="cancel-connect" style="flex: 1; padding: 12px 20px; font-size: 16px; font-weight: bold; color: #fff; background: linear-gradient(135deg, #4a4a6a 0%, #5a5a7a 100%); border: 2px solid #5a5a7a; border-radius: 8px; cursor: pointer; font-family: 'Georgia', serif;">Cancel</button>
+        <button id="confirm-connect" style="flex: 1; padding: 12px 20px; font-size: 16px; font-weight: bold; color: #fff; background: linear-gradient(135deg, #4a4a9a 0%, #5a5aaa 100%); border: 2px solid #5a5aaa; border-radius: 8px; cursor: pointer; font-family: 'Georgia', serif;">Connect</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PeerJS for P2P connections -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <script type="module" src="src/components/app-header.js"></script>
   <script type="module" src="src/components/potential-track.js"></script>
   <script type="module" src="src/components/d20-skill-roller.js"></script>
-  <script type="module" src="src/components/campaign-panel.js"></script>
   <script type="module">
     import characterStorage from './src/services/character-storage.js';
     import commandManager from './src/services/command-manager.js';
     import sessionService from './src/services/session-service.js';
+    import campaignStorage from './src/services/campaign-storage.js';
 
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
     
@@ -577,7 +646,7 @@
         setupUndoButton();
         loadTrackStates();
         initPreviousStates();
-        setupCampaignPanel();
+        setupCampaignConnection();
       } catch (error) {
         console.error('Error initializing character sheet:', error);
         alert('Error loading character: ' + error.message);
@@ -879,48 +948,37 @@
 
     // ============ Campaign Session Integration ============
     
-    const campaignPanel = document.getElementById('campaign-panel');
+    const connectButton = document.getElementById('connect-campaign-button');
+    const campaignStatus = document.getElementById('campaign-status');
+    const campaignModal = document.getElementById('campaign-modal');
+    const campaignCodeInput = document.getElementById('campaign-code-input');
+    const confirmConnectBtn = document.getElementById('confirm-connect');
+    const cancelConnectBtn = document.getElementById('cancel-connect');
     
-    // Setup campaign panel event listeners
-    function setupCampaignPanel() {
-      campaignPanel.addEventListener('create-session', async () => {
-        try {
-          const playerInfo = {
-            name: currentCharacter.name || 'Unnamed Character',
-            avatar: currentCharacter.avatar || '🧙',
-            characterId: currentCharacter.id
-          };
-          
-          const sessionId = await sessionService.initAsGM(playerInfo);
-          updateCampaignPanel();
-          console.log('Created session:', sessionId);
-        } catch (error) {
-          console.error('Error creating session:', error);
-          alert('Failed to create session: ' + error.message);
+    // Setup campaign connection
+    function setupCampaignConnection() {
+      // Connect button handler
+      connectButton.addEventListener('click', () => {
+        const info = sessionService.getSessionInfo();
+        if (info.isConnected) {
+          // Disconnect
+          if (confirm('Disconnect from campaign?')) {
+            sessionService.leaveSession();
+            updateConnectionUI();
+          }
+        } else {
+          // Show connect modal
+          showConnectModal();
         }
       });
 
-      campaignPanel.addEventListener('join-session', async (e) => {
-        try {
-          const sessionId = e.detail.sessionId;
-          const playerInfo = {
-            name: currentCharacter.name || 'Unnamed Character',
-            avatar: currentCharacter.avatar || '🧙',
-            characterId: currentCharacter.id
-          };
-          
-          await sessionService.joinSession(sessionId, playerInfo);
-          updateCampaignPanel();
-          console.log('Joined session:', sessionId);
-        } catch (error) {
-          console.error('Error joining session:', error);
-          alert('Failed to join session: ' + error.message);
+      // Modal handlers
+      confirmConnectBtn.addEventListener('click', connectToCampaign);
+      cancelConnectBtn.addEventListener('click', hideConnectModal);
+      campaignModal.addEventListener('click', (e) => {
+        if (e.target === campaignModal) {
+          hideConnectModal();
         }
-      });
-
-      campaignPanel.addEventListener('leave-session', () => {
-        sessionService.leaveSession();
-        updateCampaignPanel();
       });
 
       // Listen to session events
@@ -928,75 +986,94 @@
         console.log('Session event:', event, data);
         
         switch (event) {
-          case 'session-created':
           case 'session-joined':
-          case 'player-joined':
-          case 'player-left':
-          case 'player-list-updated':
-            updateCampaignPanel();
+            hideConnectModal();
+            updateConnectionUI();
+            break;
+            
+          case 'session-left':
+            updateConnectionUI();
             break;
             
           case 'roll-received':
-            updateCampaignPanel();
             logSessionActivity(data);
-            break;
-            
-          case 'activity-added':
-            updateCampaignPanel();
             break;
             
           case 'error':
             console.error('Session error:', data.error);
+            alert('Connection error: ' + data.error);
             break;
         }
       });
 
       // Try to restore previous session
       const savedSession = sessionService.restoreSession();
-      if (savedSession && currentCharacter) {
+      if (savedSession && currentCharacter && !savedSession.isGM) {
         console.log('Found saved session, attempting to reconnect...');
-        // Attempt to reconnect
         const playerInfo = {
           name: currentCharacter.name || 'Unnamed Character',
           avatar: currentCharacter.avatar || '🧙',
           characterId: currentCharacter.id
         };
         
-        if (savedSession.isGM) {
-          sessionService.initAsGM(playerInfo).catch(err => {
-            console.log('Could not restore GM session:', err);
-          });
-        } else {
-          sessionService.joinSession(savedSession.sessionId, playerInfo).catch(err => {
-            console.log('Could not restore player session:', err);
-          });
-        }
+        sessionService.joinSession(savedSession.sessionId, playerInfo).catch(err => {
+          console.log('Could not restore session:', err);
+        });
+      }
+
+      updateConnectionUI();
+    }
+
+    // Show connect modal
+    function showConnectModal() {
+      campaignCodeInput.value = '';
+      campaignModal.style.display = 'flex';
+      campaignCodeInput.focus();
+    }
+
+    // Hide connect modal
+    function hideConnectModal() {
+      campaignModal.style.display = 'none';
+    }
+
+    // Connect to campaign
+    async function connectToCampaign() {
+      const code = campaignCodeInput.value.trim().toUpperCase();
+      
+      if (!code || code.length !== 6) {
+        alert('Please enter a valid 6-character session code');
+        return;
+      }
+
+      try {
+        const playerInfo = {
+          name: currentCharacter.name || 'Unnamed Character',
+          avatar: currentCharacter.avatar || '🧙',
+          characterId: currentCharacter.id
+        };
+        
+        await sessionService.joinSession(code, playerInfo);
+        console.log('Connected to campaign:', code);
+      } catch (error) {
+        console.error('Error joining campaign:', error);
+        alert('Failed to connect to campaign: ' + error.message);
       }
     }
 
-    // Update campaign panel with current session state
-    function updateCampaignPanel() {
+    // Update connection UI
+    function updateConnectionUI() {
       const info = sessionService.getSessionInfo();
       
-      campaignPanel.updateConnectionStatus(
-        info.isConnected,
-        info.sessionId,
-        info.isGM
-      );
-
-      // Get player list from session service
       if (info.isConnected) {
-        const playerList = sessionService.getPlayerList();
-        const players = playerList.map(p => ({
-          name: p.info?.name || 'Unknown',
-          avatar: p.info?.avatar || '🧙',
-          isGM: p.isGM
-        }));
-        
-        campaignPanel.updatePlayers(players);
+        connectButton.textContent = '🛑 Disconnect';
+        connectButton.classList.add('connected');
+        campaignStatus.style.display = 'flex';
+        campaignStatus.querySelector('.status-text').textContent = `Connected: ${info.sessionId}`;
+      } else {
+        connectButton.textContent = '🎲 Connect to Campaign';
+        connectButton.classList.remove('connected');
+        campaignStatus.style.display = 'none';
       }
-
-      campaignPanel.updateActivityLog(sessionService.getActivityLog());
     }
 
     // Log session activity to local activity log
