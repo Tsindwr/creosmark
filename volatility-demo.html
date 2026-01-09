@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volatility Roller Demo - Creosmark</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .demo-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .info-section {
+      background: rgba(40, 40, 60, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 2px solid rgba(100, 100, 150, 0.5);
+    }
+
+    .roller-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: rgba(102, 126, 234, 0.8);
+      color: white;
+      border: 2px solid rgba(102, 126, 234, 1);
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: rgba(118, 75, 162, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .perk-list {
+      background: rgba(30, 30, 50, 0.6);
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .perk-item {
+      padding: 8px;
+      margin: 5px 0;
+      background: rgba(50, 50, 70, 0.5);
+      border-radius: 4px;
+      border-left: 3px solid #667eea;
+    }
+
+    .perk-name {
+      color: #ffd700;
+      font-weight: bold;
+    }
+
+    .perk-cost {
+      color: #aaa;
+      font-size: 0.9em;
+    }
+
+    .event-log {
+      background: rgba(20, 20, 30, 0.8);
+      padding: 15px;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+      border-left: 2px solid #667eea;
+      padding-left: 10px;
+    }
+
+    .log-entry.exploded {
+      border-left-color: #ffd700;
+      background: rgba(255, 215, 0, 0.1);
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1>⚡ Volatility Roller Demo</h1>
+
+    <div class="info-section">
+      <h2>About Volatility Dice & Perks</h2>
+      <p>
+        Volatility Dice represent a character's experience and control over specific actions.
+        Each die can have perks assigned to specific slot numbers, which activate when you roll that value.
+      </p>
+      <p>
+        <strong>Die Sizes:</strong> D4 (2 slots) → D6 (4 slots) → D8 (6 slots) → D10 (8 slots) → D12 (10 slots)
+      </p>
+      <p>
+        <strong>Jinx Threshold:</strong> When stress is high and you roll low, bad things can happen!
+        Slots in the jinx threshold (≤ stress) are highlighted in red.
+      </p>
+    </div>
+
+    <div class="info-section">
+      <h2>Available Perks</h2>
+      <div class="perk-list">
+        <div class="perk-item">
+          <span class="perk-name">Refresh</span> <span class="perk-cost">(2 Beats)</span>
+          - Remove 1 Stress from this Potential's track
+        </div>
+        <div class="perk-item">
+          <span class="perk-name">Implode</span> <span class="perk-cost">(2 Beats)</span>
+          - Roll one die level below your current die size and take the result
+        </div>
+        <div class="perk-item">
+          <span class="perk-name">Cleave</span> <span class="perk-cost">(3 Beats)</span>
+          - Roll 2 dice, take the result furthest from the middle
+        </div>
+        <div class="perk-item">
+          <span class="perk-name">Drive</span> <span class="perk-cost">(3 Beats)</span>
+          - Reroll the kept die and take the resulting value
+        </div>
+        <div class="perk-item">
+          <span class="perk-name">Burn</span> <span class="perk-cost">(5 Beats)</span>
+          - Spend 1 Resistance for an automatic max Volatility value
+        </div>
+        <div class="perk-item">
+          <span class="perk-name">Fracture</span> <span class="perk-cost">(5 Beats)</span>
+          - In jinx threshold: minimum value. Outside: maximum value
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h2>Demo Volatility Dice</h2>
+      <div class="controls">
+        <button id="addStressBtn">Add Stress</button>
+        <button id="removeStressBtn">Remove Stress</button>
+        <button id="addResistanceBtn">Add Resistance</button>
+        <button id="removeResistanceBtn">Remove Resistance</button>
+        <button id="upgradeDieBtn">Upgrade Die (D4→D6)</button>
+        <button id="resetBtn">Reset Demo</button>
+      </div>
+      <div class="roller-grid" id="rollerGrid"></div>
+    </div>
+
+    <div class="info-section">
+      <h2>Event Log</h2>
+      <div class="event-log" id="eventLog"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import './src/components/volatility-roller.js';
+    import { VolatilityDie } from './src/services/volatility-die.js';
+    import { PerkFactory } from './src/services/perk.js';
+
+    // Demo state
+    let stress = 0;
+    let resistance = 2;
+    let dieSize = 'd4';
+
+    // Mock potential track
+    const mockTrack = {
+      stress: 0,
+      resistance: 2,
+      removeStress() {
+        if (this.stress > 0) {
+          this.stress--;
+          stress--;
+          updateDisplay();
+          return true;
+        }
+        return false;
+      },
+      removeResistance() {
+        if (this.resistance > 0) {
+          this.resistance--;
+          resistance--;
+          updateDisplay();
+          return true;
+        }
+        return false;
+      }
+    };
+
+    function createDemoRollers() {
+      const grid = document.getElementById('rollerGrid');
+      grid.innerHTML = '';
+
+      // Create demo dice with different configurations
+      const configs = [
+        {
+          name: 'Basic D4',
+          dieSize: 'd4',
+          perks: {}
+        },
+        {
+          name: 'D4 with Refresh',
+          dieSize: 'd4',
+          perks: { 2: 'Refresh', 3: 'Drive' }
+        },
+        {
+          name: 'D6 with Perks',
+          dieSize: 'd6',
+          perks: { 2: 'Implode', 3: 'Cleave', 4: 'Burn', 5: 'Fracture' }
+        },
+        {
+          name: 'D8 Advanced',
+          dieSize: 'd8',
+          perks: { 2: 'Refresh', 3: 'Implode', 4: 'Cleave', 5: 'Drive', 6: 'Burn', 7: 'Fracture' }
+        }
+      ];
+
+      configs.forEach(config => {
+        const roller = document.createElement('volatility-roller');
+        roller.setAttribute('potential-name', config.name);
+        roller.setAttribute('stress', stress);
+        roller.setAttribute('resistance', resistance);
+
+        const die = new VolatilityDie(config.dieSize);
+        Object.entries(config.perks).forEach(([slot, perk]) => {
+          try {
+            die.assignPerk(parseInt(slot), perk, 10);
+          } catch (e) {
+            console.error(`Failed to assign ${perk} to slot ${slot}:`, e);
+          }
+        });
+
+        roller.volatilityDie = die;
+
+        // Listen for roll events
+        roller.addEventListener('volatility-roll-complete', (e) => {
+          logEvent(e.detail);
+        });
+
+        grid.appendChild(roller);
+      });
+    }
+
+    function logEvent(detail) {
+      const log = document.getElementById('eventLog');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      
+      if (detail.result.exploded) {
+        entry.classList.add('exploded');
+      }
+
+      const timestamp = new Date().toLocaleTimeString();
+      let message = `[${timestamp}] <strong>${detail.potentialName}</strong>: `;
+      
+      if (detail.result.exploded) {
+        message += `💥 DIE EXPLODED! ${detail.result.explosionResult.message}`;
+      } else {
+        message += `Rolled ${detail.result.initialRoll} → Final: ${detail.result.finalValue}`;
+        if (detail.result.perkActivated) {
+          message += ` (<code>${detail.result.perkActivated}</code> activated)`;
+        }
+      }
+
+      entry.innerHTML = message;
+      log.insertBefore(entry, log.firstChild);
+
+      // Keep only last 20 entries
+      while (log.children.length > 20) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    function updateDisplay() {
+      mockTrack.stress = stress;
+      mockTrack.resistance = resistance;
+      
+      // Update all rollers
+      document.querySelectorAll('volatility-roller').forEach(roller => {
+        roller.setAttribute('stress', stress);
+        roller.setAttribute('resistance', resistance);
+      });
+
+      logEvent({
+        potentialName: 'System',
+        result: {
+          initialRoll: 0,
+          finalValue: 0,
+          message: `Updated - Stress: ${stress}, Resistance: ${resistance}`
+        }
+      });
+    }
+
+    // Button handlers
+    document.getElementById('addStressBtn').addEventListener('click', () => {
+      if (stress < 10) {
+        stress++;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('removeStressBtn').addEventListener('click', () => {
+      if (stress > 0) {
+        stress--;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('addResistanceBtn').addEventListener('click', () => {
+      if (resistance < 10) {
+        resistance++;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('removeResistanceBtn').addEventListener('click', () => {
+      if (resistance > 0) {
+        resistance--;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('upgradeDieBtn').addEventListener('click', () => {
+      const sizes = ['d4', 'd6', 'd8', 'd10', 'd12'];
+      const currentIndex = sizes.indexOf(dieSize);
+      if (currentIndex < sizes.length - 1) {
+        dieSize = sizes[currentIndex + 1];
+        createDemoRollers();
+        logEvent({
+          potentialName: 'System',
+          result: {
+            initialRoll: 0,
+            finalValue: 0,
+            message: `Upgraded to ${dieSize.toUpperCase()}`
+          }
+        });
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      stress = 0;
+      resistance = 2;
+      dieSize = 'd4';
+      createDemoRollers();
+      document.getElementById('eventLog').innerHTML = '';
+      logEvent({
+        potentialName: 'System',
+        result: {
+          initialRoll: 0,
+          finalValue: 0,
+          message: 'Demo reset'
+        }
+      });
+    });
+
+    // Initialize
+    createDemoRollers();
+    logEvent({
+      potentialName: 'System',
+      result: {
+        initialRoll: 0,
+        finalValue: 0,
+        message: 'Demo initialized - Click any die to roll!'
+      }
+    });
+  </script>
+</body>
+</html>
