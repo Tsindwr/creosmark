@@ -1,3 +1,9 @@
+import { 
+  PERKS,
+  getPerkSlotCount,
+  getAvailableSlots 
+} from '../utils/volatility-constants.js';
+
 /**
  * PerkManagementModal - A custom web element for managing perks on volatility dice
  * 
@@ -8,34 +14,6 @@
  * - Drag-and-drop or click-to-assign interface
  * - Beat cost tracking
  */
-
-// Perk definitions
-const PERKS = {
-  'Refresh': {
-    cost: 2,
-    description: 'Remove 1 Stress from this Potential\'s track'
-  },
-  'Implode': {
-    cost: 2,
-    description: 'If your Volatility Die is not already a D4, roll one Die level below your current Die size and take the resulting value.'
-  },
-  'Cleave': {
-    cost: 3,
-    description: 'Roll 2 Volatility Dice instead, taking the result furthest from the middle. If they are equidistant, take the higher.'
-  },
-  'Drive': {
-    cost: 3,
-    description: 'Reroll the kept die and take the resulting value.'
-  },
-  'Burn': {
-    cost: 5,
-    description: 'Spend 1 Resistance for an automatic max Volatility value.'
-  },
-  'Fracture': {
-    cost: 5,
-    description: 'When activating this Perk while its slot is in the jinx threshold, its result is considered the lowest value on the Die. Otherwise, it is considered the highest value.'
-  }
-};
 
 class PerkManagementModal extends HTMLElement {
   constructor() {
@@ -62,7 +40,7 @@ class PerkManagementModal extends HTMLElement {
     this._potentialName = config.potentialName || '';
     this._dieSize = config.dieSize || 4;
     this._potentialScore = config.potentialScore || 10;
-    this._perks = { ...config.perks } || {};
+    this._perks = { ...(config.perks || {}) };
     this._selectedSlot = null;
     this.render();
   }
@@ -79,19 +57,14 @@ class PerkManagementModal extends HTMLElement {
    * Get available slots for the current die size
    */
   getAvailableSlots() {
-    const slots = [];
-    for (let i = 2; i < this._dieSize; i++) {
-      slots.push(i);
-    }
-    return slots;
+    return getAvailableSlots(this._dieSize);
   }
 
   /**
    * Get perk slot count
    */
   getPerkSlotCount() {
-    const slotMap = { 4: 2, 6: 4, 8: 6, 10: 8, 12: 10 };
-    return slotMap[this._dieSize] || 2;
+    return getPerkSlotCount(this._dieSize);
   }
 
   /**

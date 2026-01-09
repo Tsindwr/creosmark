@@ -1,3 +1,11 @@
+import { 
+  VALID_DIE_SIZES, 
+  getPerkSlotCount, 
+  getAvailableSlots, 
+  abbreviatePerk,
+  isValidDieSize 
+} from '../utils/volatility-constants.js';
+
 /**
  * PotentialTrack - A custom web element for tracking character potential
  * 
@@ -75,8 +83,7 @@ class PotentialTrack extends HTMLElement {
         }
         break;
       case 'die-size':
-        const validSizes = [4, 6, 8, 10, 12];
-        if (validSizes.includes(numValue)) {
+        if (isValidDieSize(numValue)) {
           this._dieSize = numValue;
         }
         break;
@@ -148,8 +155,7 @@ class PotentialTrack extends HTMLElement {
    * @returns {number} Number of perk slots
    */
   getPerkSlotCount() {
-    const slotMap = { 4: 2, 6: 4, 8: 6, 10: 8, 12: 10 };
-    return slotMap[this._dieSize] || 2;
+    return getPerkSlotCount(this._dieSize);
   }
   
   /**
@@ -157,11 +163,7 @@ class PotentialTrack extends HTMLElement {
    * @returns {Array<number>} Array of available slot numbers
    */
   getAvailableSlots() {
-    const slots = [];
-    for (let i = 2; i < this._dieSize; i++) {
-      slots.push(i);
-    }
-    return slots;
+    return getAvailableSlots(this._dieSize);
   }
 
   get score() {
@@ -498,15 +500,7 @@ class PotentialTrack extends HTMLElement {
    * Abbreviate perk names for display
    */
   abbreviatePerk(perkName) {
-    const abbrev = {
-      'Refresh': 'Ref',
-      'Implode': 'Imp',
-      'Cleave': 'Clv',
-      'Drive': 'Drv',
-      'Burn': 'Brn',
-      'Fracture': 'Frc'
-    };
-    return abbrev[perkName] || perkName.substring(0, 3);
+    return abbreviatePerk(perkName);
   }
   
   /**
