@@ -134,6 +134,15 @@ class CommandManager {
   }
 
   /**
+   * Add an already-executed command to the queue
+   * Use this when the command's action has already occurred (e.g., user interaction)
+   */
+  addExecutedCommand(command) {
+    this.commandQueue.push(command);
+    this.notifyListeners();
+  }
+
+  /**
    * Undo the last command
    * @returns {boolean} True if undo was performed, false if queue is empty
    */

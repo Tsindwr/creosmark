@@ -782,8 +782,7 @@
               
               // Save current state and add command to queue (track already updated by user interaction)
               saveTrackState(stat, newStress, e.detail.resistance);
-              commandManager.commandQueue.push(command);
-              commandManager.notifyListeners();
+              commandManager.addExecutedCommand(command);
               
               // Update previous state
               previousTrackStates[stat].stress = newStress;
@@ -809,8 +808,7 @@
               
               // Save current state and add command to queue (track already updated by user interaction)
               saveTrackState(stat, e.detail.stress, newResistance);
-              commandManager.commandQueue.push(command);
-              commandManager.notifyListeners();
+              commandManager.addExecutedCommand(command);
               
               // Update previous state
               previousTrackStates[stat].resistance = newResistance;
