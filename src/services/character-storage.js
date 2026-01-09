@@ -172,7 +172,8 @@ class CharacterStorage {
       avatar: null,
       stats: {},
       stress: {},
-      resistance: {}
+      resistance: {},
+      volatility: {}
     };
 
     // Migrate stats
@@ -184,6 +185,9 @@ class CharacterStorage {
       if (value) character.stats[stat] = parseInt(value, 10);
       if (stress) character.stress[stat] = parseInt(stress, 10);
       if (resistance) character.resistance[stat] = parseInt(resistance, 10);
+      
+      // Initialize volatility defaults
+      character.volatility[stat] = { dieSize: 4, perks: {} };
     });
 
     // Save as new character
@@ -221,7 +225,18 @@ class CharacterStorage {
         tether: 10
       },
       stress: {},
-      resistance: {}
+      resistance: {},
+      // Volatility system
+      volatility: {
+        might: { dieSize: 4, perks: {} },      // perks: { slotNumber: perkName }
+        finesse: { dieSize: 4, perks: {} },
+        nerve: { dieSize: 4, perks: {} },
+        seep: { dieSize: 4, perks: {} },
+        instinct: { dieSize: 4, perks: {} },
+        wit: { dieSize: 4, perks: {} },
+        heart: { dieSize: 4, perks: {} },
+        tether: { dieSize: 4, perks: {} }
+      }
     };
 
     return this._saveLocalCharacter(character);
