@@ -7,12 +7,12 @@ class CampaignPanel extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.isOpen = false;
-    this.isConnected = false;
-    this.sessionId = null;
-    this.isGM = false;
-    this.players = [];
-    this.activityLog = [];
+    this._isOpen = false;
+    this._isConnected = false;
+    this._sessionId = null;
+    this._isGM = false;
+    this._players = [];
+    this._activityLog = [];
   }
 
   connectedCallback() {
@@ -346,19 +346,19 @@ class CampaignPanel extends HTMLElement {
     `;
 
     const html = `
-      <div class="campaign-toggle ${this.isConnected ? 'connected' : ''}" id="toggle-btn">
+      <div class="campaign-toggle ${this._isConnected ? 'connected' : ''}" id="toggle-btn">
         <span class="status-indicator"></span>
         CAMPAIGN
       </div>
 
-      <div class="campaign-panel ${this.isOpen ? 'open' : ''}" id="panel">
+      <div class="campaign-panel ${this._isOpen ? 'open' : ''}" id="panel">
         <div class="panel-header">
           <h2 class="panel-title">🎲 Campaign</h2>
           <button class="close-button" id="close-btn">✕</button>
         </div>
 
         <div class="panel-content">
-          ${this.isConnected ? this._renderConnected() : this._renderDisconnected()}
+          ${this._isConnected ? this._renderConnected() : this._renderDisconnected()}
         </div>
       </div>
     `;
@@ -389,23 +389,23 @@ class CampaignPanel extends HTMLElement {
   _renderConnected() {
     return `
       <div class="connection-section">
-        <h3 class="section-title">${this.isGM ? 'Your Session' : 'Connected Session'}</h3>
+        <h3 class="section-title">${this._isGM ? 'Your Session' : 'Connected Session'}</h3>
         <div class="session-info">
           <div style="text-align: center; color: #a0a0b0; font-size: 0.85rem;">Session Code</div>
-          <div class="session-code">${this.sessionId}</div>
-          ${this.isGM ? '<button class="button copy-button" id="copy-code-btn">📋 Copy Code</button>' : ''}
+          <div class="session-code">${this._sessionId}</div>
+          ${this._isGM ? '<button class="button copy-button" id="copy-code-btn">📋 Copy Code</button>' : ''}
           <p class="info-text" style="text-align: center; margin-top: 15px;">
-            ${this.isGM ? 'Share this code with your players' : 'Connected to GM'}
+            ${this._isGM ? 'Share this code with your players' : 'Connected to GM'}
           </p>
         </div>
         <button class="button danger" id="leave-session-btn">Leave Session</button>
       </div>
 
       <div class="connection-section">
-        <h3 class="section-title">Players (${this.players.length})</h3>
-        ${this.players.length > 0 ? `
+        <h3 class="section-title">Players (${this._players.length})</h3>
+        ${this._players.length > 0 ? `
           <ul class="players-list">
-            ${this.players.map(player => `
+            ${this._players.map(player => `
               <li class="player-item">
                 <div class="player-avatar">${player.avatar || '🧙'}</div>
                 <div class="player-info">
@@ -420,9 +420,9 @@ class CampaignPanel extends HTMLElement {
 
       <div class="connection-section">
         <h3 class="section-title">Activity</h3>
-        ${this.activityLog.length > 0 ? `
+        ${this._activityLog.length > 0 ? `
           <ul class="activity-list">
-            ${this.activityLog.slice(0, 10).map(entry => this._renderActivity(entry)).join('')}
+            ${this._activityLog.slice(0, 10).map(entry => this._renderActivity(entry)).join('')}
           </ul>
         ` : '<div class="empty-state">No activity yet</div>'}
       </div>
@@ -472,13 +472,13 @@ class CampaignPanel extends HTMLElement {
   }
 
   togglePanel() {
-    this.isOpen = !this.isOpen;
+    this._isOpen = !this._isOpen;
     this.render();
     this.setupEventListeners();
   }
 
   closePanel() {
-    this.isOpen = false;
+    this._isOpen = false;
     this.render();
     this.setupEventListeners();
   }
@@ -515,8 +515,8 @@ class CampaignPanel extends HTMLElement {
   }
 
   copySessionCode() {
-    if (this.sessionId) {
-      navigator.clipboard.writeText(this.sessionId).then(() => {
+    if (this._sessionId) {
+      navigator.clipboard.writeText(this._sessionId).then(() => {
         const btn = this.shadowRoot.getElementById('copy-code-btn');
         if (btn) {
           const originalText = btn.textContent;
@@ -531,24 +531,24 @@ class CampaignPanel extends HTMLElement {
 
   // Public methods to update state
   updateConnectionStatus(isConnected, sessionId, isGM) {
-    this.isConnected = isConnected;
-    this.sessionId = sessionId;
-    this.isGM = isGM;
+    this._isConnected = isConnected;
+    this._sessionId = sessionId;
+    this._isGM = isGM;
     this.render();
     this.setupEventListeners();
   }
 
   updatePlayers(players) {
-    this.players = players;
-    if (this.isConnected) {
+    this._players = players;
+    if (this._isConnected) {
       this.render();
       this.setupEventListeners();
     }
   }
 
   updateActivityLog(log) {
-    this.activityLog = log;
-    if (this.isConnected) {
+    this._activityLog = log;
+    if (this._isConnected) {
       this.render();
       this.setupEventListeners();
     }
