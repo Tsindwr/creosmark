@@ -1007,6 +1007,8 @@
       });
 
       // Try to restore previous session
+      // Note: Only restore player sessions, not GM sessions.
+      // GMs should start campaigns from the Campaigns page, not the character sheet.
       const savedSession = sessionService.restoreSession();
       if (savedSession && currentCharacter && !savedSession.isGM) {
         console.log('Found saved session, attempting to reconnect...');

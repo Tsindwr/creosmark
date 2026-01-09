@@ -509,7 +509,7 @@
             <div class="empty-state-icon">🎲</div>
             <h2 class="empty-state-title">No Campaigns Yet</h2>
             <p class="empty-state-description">Create your first campaign to start hosting games</p>
-            <button class="create-first-button" onclick="createNewCampaign()">Create Campaign</button>
+            <button class="create-first-button" id="create-first-btn">Create Campaign</button>
           </div>
         `;
         return;
@@ -714,6 +714,12 @@
         alert('Logout functionality coming soon!');
       });
 
+      // Create first campaign button (in empty state)
+      const createFirstBtn = document.getElementById('create-first-btn');
+      if (createFirstBtn) {
+        createFirstBtn.addEventListener('click', createNewCampaign);
+      }
+
       // Campaign form
       document.getElementById('campaign-form').addEventListener('submit', saveCampaign);
       document.getElementById('cancel-edit').addEventListener('click', hideEditModal);
@@ -789,9 +795,6 @@
       div.textContent = text;
       return div.innerHTML;
     }
-
-    // Make createNewCampaign available globally
-    window.createNewCampaign = createNewCampaign;
 
     // Initialize on load
     init();

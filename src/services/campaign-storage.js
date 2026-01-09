@@ -18,6 +18,7 @@ class CampaignStorage {
       return Array.isArray(campaigns) ? campaigns : [];
     } catch (e) {
       console.error('Failed to parse campaigns from localStorage:', e);
+      console.error('Campaign data may be corrupted. Try clearing browser storage or contact support.');
       return [];
     }
   }
@@ -84,6 +85,8 @@ class CampaignStorage {
 
   // Generate unique ID
   _generateId() {
+    // Format: camp_timestamp_randomstring
+    // Random string is 9 characters from base36 encoding
     return `camp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 }
