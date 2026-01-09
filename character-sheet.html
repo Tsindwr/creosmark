@@ -387,6 +387,7 @@
 </head>
 <body>
   <app-header></app-header>
+  <campaign-panel id="campaign-panel"></campaign-panel>
 
   <div class="main-content">
     <!-- Character Header -->
@@ -466,12 +467,17 @@
     </div>
   </div>
 
+  <!-- PeerJS for P2P connections -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
   <script type="module" src="src/components/app-header.js"></script>
   <script type="module" src="src/components/potential-track.js"></script>
   <script type="module" src="src/components/d20-skill-roller.js"></script>
+  <script type="module" src="src/components/campaign-panel.js"></script>
   <script type="module">
     import characterStorage from './src/services/character-storage.js';
     import commandManager from './src/services/command-manager.js';
+    import sessionService from './src/services/session-service.js';
 
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
     
@@ -571,6 +577,7 @@
         setupUndoButton();
         loadTrackStates();
         initPreviousStates();
+        setupCampaignPanel();
       } catch (error) {
         console.error('Error initializing character sheet:', error);
         alert('Error loading character: ' + error.message);
@@ -666,16 +673,25 @@
           // Listen for roll results and log them
           roller.addEventListener('roll-complete', (e) => {
             const { roll, result } = e.detail;
+            const rollData = { 
+              roll, 
+              potential: potentialScore, 
+              resistance, 
+              result: result.level,
+              proficiency,
+              total: roll + potentialScore - resistance,
+              skillName
+            };
+            
             logActivity(
               `${skillName} Check`,
               'roll',
-              { 
-                roll, 
-                potential: potentialScore, 
-                resistance, 
-                result: result.level,
-                proficiency
-              }
+              rollData
+            );
+            
+            // Broadcast to session if connected
+            broadcastRollToSession(skillName, rollData);
+          });
             );
           });
 
@@ -860,6 +876,157 @@
       // Keep only last 50 entries
       while (log.children.length > 50) {
         log.removeChild(log.lastChild);
+      }
+    }
+
+    // ============ Campaign Session Integration ============
+    
+    const campaignPanel = document.getElementById('campaign-panel');
+    
+    // Setup campaign panel event listeners
+    function setupCampaignPanel() {
+      campaignPanel.addEventListener('create-session', async () => {
+        try {
+          const playerInfo = {
+            name: currentCharacter.name || 'Unnamed Character',
+            avatar: currentCharacter.avatar || '🧙',
+            characterId: currentCharacter.id
+          };
+          
+          const sessionId = await sessionService.initAsGM(playerInfo);
+          updateCampaignPanel();
+          console.log('Created session:', sessionId);
+        } catch (error) {
+          console.error('Error creating session:', error);
+          alert('Failed to create session: ' + error.message);
+        }
+      });
+
+      campaignPanel.addEventListener('join-session', async (e) => {
+        try {
+          const sessionId = e.detail.sessionId;
+          const playerInfo = {
+            name: currentCharacter.name || 'Unnamed Character',
+            avatar: currentCharacter.avatar || '🧙',
+            characterId: currentCharacter.id
+          };
+          
+          await sessionService.joinSession(sessionId, playerInfo);
+          updateCampaignPanel();
+          console.log('Joined session:', sessionId);
+        } catch (error) {
+          console.error('Error joining session:', error);
+          alert('Failed to join session: ' + error.message);
+        }
+      });
+
+      campaignPanel.addEventListener('leave-session', () => {
+        sessionService.leaveSession();
+        updateCampaignPanel();
+      });
+
+      // Listen to session events
+      sessionService.addListener((event, data) => {
+        console.log('Session event:', event, data);
+        
+        switch (event) {
+          case 'session-created':
+          case 'session-joined':
+          case 'player-joined':
+          case 'player-left':
+          case 'player-list-updated':
+            updateCampaignPanel();
+            break;
+            
+          case 'roll-received':
+            updateCampaignPanel();
+            logSessionActivity(data);
+            break;
+            
+          case 'activity-added':
+            updateCampaignPanel();
+            break;
+            
+          case 'error':
+            console.error('Session error:', data.error);
+            break;
+        }
+      });
+
+      // Try to restore previous session
+      const savedSession = sessionService.restoreSession();
+      if (savedSession && currentCharacter) {
+        console.log('Found saved session, attempting to reconnect...');
+        // Attempt to reconnect
+        const playerInfo = {
+          name: currentCharacter.name || 'Unnamed Character',
+          avatar: currentCharacter.avatar || '🧙',
+          characterId: currentCharacter.id
+        };
+        
+        if (savedSession.isGM) {
+          sessionService.initAsGM(playerInfo).catch(err => {
+            console.log('Could not restore GM session:', err);
+          });
+        } else {
+          sessionService.joinSession(savedSession.sessionId, playerInfo).catch(err => {
+            console.log('Could not restore player session:', err);
+          });
+        }
+      }
+    }
+
+    // Update campaign panel with current session state
+    function updateCampaignPanel() {
+      const info = sessionService.getSessionInfo();
+      
+      campaignPanel.updateConnectionStatus(
+        info.isConnected,
+        info.sessionId,
+        info.isGM
+      );
+
+      // For now, just show current player
+      // This will be expanded when players send their info
+      if (info.isConnected) {
+        const players = [{
+          name: currentCharacter?.name || 'You',
+          avatar: currentCharacter?.avatar || '🧙',
+          isGM: info.isGM
+        }];
+        
+        campaignPanel.updatePlayers(players);
+      }
+
+      campaignPanel.updateActivityLog(sessionService.getActivityLog());
+    }
+
+    // Log session activity to local activity log
+    function logSessionActivity(data) {
+      if (data.type === 'roll-result') {
+        const playerName = data.player?.name || 'Unknown';
+        const rollData = data.data;
+        
+        logActivity(
+          `${playerName}: ${rollData.skillName || 'Skill'}`,
+          'roll',
+          rollData
+        );
+      }
+    }
+
+    // Hook into existing roll handlers to broadcast to session
+    function broadcastRollToSession(skillName, rollData) {
+      if (sessionService.getSessionInfo().isConnected) {
+        sessionService.broadcastRoll({
+          skillName,
+          roll: rollData.roll,
+          total: rollData.total,
+          result: rollData.result,
+          potential: rollData.potential,
+          resistance: rollData.resistance,
+          proficiency: rollData.proficiency
+        });
       }
     }
 
