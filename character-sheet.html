@@ -387,6 +387,9 @@
 </head>
 <body>
   <app-header></app-header>
+  
+  <!-- Perk Management Modal -->
+  <perk-management-modal id="perk-modal"></perk-management-modal>
 
   <div class="main-content">
     <!-- Character Header -->
@@ -469,6 +472,7 @@
   <script type="module" src="src/components/app-header.js"></script>
   <script type="module" src="src/components/potential-track.js"></script>
   <script type="module" src="src/components/d20-skill-roller.js"></script>
+  <script type="module" src="src/components/perk-management-modal.js"></script>
   <script type="module">
     import characterStorage from './src/services/character-storage.js';
     import commandManager from './src/services/command-manager.js';
@@ -593,12 +597,25 @@
       // Set edit button link
       document.getElementById('edit-character-button').href = `character-builder.html?id=${currentCharacter.id}`;
 
-      // Load stats
+      // Initialize volatility data if not present
+      if (!currentCharacter.volatility) {
+        currentCharacter.volatility = {};
+        STATS.forEach(stat => {
+          currentCharacter.volatility[stat] = { dieSize: 4, perks: {} };
+        });
+        characterStorage.saveCharacter(currentCharacter);
+      }
+
+      // Load stats and volatility data
       STATS.forEach(stat => {
         const track = document.getElementById(`${stat}-track`);
         const value = currentCharacter.stats?.[stat] || 10;
+        const volatilityData = currentCharacter.volatility?.[stat] || { dieSize: 4, perks: {} };
+        
         if (track) {
           track.setAttribute('score', value);
+          track.setAttribute('die-size', volatilityData.dieSize);
+          track.setPerks(volatilityData.perks);
         }
       });
 
@@ -816,8 +833,66 @@
             
             logActivity(stat, 'resistance', e.detail);
           });
+          
+          // Volatility view toggle
+          track.addEventListener('view-toggled', (e) => {
+            logActivity(stat, 'view-toggle', { viewMode: e.detail.viewMode });
+          });
+          
+          // Perk slot click
+          track.addEventListener('perk-slot-clicked', (e) => {
+            const modal = document.getElementById('perk-modal');
+            if (modal) {
+              modal.open({
+                potentialName: stat,
+                dieSize: currentCharacter.volatility[stat].dieSize,
+                potentialScore: currentCharacter.stats[stat],
+                perks: currentCharacter.volatility[stat].perks
+              });
+            }
+          });
+          
+          // Perk management request
+          track.addEventListener('perk-management-requested', (e) => {
+            const modal = document.getElementById('perk-modal');
+            if (modal) {
+              modal.open({
+                potentialName: stat,
+                dieSize: e.detail.dieSize,
+                potentialScore: e.detail.potentialScore,
+                perks: e.detail.perks
+              });
+            }
+          });
         }
       });
+      
+      // Perk modal event handlers
+      const perkModal = document.getElementById('perk-modal');
+      if (perkModal) {
+        perkModal.addEventListener('modal-saved', (e) => {
+          const { perks, potentialName } = e.detail;
+          
+          // Update character data
+          if (currentCharacter.volatility[potentialName]) {
+            currentCharacter.volatility[potentialName].perks = perks;
+            characterStorage.saveCharacter(currentCharacter);
+            
+            // Update track display
+            const track = document.getElementById(`${potentialName}-track`);
+            if (track) {
+              track.setPerks(perks);
+            }
+            
+            logActivity(potentialName, 'perks-updated', { perks });
+          }
+        });
+        
+        perkModal.addEventListener('perk-changed', (e) => {
+          const { potentialName } = e.detail;
+          logActivity(potentialName, 'perk-change', e.detail);
+        });
+      }
     }
 
     // Log activity
