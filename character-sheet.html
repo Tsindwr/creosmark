@@ -397,6 +397,7 @@
         <p class="character-meta">Last Updated: <span id="character-updated">-</span></p>
       </div>
       <div class="action-buttons">
+        <button id="undo-button" class="action-button" disabled style="opacity: 0.5;">↶ Undo</button>
         <a href="#" id="edit-character-button" class="action-button">✏️ Edit Character</a>
       </div>
     </div>
@@ -470,6 +471,7 @@
   <script type="module" src="src/components/d20-skill-roller.js"></script>
   <script type="module">
     import characterStorage from './src/services/character-storage.js';
+    import commandManager from './src/services/command-manager.js';
 
     const STATS = ['might', 'finesse', 'nerve', 'seep', 'instinct', 'wit', 'heart', 'tether'];
     
@@ -486,6 +488,31 @@
     };
 
     let currentCharacter = null;
+
+    // Setup undo button handler
+    function setupUndoButton() {
+      const undoButton = document.getElementById('undo-button');
+      
+      // Update button state based on command queue
+      commandManager.addListener((canUndo, queueSize) => {
+        if (canUndo) {
+          undoButton.disabled = false;
+          undoButton.style.opacity = '1';
+          undoButton.title = `Undo last change (${queueSize} in queue)`;
+        } else {
+          undoButton.disabled = true;
+          undoButton.style.opacity = '0.5';
+          undoButton.title = 'No changes to undo';
+        }
+      });
+
+      // Handle undo button click
+      undoButton.addEventListener('click', () => {
+        if (commandManager.canUndo()) {
+          commandManager.undo();
+        }
+      });
+    }
 
     // Toggle instructions visibility
     function toggleInstructions() {
@@ -536,9 +563,14 @@
           return;
         }
 
+        // Set character in command manager (clears queue if different character)
+        commandManager.setCharacter(currentCharacter.id);
+
         loadCharacterData();
         setupEventListeners();
+        setupUndoButton();
         loadTrackStates();
+        initPreviousStates();
       } catch (error) {
         console.error('Error initializing character sheet:', error);
         alert('Error loading character: ' + error.message);
@@ -697,6 +729,19 @@
       characterStorage.saveCharacter(currentCharacter);
     }
 
+    // Store previous track states for command creation
+    const previousTrackStates = {};
+    
+    // Initialize previous states
+    function initPreviousStates() {
+      STATS.forEach(stat => {
+        previousTrackStates[stat] = {
+          stress: currentCharacter.stress?.[stat] || 0,
+          resistance: currentCharacter.resistance?.[stat] || 0
+        };
+      });
+    }
+
     // Setup event listeners
     function setupEventListeners() {
       // Header navigation
@@ -713,17 +758,64 @@
         alert('Logout functionality coming soon!');
       });
 
-      // Track change listeners
+      // Track change listeners with command pattern
       STATS.forEach(stat => {
         const track = document.getElementById(`${stat}-track`);
         if (track) {
+          // Initialize flag to prevent command creation during undo
+          track._isUndoing = false;
+          
           track.addEventListener('stress-changed', (e) => {
-            saveTrackState(stat, e.detail.stress, e.detail.resistance);
+            const newStress = e.detail.stress;
+            const oldStress = previousTrackStates[stat].stress;
+            
+            // Only create command if not undoing and value actually changed
+            if (!track._isUndoing && oldStress !== newStress) {
+              const trackId = `${stat}-track`;
+              const command = commandManager.createStressCommand(
+                trackId, 
+                stat, 
+                oldStress, 
+                newStress, 
+                saveTrackState
+              );
+              
+              // Save current state and add command to queue (track already updated by user interaction)
+              saveTrackState(stat, newStress, e.detail.resistance);
+              commandManager.commandQueue.push(command);
+              commandManager.notifyListeners();
+              
+              // Update previous state
+              previousTrackStates[stat].stress = newStress;
+            }
+            
             logActivity(stat, 'stress', e.detail);
           });
           
           track.addEventListener('resistance-changed', (e) => {
-            saveTrackState(stat, e.detail.stress, e.detail.resistance);
+            const newResistance = e.detail.resistance;
+            const oldResistance = previousTrackStates[stat].resistance;
+            
+            // Only create command if not undoing and value actually changed
+            if (!track._isUndoing && oldResistance !== newResistance) {
+              const trackId = `${stat}-track`;
+              const command = commandManager.createResistanceCommand(
+                trackId, 
+                stat, 
+                oldResistance, 
+                newResistance, 
+                saveTrackState
+              );
+              
+              // Save current state and add command to queue (track already updated by user interaction)
+              saveTrackState(stat, e.detail.stress, newResistance);
+              commandManager.commandQueue.push(command);
+              commandManager.notifyListeners();
+              
+              // Update previous state
+              previousTrackStates[stat].resistance = newResistance;
+            }
+            
             logActivity(stat, 'resistance', e.detail);
           });
         }
