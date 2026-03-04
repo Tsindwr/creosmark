@@ -1,5 +1,6 @@
 ---
-import PotentialShell from "../components/PotentialShell";
+import PotentialWidget from "../components/PotentialWidget";
+import PotentialsList from "../components/PotentialsList";
 import { useState } from "react";
 ---
 
@@ -13,12 +14,10 @@ import { useState } from "react";
 </head>
 <body>
 <div class="wrap">
-    <PotentialShell client:load />
+    <PotentialsList />
 </div>
 </body>
 </html>
-
----
 
 {/* React wrapper for state */}
 {/* Put this below in the same file or better as src/components/PotentialShell.tsx */}
