@@ -64,6 +64,9 @@
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.76rem;
+
+  display: flex;
+  align-items: center;
 }
 
 .footer {

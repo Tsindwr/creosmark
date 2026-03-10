@@ -1,11 +1,19 @@
 import React, { useState } from "react";
-import type { CharacterSheetState } from "../../types/sheet.ts";
+import type {
+    CharacterSheetState,
+    PotentialKey,
+    RollComposerDraft,
+} from "../../types/sheet.ts";
 import { SHEET_TABS, type SheetTabId } from "../../lib/sheet-data.ts";
+import { createDraftFromSkill } from "../../lib/rolls.ts";
 import SectionTabs from "./SectionTabs.tsx";
 import OverviewSection from "../sections/OverviewSection.tsx";
 import PotentialsList from "../potentials/PotentialsList.tsx";
 import RollComposerFab from "../roll/RollComposerFab.tsx";
 import SheetCard from "../common/SheetCard.tsx";
+import AttacksPanel from "../attacks/AttacksPanel.tsx";
+import GoalsPanel from "../story/GoalsPanel.tsx";
+import KnacksDomainsPanel from "../story/KnacksDomainsPanel.tsx";
 import styles from "./CharacterSheetShell.module.css";
 
 type CharacterSheetShellProps = {
@@ -20,14 +28,24 @@ function Placeholder({ title, copy }: { title: string; copy: string }) {
   );
 }
 
-export default function CharacterSheetShell({ initialSheet }: CharacterSheetShellProps) {
+export default function CharacterSheetShell({
+    initialSheet
+}: CharacterSheetShellProps) {
   const [sheet, setSheet] = useState(initialSheet);
   const [activeTab, setActiveTab] = useState<SheetTabId>("overview");
+  const [pendingRoll, setPendingRoll] =
+    useState<Partial<RollComposerDraft> | null>(null);
+
+  const seedRoll = (seed: { potentialKey: PotentialKey; skillName: string }) => {
+      setPendingRoll(
+          createDraftFromSkill(sheet.potentials, seed.potentialKey, seed.skillName),
+      );
+  };
 
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <div>
+        <div className={"header-wrapper"}>
           {sheet.header.partyName ? <div className={styles.party}>{sheet.header.partyName}</div> : null}
           <h1 className={styles.name}>{sheet.header.name}</h1>
           <div className={styles.meta}>
@@ -52,16 +70,12 @@ export default function CharacterSheetShell({ initialSheet }: CharacterSheetShel
           <PotentialsList
             potentials={sheet.potentials}
             onChange={(potentials) => setSheet({ ...sheet, potentials })}
-            tileMin={155}
-            tileMax={215}
+            onStartRoll={seedRoll}
           />
         ) : null}
 
         {activeTab === "actions" ? (
-          <Placeholder
-            title="Actions"
-            copy="This tab is ready for the attacks list, built abilities, and default action cards."
-          />
+          <AttacksPanel attacks={sheet.attacks} onStartRoll={seedRoll} />
         ) : null}
 
         {activeTab === "abilities" ? (
@@ -79,10 +93,12 @@ export default function CharacterSheetShell({ initialSheet }: CharacterSheetShel
         ) : null}
 
         {activeTab === "background" ? (
-          <Placeholder
-            title="Background"
-            copy="Origin, goals, flaws, knacks, and domains belong here once those editors are built."
-          />
+          <div className={styles.storyLayout}>
+              <GoalsPanel goals={sheet.goals}
+                          onChange={(goals) => setSheet({ ...sheet, goals })}
+                          />
+              <KnacksDomainsPanel domains={sheet.domains} knacks={sheet.knacks} />
+          </div>
         ) : null}
 
         {activeTab === "notes" ? (
@@ -95,6 +111,10 @@ export default function CharacterSheetShell({ initialSheet }: CharacterSheetShel
 
       <RollComposerFab
         potentials={sheet.potentials}
+        domains={sheet.domains}
+        knacks={sheet.knacks}
+        initialDraft={pendingRoll}
+        onDraftConsumed={() => setPendingRoll(null)}
         onRoll={(request) => {
           console.log("ROLL REQUEST", request);
         }}

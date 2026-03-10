@@ -233,4 +233,96 @@ export const DEMO_SHEET: CharacterSheetState = {
       },
     },
   ],
+  goals: [
+    {
+      id: "minor-1",
+      title: "Leave every refuge safer than you found it.",
+      tier: "minor",
+      reward: "string",
+    },
+    {
+      id: "major-1",
+      title: "Make peace with the mentor you abandoned.",
+      tier: "major",
+      reward: "milestone",
+    },
+    {
+      id: "heroic-1",
+      title: "Break the chain binding the starry dead to Umbrea.",
+      tier: "heroic",
+      reward: "zenith",
+    },
+    {
+      id: "flaw-1",
+      title: "Cannot refuse a dare that proves your courage.",
+      tier: "flaw",
+      reward: "flavor",
+    },
+  ],
+
+  domains: [
+    {
+      id: "thread",
+      name: "Thread",
+      epithet: "The Weaver",
+      summary: "Study, knowledge, arcana.",
+    },
+    {
+      id: "warp",
+      name: "Warp",
+      epithet: "The Phantom",
+      summary: "Mysticism, warped landscape, shadow.",
+    },
+    {
+      id: "crossing",
+      name: "Crossing",
+      epithet: "The Migrant",
+      summary: "Travel, havens, liminal spaces.",
+    },
+  ],
+
+  knacks: [
+    {
+      id: "acrobatics",
+      name: "Acrobatics",
+      summary: "Tumbling, vaulting, aerial control.",
+      linkedSkills: ["Grace", "Sleight"],
+    },
+    {
+      id: "star-lore",
+      name: "Star Lore",
+      summary: "Astral symbols, navigational omens, moon-reading.",
+      linkedSkills: ["Recall", "Esoterica", "Weave"],
+    },
+    {
+      id: "dueling-rods",
+      name: "Dueling Rods",
+      summary: "Fighting with paired light weapons.",
+      linkedSkills: ["Force", "Grace"],
+    },
+  ],
+
+  attacks: [
+    {
+      id: "rod-main",
+      name: "Rod",
+      potential: "finesse",
+      skillName: "Grace",
+      damage: "1d4+3",
+      targetPotential: "might",
+      range: "Here / There",
+      properties: ["Simple", "Finesse", "Light", "Thrown"],
+    },
+    {
+      id: "unarmed",
+      name: "Unarmed Strike",
+      potential: "might",
+      skillName: "Force",
+      damage: "Tier",
+      targetPotential: "might",
+      range: "Here",
+      properties: ["Unarmed"],
+      notes: "Default attack fallback.",
+    },
+  ],
 };

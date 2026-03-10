@@ -62,6 +62,45 @@ export type ArmorPieceState = {
   notes?: string;
 };
 
+export type GoalTier = "minor" | "major" | "heroic" | "flaw";
+export type GoalReward = "string" | "milestone" | "zenith" | "flavor";
+
+export type GoalState = {
+  id: string;
+  title: string;
+  tier: GoalTier;
+  reward: GoalReward;
+  completed?: boolean;
+  notes?: string;
+};
+
+export type DomainState = {
+  id: string;
+  name: string;
+  epithet?: string;
+  summary: string;
+};
+
+export type KnackState = {
+  id: string;
+  name: string;
+  summary?: string;
+  linkedSkills?: string[];
+};
+
+export type AttackState = {
+  id: string;
+  name: string;
+  potential: PotentialKey;
+  skillName: string;
+  damage: string;
+  targetPotential: PotentialKey;
+  range: string;
+  properties?: string[];
+  notes?: string;
+  equipped?: boolean;
+};
+
 export type CharacterHeaderState = {
   name: string;
   archetype: string;
@@ -72,6 +111,19 @@ export type CharacterHeaderState = {
   tier?: string;
 };
 
+export type RollMode = "normal" | "advantage" | "disadvantage";
+export type RiskinessLevel = "uncertain" | "risky" | "dire" | "desperate";
+
+export type RollComposerDraft = {
+  potentialKey: PotentialKey;
+  skillName: string;
+  mode: RollMode;
+  riskiness: RiskinessLevel;
+  extraVolatility: number;
+  selectedKnacks: string[];
+  selectedDomains: string[];
+};
+
 export type CharacterSheetState = {
   header: CharacterHeaderState;
   marks: MarksState;
@@ -79,4 +131,8 @@ export type CharacterSheetState = {
   tokens: TokenPoolState[];
   armor: ArmorPieceState[];
   potentials: PotentialState[];
+  goals: GoalState[];
+  domains: DomainState[];
+  knacks: KnackState[];
+  attacks: AttackState[];
 };
