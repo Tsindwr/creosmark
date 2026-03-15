@@ -3,15 +3,16 @@
     inset: 0;
     z-index: 90;
     overflow: hidden;
+    pointer-events: none;
 }
 
 .scrim {
     position: absolute;
     inset: 0;
-    background:
-            radial-gradient(circle at 50% 20%, rgba(210, 178, 76, 0.12), transparent 30%),
-            rgba(4, 6, 10, 0.84);
-    backdrop-filter: blur(8px);
+    border: none;
+    background: transparent;
+    cursor: default;
+    pointer-events: auto;
 }
 
 .diceStage {

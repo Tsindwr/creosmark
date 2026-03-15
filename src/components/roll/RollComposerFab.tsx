@@ -356,7 +356,10 @@ export default function RollComposerFab({
           <button
               type={"button"}
               className={styles.rollButton}
-              onClick={() => onRoll?.(draft)}
+              onClick={() => {
+                onRoll?.(draft)
+                // setOpen(false)
+              }}
           >
             Roll
           </button>

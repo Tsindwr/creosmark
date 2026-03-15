@@ -1,25 +1,22 @@
 {
   "name": "creosmark",
-  "version": "1.0.0",
-  "description": "A character sheet builder tool for Sunder players to use online",
-  "main": "src/components/potential-track.js",
   "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "test": "node tests/potential-track.test.js && node tests/dice-roller.test.js && node tests/d20-skill-roller.test.js && node tests/command-manager.test.js",
-    "start": "npx serve .",
-    "dev": "npx serve . --cors"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
-  "keywords": [
-    "character-sheet",
-    "sunder",
-    "tabletop-rpg",
-    "web-components",
-    "custom-elements"
-  ],
-  "author": "",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Tsindwr/creosmark"
+  "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
+    "@astrojs/react": "^4.4.2",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^5.17.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

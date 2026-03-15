@@ -34,6 +34,11 @@ export default function DiceRoller({
 }: DiceRollerProps) {
     const hostRef = useRef<HTMLDivElement | null>(null);
     const diceBoxRef = useRef<DiceBox | null>(null);
+    const onResolvedRef = useRef<typeof onResolved>(onResolved);
+
+    useEffect(() => {
+        onResolvedRef.current = onResolved;
+    }, [onResolved])
 
     const [phase, setPhase] = useState<RollPhase>('idle');
     const [displayRoll, setDisplayRoll] = useState<DisplayRoll | null>(null);
@@ -82,6 +87,7 @@ export default function DiceRoller({
                 const box = new DiceBox({
                     assetPath: "/assets/dice-box/",
                     container: "#sunder-dice-stage",
+                    offscreen: false,
                     theme: "default",
                     themeColor: "#d2b24c",
                     scale: 7,
@@ -157,7 +163,7 @@ export default function DiceRoller({
 
                 setDisplayRoll(nextDisplay);
                 setPhase("resolved");
-                onResolved?.(result);
+                onResolvedRef.current?.(result);
 
                 console.log("runRoll end", {
                     hasPrepared: Boolean(prepared),
@@ -180,7 +186,7 @@ export default function DiceRoller({
         return () => {
             cancelled = true;
         };
-    }, [prepared, boxReady, onResolved]);
+    }, [prepared, boxReady]);
 
     return (
         <SunderDiceBoxOverlay
