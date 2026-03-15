@@ -1,0 +1,326 @@
+.panel {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1rem;
+    min-height: 720px;
+}
+
+.sidebar {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(210, 178, 76, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebarHeader {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.eyebrow {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sunder-purple, #8b7cf3);
+    font-weight: 700;
+}
+
+.title {
+    margin: 0;
+}
+
+.nav {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.navButton,
+.addButton,
+.subtleButton,
+.filterButton,
+.dangerButton {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 0.8rem;
+}
+
+.navButton {
+    text-align: left;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+}
+
+.navButtonActive {
+    border-color: rgba(210, 178, 76, 0.45);
+    background: rgba(210, 178, 76, 0.14);
+}
+
+.quickCreate {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.inlineCreate {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+}
+
+.fieldLabel {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.64);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+
+.input,
+.select,
+.textarea {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 10, 14, 0.85);
+    color: white;
+    font: inherit;
+    padding: 0.7rem 0.8rem;
+}
+
+.textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+.addButton {
+    padding: 0.7rem 0.95rem;
+    border: none;
+    background: linear-gradient(135deg, var(--sunder-gold, #d2b24c), #f0daa0);
+    color: #161a22;
+    font-weight: 800;
+}
+
+.content {
+    display: grid;
+    gap: 1rem;
+}
+
+.sectionStack {
+    display: grid;
+    gap: 1rem;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+}
+
+.sectionHeader h3 {
+    margin: 0.15rem 0 0;
+}
+
+.copy {
+    color: rgba(255, 255, 255, 0.64);
+    max-width: 38rem;
+}
+
+.slotGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.slotCard,
+.itemCard,
+.containerCard,
+.currencyCard {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(210, 178, 76, 0.14);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.slotTop,
+.itemHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: start;
+}
+
+.equippedItem,
+.emptySlot {
+    min-height: 72px;
+}
+
+.itemName {
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.itemMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.35rem;
+}
+
+.itemMeta span,
+.staticPill,
+.valueBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+}
+
+.tag {
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(139, 124, 243, 0.18);
+    color: white;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.statBlock {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.88rem;
+}
+
+.slotAssign,
+.controlGroup {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.subtleButton {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+}
+
+.dangerButton {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid rgba(255, 107, 107, 0.25);
+    background: rgba(255, 107, 107, 0.14);
+    color: white;
+}
+
+.filterRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filterButton {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+}
+
+.filterButtonActive {
+    border-color: rgba(210, 178, 76, 0.45);
+    background: rgba(210, 178, 76, 0.14);
+}
+
+.itemList,
+.containerList,
+.customCurrencyList {
+    display: grid;
+    gap: 1rem;
+}
+
+.itemCard h4,
+.containerCard h4,
+.currencyCard h4 {
+    margin: 0;
+}
+
+.itemControls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.containedList {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.containedRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.currencyGrid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 1rem;
+}
+
+.currencyInputs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.customCurrencyRow {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr auto auto;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.emptyState {
+    padding: 1rem;
+    border-radius: 0.8rem;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 1100px) {
+    .panel {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .slotGrid,
+    .currencyGrid,
+    .itemControls {
+        grid-template-columns: 1fr;
+    }
+}

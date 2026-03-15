@@ -1,0 +1,23 @@
+---
+import PotentialWidget from "../components/PotentialWidget";
+import PotentialsList from "../components/PotentialsList";
+import { useState } from "react";
+---
+
+<html>
+<head>
+    <style>
+        /* Example: make it responsive */
+        .wrap { max-width: 420px; margin: 2rem auto; }
+    </style>
+    <title>Potential Sheet</title>
+</head>
+<body>
+<div class="wrap">
+    <PotentialsList client:load />
+</div>
+</body>
+</html>
+
+{/* React wrapper for state */}
+{/* Put this below in the same file or better as src/components/PotentialShell.tsx */}

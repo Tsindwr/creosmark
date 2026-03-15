@@ -1,0 +1,100 @@
+---
+import SunderSheetDemo from "../demo/SunderSheetDemo";
+import "../styles/sunder-theme.css";
+---
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sunder Character Sheet Demo</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --page-bg: radial-gradient(circle at top, #1f3550 0%, #0c1420 42%, #070b11 100%);
+            --card-bg: rgba(10, 16, 24, 0.88);
+            --card-border: rgba(242, 213, 144, 0.45);
+            --text-main: #f6f0dd;
+            --text-subtle: rgba(246, 240, 221, 0.74);
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                sans-serif;
+            background: var(--page-bg);
+            color: var(--text-main);
+        }
+
+        .page {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .hero {
+            margin-bottom: 20px;
+            padding: 20px 24px;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(15, 23, 34, 0.9), rgba(10, 16, 24, 0.8));
+            box-shadow: var(--shadow);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--text-subtle);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-size: 0.74rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1;
+        }
+
+        .copy {
+            margin: 10px 0 0;
+            max-width: 70ch;
+            color: var(--text-subtle);
+        }
+
+        .demoFrame {
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            overflow: clip;
+        }
+    </style>
+</head>
+
+<body>
+<main class="page">
+    <section class="hero">
+        <p class="eyebrow">Astro playground</p>
+        <h1>Sunder character sheet demo</h1>
+        <p class="copy">
+            This mounts the current React character-sheet demo inside Astro.
+        </p>
+    </section>
+
+    <section class="demoFrame">
+        <SunderSheetDemo client:load />
+    </section>
+</main>
+</body>
+</html>

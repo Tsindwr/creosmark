@@ -1,0 +1,67 @@
+.panel {
+    display: grid;
+    gap: 1rem;
+}
+
+.header h2 {
+    margin: 0.2rem 0 0;
+}
+
+.eyebrow {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sunder-purple, #8b7cf3);
+    font-weight: 700;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1rem;
+}
+
+.card {
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(210, 178, 76, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.card h3 {
+    margin: 0 0 0.85rem;
+}
+
+.domainList,
+.knackList {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.domainChip,
+.knackItem {
+    padding: 0.8rem 0.9rem;
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.domainChip span,
+.knackItem span {
+    display: block;
+    margin-top: 0.2rem;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.8rem;
+}
+
+.domainChip p,
+.knackItem p {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+}
