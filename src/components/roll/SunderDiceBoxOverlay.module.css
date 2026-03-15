@@ -204,6 +204,11 @@
     font-size: 0.84rem;
 }
 
+.overlayHidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
 @media (max-width: 720px) {
     .resultRow {
         grid-template-columns: 1fr;

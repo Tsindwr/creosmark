@@ -199,6 +199,10 @@ export default function DiceRoller({
                 setDisplayRoll(null);
                 setErrorText(null);
                 setPhase("idle");
+
+                diceBoxRef.current = null;
+                setBoxReady(false);
+
                 onClose();
             }}
         />
