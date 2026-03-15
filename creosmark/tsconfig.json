@@ -15,9 +15,11 @@
     "lib": ["ES2020", "DOM"],
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": []
   },
   "include": [
+    "src",
     ".astro/types.d.ts",
     "**/*",
     "**/*.ts",

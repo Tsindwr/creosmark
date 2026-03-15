@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
     "@astrojs/react": "^4.4.2",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",

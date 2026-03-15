@@ -1,3 +1,10 @@
+import type { InventoryState } from './inventory.ts'
+import type { AssignedPerkMap, PerkId } from "../lib/rolling/types.ts";
+
+export type PotentialPerkSlot = {
+  perkId: PerkId,
+};
+
 export type PotentialKey =
   | "might"
   | "finesse"
@@ -24,6 +31,7 @@ export type PotentialState = {
   charged?: boolean;
   skills: SkillDef[];
   perks?: Record<number, { label?: string; color?: string }>;
+  resolverPerks?: AssignedPerkMap;
 };
 
 export type MarksState = {
@@ -135,4 +143,5 @@ export type CharacterSheetState = {
   domains: DomainState[];
   knacks: KnackState[];
   attacks: AttackState[];
+  inventory: InventoryState;
 };

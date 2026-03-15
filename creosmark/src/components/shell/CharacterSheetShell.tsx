@@ -14,7 +14,11 @@ import SheetCard from "../common/SheetCard.tsx";
 import AttacksPanel from "../attacks/AttacksPanel.tsx";
 import GoalsPanel from "../story/GoalsPanel.tsx";
 import KnacksDomainsPanel from "../story/KnacksDomainsPanel.tsx";
+import InventoryPanel from "../iventory/InventoryPanel.tsx";
+import DiceRoller from "../roll/DiceRoller.tsx";
+import type { TestResult } from "../../lib/rolling/types.ts";
 import styles from "./CharacterSheetShell.module.css";
+import {buildTestStateFromDraft} from "../roll/rollDisplay.ts";
 
 type CharacterSheetShellProps = {
   initialSheet: CharacterSheetState;
@@ -33,13 +37,18 @@ export default function CharacterSheetShell({
 }: CharacterSheetShellProps) {
   const [sheet, setSheet] = useState(initialSheet);
   const [activeTab, setActiveTab] = useState<SheetTabId>("overview");
-  const [pendingRoll, setPendingRoll] =
+  const [rollBuilderSeed, setRollBuilderSeed] =
     useState<Partial<RollComposerDraft> | null>(null);
+  const [activeRollRequest, setActiveRollRequest] =
+    useState<RollComposerDraft | null>(null);
+  const [pendingResolvedRoll, setPendingResolvedRoll] =
+    useState<TestResult | null>(null);
 
   const seedRoll = (seed: { potentialKey: PotentialKey; skillName: string }) => {
-      setPendingRoll(
-          createDraftFromSkill(sheet.potentials, seed.potentialKey, seed.skillName),
-      );
+      setRollBuilderSeed({
+          potentialKey: seed.potentialKey,
+          skillName: seed.skillName,
+      });
   };
 
   return (
@@ -86,9 +95,9 @@ export default function CharacterSheetShell({
         ) : null}
 
         {activeTab === "inventory" ? (
-          <Placeholder
-            title="Inventory"
-            copy="The page 2 equipment area can become an equipment manager with armor locations and carried items."
+          <InventoryPanel
+            inventory={sheet.inventory}
+            onChange={(inventory) => setSheet({ ...sheet, inventory })}
           />
         ) : null}
 
@@ -113,10 +122,20 @@ export default function CharacterSheetShell({
         potentials={sheet.potentials}
         domains={sheet.domains}
         knacks={sheet.knacks}
-        initialDraft={pendingRoll}
-        onDraftConsumed={() => setPendingRoll(null)}
+        initialDraft={rollBuilderSeed}
+        onDraftConsumed={() => setRollBuilderSeed(null)}
         onRoll={(request) => {
-          console.log("ROLL REQUEST", request);
+          setActiveRollRequest(request);
+        }}
+      />
+
+      <DiceRoller
+        sheet={sheet}
+        request={activeRollRequest}
+        onClose={() => setActiveRollRequest(null)}
+        onResolved={(result) => {
+            setPendingResolvedRoll(result);
+            console.log("SUNDER ROLL RESULT", result);
         }}
       />
     </div>
