@@ -1,143 +1,43 @@
-# Creosmark
+# Astro Starter Kit: Minimal
 
-A character sheet builder tool for Sunder players to use online.
-
-## Features
-
-### Potential Track Component
-
-A custom web element (`<potential-track>`) for tracking character potential scores with stress and resistance mechanics.
-
-**Key Features:**
-- **Main Score Display**: Central number showing the character's potential score
-- **Semi-Halo Nodes**: Surrounding nodes equal to the score, arranged in a semicircle
-- **Stress Tracking**: Queue-style tracking from the left side (red nodes)
-- **Resistance Tracking**: Queue-style tracking from the right side (green nodes)
-- **Constraint Validation**: Ensures stress + resistance never exceeds the score
-- **Keyboard Accessible**: Full keyboard navigation support
-- **Themeable**: CSS custom properties for easy customization
-
-## Installation
-
-Simply include the component in your HTML:
-
-```html
-<script type="module" src="src/components/potential-track.js"></script>
-<link rel="stylesheet" href="src/css/potential-track.css">
+```sh
+npm create astro@latest -- --template minimal
 ```
 
-## Usage
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-### Basic Usage
+## 🚀 Project Structure
 
-```html
-<potential-track score="10" stress="0" resistance="0"></potential-track>
-```
+Inside of your Astro project, you'll see the following folders and files:
 
-### JavaScript API
-
-```javascript
-const track = document.querySelector('potential-track');
-
-// Properties
-track.score = 10;        // Set the total potential score
-track.stress = 2;        // Set stress level (must respect constraint)
-track.resistance = 1;    // Set resistance level (must respect constraint)
-
-// Methods
-track.addStress();       // Add 1 stress (returns true if successful)
-track.removeStress();    // Remove 1 stress (returns true if successful)
-track.addResistance();   // Add 1 resistance (returns true if successful)
-track.removeResistance(); // Remove 1 resistance (returns true if successful)
-
-// Events
-track.addEventListener('stress-changed', (e) => {
-  console.log(e.detail); // { stress, resistance, score }
-});
-
-track.addEventListener('resistance-changed', (e) => {
-  console.log(e.detail); // { stress, resistance, score }
-});
-```
-
-### Themes
-
-Add theme classes to customize appearance:
-
-```html
-<!-- Default dark theme -->
-<potential-track score="10"></potential-track>
-
-<!-- Light theme -->
-<potential-track class="light-theme" score="10"></potential-track>
-
-<!-- Fantasy/parchment theme -->
-<potential-track class="fantasy-theme" score="10"></potential-track>
-
-<!-- Size variations -->
-<potential-track class="small" score="10"></potential-track>
-<potential-track class="large" score="10"></potential-track>
-```
-
-### CSS Custom Properties
-
-Customize the component using CSS custom properties:
-
-```css
-potential-track {
-  --potential-center-bg: #1a1a2e;
-  --potential-center-stroke: #4a4a6a;
-  --potential-score-color: #e0e0e0;
-  --potential-node-empty: #2a2a4a;
-  --potential-node-stroke: #5a5a8a;
-  --potential-stress-fill: #8b0000;
-  --potential-stress-stroke: #ff4444;
-  --potential-resistance-fill: #004d00;
-  --potential-resistance-stroke: #44ff44;
-  --potential-font: 'Georgia', serif;
-}
-```
-
-## Running the Demo
-
-Start a local server to view the demo:
-
-```bash
-npm start
-```
-
-Then open `http://localhost:3000` in your browser.
-
-## Running Tests
-
-```bash
-npm test
-```
-
-## Project Structure
-
-```
-creosmark/
-├── index.html                    # Demo page
-├── package.json                  # Project configuration
-├── README.md                     # This file
+```text
+/
+├── public/
 ├── src/
-│   ├── components/
-│   │   └── potential-track.js   # The Potential Track web component
-│   └── css/
-│       └── potential-track.css  # Theme styles
-└── tests/
-    └── potential-track.test.js  # Unit tests
+│   └── pages/
+│       └── index.astro
+└── package.json
 ```
 
-## Browser Support
+Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
 
-This project uses Web Components (Custom Elements v1), which are supported in all modern browsers:
-- Chrome 67+
-- Firefox 63+
-- Safari 10.1+
-- Edge 79+
+There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
 
-## License
+Any static assets, like images, can be placed in the `public/` directory.
 
-MIT
+## 🧞 Commands
+
+All commands are run from the root of the project, from a terminal:
+
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npm run dev`             | Starts local dev server at `localhost:4321`      |
+| `npm run build`           | Build your production site to `./dist/`          |
+| `npm run preview`         | Preview your build locally, before deploying     |
+| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `npm run astro -- --help` | Get help using the Astro CLI                     |
+
+## 👀 Want to learn more?
+
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
