@@ -1,0 +1,85 @@
+import React, { useEffect, useState } from "react";
+import {
+    getCachedUserInfo,
+    getCurrentUser,
+    onAuthStateChange,
+    signInWithDiscord,
+    signOut,
+} from "../../lib/auth";
+import styles from "./AuthStatus.module.css";
+
+function resolveAvatar(userInfo: ReturnType<typeof getCachedUserInfo>) {
+    const avatar =
+        (userInfo?.user_metadata as any)?.avatar_url ||
+        "/favicon/sunder-logo.png";
+
+    if (!avatar) return "/favicon/sunder-logo.png";
+    if (/^(https?:)?\/\//.test(String(avatar))) return String(avatar);
+    if (String(avatar).startsWith("/")) return String(avatar);
+    return `/${String(avatar).replace(/^\/+/, "")}`;
+}
+
+export default function AuthStatus() {
+    const [user, setUser] = useState<any | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+
+        getCurrentUser().then((nextUser) => {
+            if (!mounted) return;
+            setUser(nextUser);
+        });
+
+        const unsubscribe = onAuthStateChange((nextUser) => {
+            if (!mounted) return;
+            setUser(nextUser);
+        });
+
+        return () => {
+            mounted = false;
+            unsubscribe();
+        };
+    }, []);
+
+    const cached = getCachedUserInfo();
+    const name =
+        (user?.user_metadata?.full_name ||
+            user?.user_metadata?.name ||
+            user?.user_metadata?.user_name ||
+            (cached?.user_metadata as any)?.full_name ||
+            (cached?.user_metadata as any)?.name ||
+            (cached?.user_metadata as any)?.user_name ||
+            "Guest") as string;
+
+    const avatar = resolveAvatar(cached);
+
+    return (
+        <div className={styles.card}>
+            <div className={styles.topline}>Account</div>
+
+            <div className={styles.row}>
+                <img className={styles.avatar} src={avatar} alt="" />
+                <div className={styles.identity}>
+                    <strong>{user ? name : "Not signed in"}</strong>
+                    <span>
+            {user
+                ? "Connected through Discord"
+                : "Sign in to access sheets, campaigns, and shared rolls"}
+          </span>
+                </div>
+            </div>
+
+            <div className={styles.actions}>
+                {user ? (
+                    <button type="button" className={styles.secondary} onClick={() => void signOut()}>
+                        Sign out
+                    </button>
+                ) : (
+                    <button type="button" className={styles.primary} onClick={() => void signInWithDiscord()}>
+                        Continue with Discord
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}

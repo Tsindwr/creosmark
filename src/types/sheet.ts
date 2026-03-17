@@ -1,5 +1,6 @@
 import type { InventoryState } from './inventory.ts'
 import type { AssignedPerkMap, PerkId } from "../lib/rolling/types.ts";
+import type {ArchetypeData, ArchetypeId, DomainData, DomainId} from "../lib/sheet-data.ts";
 
 export type PotentialPerkSlot = {
   perkId: PerkId,
@@ -82,11 +83,16 @@ export type GoalState = {
   notes?: string;
 };
 
+export const REWARD_FROM_GOAL = new Map<GoalTier, GoalReward>([
+    ["flaw", 'flavor'],
+    ['heroic', 'zenith'],
+    ['major', 'milestone'],
+    ['minor', 'string']
+]);
+
 export type DomainState = {
-  id: string;
-  name: string;
-  epithet?: string;
-  summary: string;
+  id: DomainId;
+  proficient: boolean;
 };
 
 export type KnackState = {
@@ -111,7 +117,7 @@ export type AttackState = {
 
 export type CharacterHeaderState = {
   name: string;
-  archetype: string;
+  archetypes: ArchetypeData[];
   origin: string;
   playerName: string;
   level: number;
@@ -140,7 +146,7 @@ export type CharacterSheetState = {
   armor: ArmorPieceState[];
   potentials: PotentialState[];
   goals: GoalState[];
-  domains: DomainState[];
+  domains: DomainData[];
   knacks: KnackState[];
   attacks: AttackState[];
   inventory: InventoryState;

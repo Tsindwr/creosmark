@@ -1,0 +1,13 @@
+---
+import "../../styles/sunder-theme.css";
+import CharacterSheetPageEntry from "../../components/characters/CharacterSheetPageEntry";
+
+const { id } = Astro.params;
+if (!id) throw new Error("Missing character id.");
+---
+
+<html lang="en">
+<body>
+<CharacterSheetPageEntry characterId={id} initialMode="play" client:load />
+</body>
+</html>

@@ -13,6 +13,7 @@ import {
   estimateVolatilityDice,
   getPotentialByKey,
 } from "../../lib/rolls";
+import type {DomainData} from "../../lib/sheet-data.ts";
 
 type RollRequest = {
   potential: string;
@@ -23,7 +24,7 @@ type RollRequest = {
 
 type RollComposerFabProps = {
   potentials: PotentialState[];
-  domains: DomainState[];
+  domains: DomainData[];
   knacks: KnackState[];
   initialDraft?: Partial<RollComposerDraft> | null;
   onDraftConsumed?: () => void;
@@ -302,7 +303,7 @@ export default function RollComposerFab({
                         }))
                       }
                   >
-                    {domain.name}
+                    {domain.label}
                   </button>
               ))}
             </div>
