@@ -1,0 +1,67 @@
+.card {
+    display: grid;
+    gap: 0.85rem;
+    color: var(--sunder-text);
+}
+
+.topline {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sunder-purple);
+    font-weight: 800;
+}
+
+.row {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.identity {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.identity strong {
+    color: var(--sunder-text);
+}
+
+.identity span {
+    color: rgba(245, 247, 251, 0.68);
+    font-size: 0.9rem;
+}
+
+.actions {
+    display: flex;
+}
+
+.primary,
+.secondary {
+    min-height: 2.4rem;
+    padding: 0.55rem 0.95rem;
+    border-radius: 0.85rem;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.primary {
+    border: none;
+    background: linear-gradient(135deg, var(--sunder-gold), #f0daa0);
+    color: #141821;
+}
+
+.secondary {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--sunder-text);
+}

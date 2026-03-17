@@ -12,10 +12,116 @@ export const SHEET_TABS = [
 
 export type SheetTabId = (typeof SHEET_TABS)[number]["id"];
 
+export type EditorTabId =
+  | "identity"
+  | "potentials"
+  | "proficiencies"
+  | "goals"
+  | "inventory"
+  | "attacks";
+
+export const EDITOR_TABS: Array<{ id: EditorTabId; label: string }> = [
+    { id: "identity", label: "Identity" },
+    { id: "potentials", label: "Potentials" },
+    { id: "proficiencies", label: "Proficiencies" },
+    { id: "goals", label: "Goals" },
+    { id: "inventory", label: "Inventory" },
+    { id: "attacks", label: "Attacks" },
+];
+
+export type ArchetypeId =
+  | "spellslinger"
+  | "summoner"
+  | "face"
+  | "control"
+  | "saboteur"
+  | "support"
+  | "frontliner"
+  | "halfcaster"
+  | "healer"
+  | "tank";
+
+export type DomainId =
+  | "spark"
+  | "root"
+  | "flow"
+  | "gleam"
+  | "scorch"
+  | "glare"
+  | "still"
+  | "crossing"
+  | "warp"
+  | "tear"
+  | "thread"
+  | "remnant"
+  | "bastion";
+
+export type DomainData = {
+  id: DomainId;
+  label: string;
+  deity?: string;
+  summary: string;
+}
+
+export const DOMAINS: DomainData[] = [
+    { id: "flow", label: "Flow", deity: "The Ebb", summary: "Places in flux, cycles, healing, water." },
+    { id: "gleam", label: "Gleam", deity: "The Glint", summary: "Desire, money, temptation, fey" },
+    { id: "scorch", label: "Scorch", deity: "The Hunger", summary: "Desolate, wasteland, fire" },
+    { id: "glare", label: "Glare", deity: "The Light", summary: "Illusion, deception, truth, exposure" },
+    { id: "spark", label: "Spark", deity: "The Breath", summary: "Places of art, inspiration, ideation" },
+    { id: "root", label: "Root", deity: "The Shade", summary: "Earth, thriving nature, growth, development" },
+    { id: "still", label: "Still", deity: "The Lurking", summary: "Hunting, fear, territory" },
+    { id: "crossing", label: "Crossing", deity: "The Migrant", summary: "Liminal spaces, wind, travel, havens" },
+    { id: "warp", label: "Warp", deity: "The Phantom", summary: "Mysticism, warped landscape, shadow" },
+    { id: "tear", label: "Tear", deity: "The Urge", summary: "Scarred terrain, wrath, war" },
+    { id: "thread", label: "Thread", deity: "The Weaver", summary: "Study, knowledge, arcana" },
+    { id: "remnant", label: "Remnant", deity: "The Crownless", summary: "Ruins, abandoned locations, forgotten knowledge" },
+    { id: "bastion", label: "Bastion", deity: "The Lord", summary: "Justice, law, court, ordinance" },
+];
+
+export type ArchetypeData = {
+  id: ArchetypeId;
+  label: string;
+  levels: number;
+}
+
+export function getTierFromArchetypes(classData: ArchetypeData[]) {
+  const totalLevels = classData.reduce(
+      (sum, archetype) => sum + archetype.levels,
+      0,
+  );
+
+  if (totalLevels <= 0) return 0;
+  return Math.ceil(totalLevels / 4);
+}
+
+export const ARCHETYPES: ArchetypeData[] = [
+    { id: "spellslinger", label: "Spellslinger", levels: 0 },
+    { id: "summoner", label: "Summoner", levels: 0 },
+    { id: "face", label: "Face", levels: 0 },
+    { id: "control", label: "Control", levels: 0 },
+    { id: "saboteur", label: "Saboteur", levels: 0 },
+    { id: "support", label: "Support", levels: 0 },
+    { id: "frontliner", label: "Frontliner", levels: 0 },
+    { id: "halfcaster", label: "Half-caster", levels: 0 },
+    { id: "healer", label: "Healer", levels: 0 },
+];
+
+export function getArchetypeLabel(id: ArchetypeId): string {
+  return ARCHETYPES.find((entry) => entry.id === id)?.label ?? id;
+}
+
+export function getDomainId(id: DomainId): DomainData | undefined {
+  return DOMAINS.find((entry) => entry.id === id);
+}
+
 export const DEMO_SHEET: CharacterSheetState = {
   header: {
     name: "Gwenhyfridd Cescire",
-    archetype: "Dreamer Barbarian / Wizard",
+    archetypes: [
+      { id: 'healer', label: 'Healer', levels: 8 },
+      { id: 'tank', label: 'Tank', levels: 1 }
+    ],
     origin: "Astral exile from Sauztein Geb",
     playerName: "Tobi",
     level: 9,
@@ -263,20 +369,20 @@ export const DEMO_SHEET: CharacterSheetState = {
   domains: [
     {
       id: "thread",
-      name: "Thread",
-      epithet: "The Weaver",
+      label: "Thread",
+      deity: "The Weaver",
       summary: "Study, knowledge, arcana.",
     },
     {
       id: "warp",
-      name: "Warp",
-      epithet: "The Phantom",
+      label: "Warp",
+      deity: "The Phantom",
       summary: "Mysticism, warped landscape, shadow.",
     },
     {
       id: "crossing",
-      name: "Crossing",
-      epithet: "The Migrant",
+      label: "Crossing",
+      deity: "The Migrant",
       summary: "Travel, havens, liminal spaces.",
     },
   ],

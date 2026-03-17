@@ -87,6 +87,45 @@
     --cut: rgba(255,255,255,.14);
 }
 
+:root {
+    --sunder-bg: #0b0e14;
+    --sunder-bg-elevated: #11151d;
+    --sunder-panel: rgba(255, 255, 255, 0.04);
+    --sunder-panel-strong: rgba(255, 255, 255, 0.07);
+    --sunder-text: #f5f7fb;
+    --sunder-text-dim: rgba(245, 247, 251, 0.72);
+    --sunder-gold: #d2b24c;
+    --sunder-purple: #8b7cf3;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--sunder-bg);
+    color: var(--sunder-text);
+    font-family: Georgia, "Times New Romaon", serif;
+}
+
+body {
+    background:
+        radial-gradient(circle at top left, rgba(139, 124, 243, 0.12), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(210, 178, 76, 0.1), transparent 24%),
+        linear-gradient(180deg, #11151d 0%, #0b0e14 100%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
 /* Extra link styling (both schemes) */
 
 .md-typeset a {

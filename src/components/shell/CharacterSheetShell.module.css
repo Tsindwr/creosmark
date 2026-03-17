@@ -4,14 +4,29 @@
   color: white;
 }
 
-.header {
+.headerMain {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: end;
+  align-items: start;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
   flex-wrap: wrap;
-  padding: 0.75rem 0.2rem 0;
-  margin-inline: 1rem;
+}
+
+.manageButton {
+  padding: 0.6rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(210, 178, 76, 0.35);
+  background: rgba(210, 178, 76, 0.14);
+  color: white;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .party {
@@ -65,4 +80,10 @@
 .storyLayout {
   display: grid;
   gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .headerMain {
+    display: grid;
+  }
 }

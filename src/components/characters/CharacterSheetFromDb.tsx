@@ -1,0 +1,109 @@
+import React, { useEffect, useRef, useState } from "react";
+import CharacterSheetShell from "../shell/CharacterSheetShell";
+import type { CampaignAssignment } from "../../types/roll-feed";
+import { getCampaignForCharacter, getMyCharacterSheet, updateCharacterSheet } from "../../lib/supabase/db";
+import type { CharacterSheetState } from "../../types/sheet";
+
+type CharacterSheetFromDbProps = {
+    characterId: string;
+    initialMode?: "play" | "edit";
+};
+
+export default function CharacterSheetFromDb({
+     characterId,
+     initialMode = "play",
+ }: CharacterSheetFromDbProps) {
+    const [sheet, setSheet] = useState<CharacterSheetState | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [errorText, setErrorText] = useState<string | null>(null);
+    const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+    const [assignedCampaign, setAssignedCampaign] = useState<CampaignAssignment | null>(null);
+
+    const loadedRef = useRef(false);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            try {
+                setLoading(true);
+                setErrorText(null);
+
+                const row = await getMyCharacterSheet(characterId);
+                if (!row) throw new Error("Character sheet not found.");
+                const campaign = await getCampaignForCharacter(characterId);
+                if (cancelled) return;
+                setSheet(row.sheet_json);
+                setAssignedCampaign(campaign)
+                loadedRef.current = true;
+            } catch (error) {
+                console.error("Failed to load library:", error);
+
+                if (error && typeof error === "object") {
+                    const anyError = error as Record<string, unknown>;
+                    console.error("Error details:", {
+                        message: anyError.message,
+                        code: anyError.code,
+                        details: anyError.details,
+                        hint: anyError.hint,
+                    });
+                }
+
+                if (cancelled) return;
+                setErrorText(
+                    error instanceof Error ? error.message : "Failed to load library."
+                );
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        }
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [characterId]);
+
+    useEffect(() => {
+        if (!loadedRef.current || !sheet || initialMode !== "edit") return;
+
+        const handle = window.setTimeout(async () => {
+            try {
+                setSaveState("saving");
+                await updateCharacterSheet(characterId, sheet);
+                setSaveState("saved");
+
+                window.setTimeout(() => {
+                    setSaveState((current) => (current === "saved" ? "idle" : current));
+                }, 1200);
+            } catch (error) {
+                console.error(error);
+                setSaveState("error");
+            }
+        }, 700);
+
+        return () => {
+            window.clearTimeout(handle);
+        };
+    }, [sheet, characterId, initialMode]);
+
+    if (loading) {
+        return <main style={{ padding: "1.5rem" }}>Loading character sheet…</main>;
+    }
+
+    if (errorText || !sheet) {
+        return <main style={{ padding: "1.5rem" }}>Error: {errorText ?? "Unknown error."}</main>;
+    }
+
+    return (
+        <CharacterSheetShell
+            initialSheet={sheet}
+            initialMode={initialMode}
+            saveState={saveState}
+            onSheetChange={setSheet}
+            characterId={characterId}
+            assignedCampaign={assignedCampaign}
+        />
+    );
+}
