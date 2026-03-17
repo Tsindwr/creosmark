@@ -8,6 +8,11 @@ type SidebarProps = {
   children?: React.ReactNode;
   /** CSS width value, e.g. "360px" or "40vw" */
   width?: string;
+  /**
+   * When false, the sidebar slides in without a dimming backdrop,
+   * so the rest of the page remains interactive. Default: true.
+   */
+  modal?: boolean;
 };
 
 /**
@@ -20,6 +25,7 @@ export default function Sidebar({
   title,
   children,
   width = "360px",
+  modal = true,
 }: SidebarProps) {
   // Close on Escape
   useEffect(() => {
@@ -33,14 +39,16 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Dimming overlay */}
-      <div
-        className={[styles.backdrop, open ? styles.backdropOpen : ""]
-          .filter(Boolean)
-          .join(" ")}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      {/* Dimming overlay — only rendered in modal mode */}
+      {modal && (
+        <div
+          className={[styles.backdrop, open ? styles.backdropOpen : ""]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Panel */}
       <aside
@@ -48,7 +56,7 @@ export default function Sidebar({
           .filter(Boolean)
           .join(" ")}
         style={{ "--sidebar-width": width } as React.CSSProperties}
-        aria-modal={open ? "true" : "false"}
+        aria-modal={open && modal ? "true" : "false"}
         aria-label={title ?? "Side panel"}
         hidden={!open}
       >

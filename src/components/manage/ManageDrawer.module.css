@@ -1,61 +1,10 @@
-.overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 95;
-}
-
-.scrim {
-    position: absolute;
-    inset: 0;
-    border: none;
-    background: rgba(5, 7, 11, 0.56);
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-}
-
-.drawer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: min(360px, 92vw);
-    height: 100%;
-    display: grid;
-    align-content: start;
-    gap: 1rem;
-    padding: 1rem;
-    border-right: 1px solid rgba(210, 178, 76, 0.22);
-    background: rgba(11, 14, 21, 0.96);
-    box-shadow: 16px 0 40px rgba(0, 0, 0, 0.32);
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: start;
-}
-
-.eyebrow,
 .groupLabel {
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     font-weight: 800;
     color: var(--sunder-purple, #8b7cf3);
-}
-
-.title {
-    margin: 0.2rem 0 0;
-}
-
-.close {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
-    color: white;
-    cursor: pointer;
+    margin-bottom: 0.2rem;
 }
 
 .group {
@@ -86,4 +35,5 @@
     border-radius: 0.9rem;
     background: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.64);
+    font-size: 0.85rem;
 }
