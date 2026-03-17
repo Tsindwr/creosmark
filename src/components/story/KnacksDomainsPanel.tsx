@@ -1,9 +1,10 @@
 import React from 'react';
 import styles from "./KnacksDomainsPanel.module.css";
 import type { DomainState, KnackState } from "../../types/sheet";
+import type {DomainData} from "../../lib/sheet-data.ts";
 
 type KnacksDomainsPanelProps = {
-    domains: DomainState[];
+    domains: DomainData[];
     knacks: KnackState[];
 };
 
@@ -39,8 +40,8 @@ export default function KnacksDomainsPanel({
                     <div className={styles.domainList}>
                         {domains.map((domain) => (
                             <div key={domain.id} className={styles.domainChip}>
-                                <strong>{domain.name}</strong>
-                                {domain.epithet ? <span>{domain.epithet}</span> : null}
+                                <strong>{domain.label}</strong>
+                                {domain.deity ? <span>{domain.deity}</span> : null}
                                 <p>{domain.summary}</p>
                             </div>
                         ))}

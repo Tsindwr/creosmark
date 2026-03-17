@@ -1,0 +1,13 @@
+---
+import "../../styles/sunder-theme.css";
+import CampaignRosterPageEntry from "../../components/library/CampaignRosterPageEntry";
+
+const { id } = Astro.params;
+if (!id) throw new Error("Missing campaign id.");
+---
+
+<html lang="en">
+<body>
+<CampaignRosterPageEntry campaignId={id} client:load />
+</body>
+</html>
