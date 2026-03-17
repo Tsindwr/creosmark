@@ -1,6 +1,7 @@
 .shell {
   display: grid;
   gap: 1rem;
+  padding: 1rem;
   color: white;
 }
 

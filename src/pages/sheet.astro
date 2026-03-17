@@ -1,23 +1,30 @@
 ---
-import PotentialWidget from "../components/PotentialWidget";
-import PotentialsList from "../components/PotentialsList";
-import { useState } from "react";
+import PotentialWidget from "../components/potentials/PotentialWidget";
+import "../styles/sunder-theme.css";
 ---
 
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        /* Example: make it responsive */
-        .wrap { max-width: 420px; margin: 2rem auto; }
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; background: #0b0e14; color: #f5f7fb; }
+        .wrap { max-width: 420px; margin: 2rem auto; padding: 1rem; }
     </style>
-    <title>Potential Sheet</title>
+    <title>Potential Widget</title>
 </head>
 <body>
 <div class="wrap">
-    <PotentialsList client:load />
+    <PotentialWidget
+        client:load
+        title="Might"
+        potentialValue={6}
+        stress={1}
+        resistance={0}
+        volatilityDieMax={6}
+    />
 </div>
 </body>
 </html>
-
-{/* React wrapper for state */}
-{/* Put this below in the same file or better as src/components/PotentialShell.tsx */}

@@ -24,6 +24,7 @@ import EditorWorkspace from "../manage/EditorWorkspace.tsx";
 import ManageDrawer from "../manage/ManageDrawer";
 import CampaignRollWidget from "../roll/CampaignRollWidget.tsx";
 import RollHistoryDrawer from "../roll/RollHistoryDrawer.tsx";
+import NavBar from "../common/NavBar.tsx";
 import { publishRollEvent } from "../../lib/supabase/rolls.ts";
 import type { CampaignAssignment, RollBroadcastMode } from "../../types/roll-feed.ts";
 import type { TestResult } from "../../lib/rolling/types.ts";
@@ -93,6 +94,8 @@ export default function CharacterSheetShell({
 
     return (
         <div className={styles.shell}>
+            <NavBar activePath="/" />
+
             <header className={styles.headerMain}>
                 <div className={"header-wrapper"}>
                     {sheet.header.partyName ? (

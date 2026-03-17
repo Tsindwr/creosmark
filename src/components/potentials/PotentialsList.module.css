@@ -1,93 +1,38 @@
-.grid {
+.section {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1rem, 3vw, 2rem);
+  gap: 1.5rem;
 }
 
-.card {
-  display: grid;
-  grid-template-columns: minmax(180px, 220px) 1fr;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(210, 178, 76, 0.14);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.widgetWrap {
-  width: 100%;
-  max-width: 220px;
-  justify-self: center;
-}
-
-.skillsCol {
+.group {
   display: grid;
   gap: 0.65rem;
 }
 
-.skillRow {
+.groupLabel {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--sunder-purple, #8b7cf3);
+  opacity: 0.7;
+}
+
+/* 4 columns on large screens so all 8 potentials fit at once */
+.grid {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.75rem;
-  align-items: center;
-  width: 100%;
-  padding: 0.85rem 0.95rem;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.skillTopline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.skillRow p {
-  margin: 0.25rem 0 0;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.88rem;
-}
-
-.badge,
-.rollHint {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 800;
-}
-
-.badge {
-  color: #121620;
-  background: rgba(210, 178, 76, 0.92);
-}
-
-.rollHint {
-  color: white;
-  background: rgba(139, 124, 243, 0.26);
-  border: 1px solid rgba(139, 124, 243, 0.35);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
 }
 
 @media (max-width: 1100px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 740px) {
-  .card {
+@media (max-width: 520px) {
+  .grid {
     grid-template-columns: 1fr;
-  }
-
-  .widgetWrap {
-    max-width: 260px;
   }
 }
