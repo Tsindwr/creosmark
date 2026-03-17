@@ -48,7 +48,7 @@ export default function Sidebar({
           .filter(Boolean)
           .join(" ")}
         style={{ "--sidebar-width": width } as React.CSSProperties}
-        aria-modal={open}
+        aria-modal={open ? "true" : "false"}
         aria-label={title ?? "Side panel"}
         hidden={!open}
       >
