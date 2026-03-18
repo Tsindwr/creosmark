@@ -10,6 +10,7 @@ import {
     joinCampaignByCode
 } from "../../lib/supabase/db";
 import styles from './LibraryHomeFromDb.module.css';
+import {routes} from "../../lib/routing.ts";
 
 export default function LibraryHomeFromDb() {
     const [characters, setCharacters] = useState<CharacterSheetSummary[]>([]);
@@ -60,7 +61,7 @@ export default function LibraryHomeFromDb() {
         try {
             setBusy(true);
             const row = await createCharacterSheet(createBlankSheet());
-            window.location.href = `/characters/${row.id}/edit`;
+            window.location.href = routes.characterEdit(row.id);
         } catch (error) {
             console.error(error);
             alert(error instanceof Error ? error.message : "Failed to create character.");
@@ -76,7 +77,7 @@ export default function LibraryHomeFromDb() {
         try {
             setBusy(true);
             const campaign = await createCampaignWithMembership({ name: name.trim() });
-            window.location.href = `/characters/${campaign.id}`;
+            window.location.href = `/campaign/view?id=${encodeURIComponent(campaign.id)}`;
         } catch (error) {
             console.error(error);
             alert(error instanceof Error ? error.message : "Failed to create campaign.");
@@ -93,7 +94,7 @@ export default function LibraryHomeFromDb() {
             setBusy(true);
             const campaign = await joinCampaignByCode(joinCode);
             setJoinCode("");
-            window.location.href = `/campaigns/${campaign.id}`;
+            window.location.href = `/campaign/view?id=${encodeURIComponent(campaign.id)}`;
         } catch (error) {
             console.error(error);
             alert(error instanceof Error ? error.message : "Failed to join campaign.");

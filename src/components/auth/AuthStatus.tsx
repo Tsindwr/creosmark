@@ -69,7 +69,7 @@ export default function AuthStatus() {
                     <span>
                         {user
                             ? "Connected through Discord"
-                            : "Sign in to access sheets, campaigns, and shared rolls"}
+                            : "Sign in to access sheets, campaign, and shared rolls"}
                     </span>
                 </div>
             </div>

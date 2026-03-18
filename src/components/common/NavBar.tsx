@@ -12,7 +12,7 @@ type NavLink = {
 
 const NAV_LINKS: NavLink[] = [
   { label: "Characters", href: "/", icon: "🧙" },
-  { label: "Campaigns", href: "/campaigns", icon: "⚔️" },
+  { label: "Campaigns", href: "/campaign", icon: "⚔️" },
   { label: "Abilities", href: "/abilities", icon: "✨", disabled: true },
 ];
 
