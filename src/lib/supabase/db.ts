@@ -553,3 +553,67 @@ export function createBlankSheet(): CharacterSheetState {
         },
     };
 }
+
+export async function createCampaignWithMembership(input: {
+    name: string;
+    gmName?: string;
+    pitch?: string;
+}): Promise<CampaignSummary & { joinCode?: string }> {
+    const userId = await requireUserId();
+
+    const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+            owner_id: userId,
+            name: input.name,
+            gm_name: input.gmName ?? null,
+            pitch: input.pitch ?? null,
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    const campaign = data as CampaignRow & { join_code?: string };
+
+    const { error: memberError } = await supabase
+        .from("campaign_members")
+        .insert({
+            campaign_id: campaign.id,
+            user_id: userId,
+            role: "gm",
+        });
+
+    if (memberError) throw memberError;
+
+    return {
+        id: campaign.id,
+        name: campaign.name,
+        gmName: campaign.gm_name ?? undefined,
+        pitch: campaign.pitch ?? undefined,
+        characterIds: [],
+        updatedLabel: new Date(campaign.updated_at).toLocaleString(),
+        joinCode: campaign.join_code,
+    };
+}
+
+export async function joinCampaignByCode(joinCode: string): Promise<{
+    id: string;
+    name: string;
+}> {
+    const { data, error } = await supabase.rpc("join_campaign_by_code", {
+        p_join_code: joinCode.trim().toUpperCase(),
+    });
+
+    if (error) throw error;
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+        throw new Error("Campaign not found.");
+    }
+
+    return {
+        id: row.campaign_id,
+        name: row.campaign_name,
+    };
+}
