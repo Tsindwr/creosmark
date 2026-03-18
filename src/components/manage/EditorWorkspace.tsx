@@ -19,6 +19,8 @@ import {
 type EditorWorkspaceProps = {
     sheet: CharacterSheetState;
     onChange: (next: CharacterSheetState) => void;
+    forcedTab?: EditorTabId;
+    hideNav?: boolean;
 };
 
 function updatePotential(
@@ -34,8 +36,12 @@ function updatePotential(
 export default function EditorWorkspace({
     sheet,
     onChange,
+    forcedTab,
+    hideNav = false,
 }: EditorWorkspaceProps) {
-    const [tab, setTab] = useState<EditorTabId>("identity");
+    const [internalTab, setInternalTab] = useState<EditorTabId>("identity");
+    const tab = forcedTab ?? internalTab;
+    const setTab = forcedTab ? (() => {}) : setInternalTab;
 
     const proficientDomainIds = useMemo(
         () => new Set(sheet.domains.map((entry) => entry.id)),
@@ -106,25 +112,27 @@ export default function EditorWorkspace({
 
     return (
         <section className={styles.editor}>
-            <aside className={styles.sidebar}>
-                <div className={styles.eyebrow}>Editing</div>
-                <h2 className={styles.title}>Character Builder</h2>
+            {!hideNav ? (
+                <aside className={styles.sidebar}>
+                    <div className={styles.eyebrow}>Editing</div>
+                    <h2 className={styles.title}>Character Builder</h2>
 
-                <nav className={styles.nav}>
-                    {EDITOR_TABS.map((entry) => (
-                        <button
-                            key={entry.id}
-                            type={'button'}
-                            className={`${styles.navButton} ${
-                                tab === entry.id ? styles.navButtonActive : ""
-                            }`}
-                            onClick={() => setTab(entry.id)}
-                        >
-                            {entry.label}
-                        </button>
-                    ))}
-                </nav>
-            </aside>
+                    <nav className={styles.nav}>
+                        {EDITOR_TABS.map((entry) => (
+                            <button
+                                key={entry.id}
+                                type={'button'}
+                                className={`${styles.navButton} ${
+                                    tab === entry.id ? styles.navButtonActive : ""
+                                }`}
+                                onClick={() => setTab(entry.id)}
+                            >
+                                {entry.label}
+                            </button>
+                        ))}
+                    </nav>
+                </aside>
+            ) : null}
 
             <div className={styles.content}>
                 {tab === "identity" ? (
