@@ -4,7 +4,13 @@
     padding: 1rem;
     border-radius: 1rem;
     border: 1px solid rgba(210, 178, 76, 0.16);
-    background: rgba(255, 255, 255, 0.03);
+    background:
+            linear-gradient(180deg, rgba(22, 27,37, 0.97), rgba(14, 18, 25, 0.95));
+    color: var(--sunder-text);
+    box-shadow:
+        0 10px 26px rgba(0,0,0,0.16),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+    align-content: start;
 }
 
 .cardHeader {
@@ -25,6 +31,8 @@
 .title {
     margin: 0.18rem 0 0;
     font-size: 1.2rem;
+    line-height: 0.98;
+    color: var(--sunder-text);
 }
 
 .badge {
@@ -37,6 +45,7 @@
     color: rgba(255, 255, 255, 0.88);
     font-size: 0.78rem;
     font-weight: 800;
+    white-space: nowrap;
 }
 
 .metaRow {
@@ -60,12 +69,15 @@
 .copy {
     margin: 0;
     color: rgba(255, 255, 255, 0.64);
+    line-height: 1.5;
+    font-size: 0.98rem;
 }
 
 .actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.65rem;
+    margin-top: auto;
 }
 
 .actionLink,
@@ -80,6 +92,15 @@
     font-weight: 800;
     text-decoration: none;
     cursor: pointer;
+    transition:
+        transform 140ms ease,
+        background 140ms ease,
+        border-color 140ms ease;
+}
+
+.actionLink:hover,
+.actionLinkSecondary:hover {
+    transform: translateY(-1px);
 }
 
 .actionLink {

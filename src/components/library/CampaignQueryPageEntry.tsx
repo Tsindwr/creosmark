@@ -2,7 +2,7 @@ import React from 'react';
 import AuthGate from '../auth/AuthGate';
 import SignInScreen from '../auth/SignInScreen';
 import CampaignRosterFromDb from "./CampaignRosterFromDb.tsx";
-import { useQueryParam } from "../routing/useQueryParams.ts";
+import { useQueryParam} from "../../lib/useQueryParams.ts";
 
 function InnerCampaignQueryPageEntry() {
     const { value: campaignId, ready } = useQueryParam('id');

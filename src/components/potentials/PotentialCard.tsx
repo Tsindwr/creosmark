@@ -25,7 +25,8 @@ export default function PotentialCard({
     <div className={styles.scene}>
       <div className={[styles.card, showWidget ? styles.flipped : ""].filter(Boolean).join(" ")}>
         {/* ── Front: Skills ── */}
-        <div className={styles.face} aria-hidden={showWidget ? "true" : "false"}>
+        <div className={[styles.face, styles.front].join(" ")}
+             aria-hidden={showWidget ? "true" : "false"}>
           <div className={styles.cardHeader}>
             <span className={[styles.cardTitle, charged ? styles.charged : ""].filter(Boolean).join(" ")}>
               {potential.title}
@@ -82,7 +83,10 @@ export default function PotentialCard({
         </div>
 
         {/* ── Back: Potential Widget ── */}
-        <div className={[styles.face, styles.back, charged ? styles.chargedBack : ""].filter(Boolean).join(" ")} aria-hidden={!showWidget ? "true" : "false"}>
+        <div className={[styles.face, styles.back, charged ? styles.chargedBack : ""]
+                .filter(Boolean)
+                .join(" ")}
+             aria-hidden={!showWidget ? "true" : "false"}>
           <div className={styles.widgetWrap}>
             <PotentialWidget
               title={potential.title}

@@ -111,7 +111,7 @@ export default function EditorWorkspace({
     }
 
     return (
-        <section className={styles.editor}>
+        <section className={`${styles.editor} ${hideNav ? styles.editorFull : ""}`}>
             {!hideNav ? (
                 <aside className={styles.sidebar}>
                     <div className={styles.eyebrow}>Editing</div>

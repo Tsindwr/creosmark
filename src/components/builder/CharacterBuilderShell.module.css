@@ -9,9 +9,11 @@
 }
 
 .header,
+.steps,
 .content {
-    max-width: 1360px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
 }
 
 .header {
@@ -44,7 +46,6 @@
 }
 
 .steps {
-    max-width: 1360px;
     margin: 0.5rem auto 1rem;
     display: flex;
     flex-wrap: wrap;

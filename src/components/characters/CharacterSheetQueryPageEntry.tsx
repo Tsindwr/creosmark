@@ -3,7 +3,7 @@ import AuthGate from '../auth/AuthGate';
 import SignInScreen from "../auth/SignInScreen.tsx";
 import CharacterSheetFromDb from "./CharacterSheetFromDb.tsx";
 import CharacterBuilderPageEntry from "./CharacterBuilderPageEntry.tsx";
-import { useQueryParam } from "../routing/useQueryParams.ts";
+import { useQueryParam} from "../../lib/useQueryParams.ts";
 
 type CharacterSheetQueryPageEntryProps = {
     mode: 'play' | 'edit';
