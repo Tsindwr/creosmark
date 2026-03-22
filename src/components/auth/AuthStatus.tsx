@@ -10,14 +10,18 @@ import {
 import styles from "./AuthStatus.module.css";
 
 function resolveAvatar(userInfo: CachedUserInfo | null) {
+    const base = import.meta.env.BASE_URL;
+    const fallbackAvatar = `${base}favicon/creosmark-logo.png`;
+
     const avatar =
         (userInfo?.user_metadata as any)?.avatar_url ||
-        "/favicon/sunder-logo.png";
+        fallbackAvatar;
 
-    if (!avatar) return "/favicon/sunder-logo.png";
+    if (!avatar) return fallbackAvatar;
     if (/^(https?:)?\/\//.test(String(avatar))) return String(avatar);
-    if (String(avatar).startsWith("/")) return String(avatar);
-    return `/${String(avatar).replace(/^\/+/, "")}`;
+
+    const normalized = String(avatar).replace(/^\/+/, "");
+    return `${base}${normalized}`;
 }
 
 export default function AuthStatus() {
