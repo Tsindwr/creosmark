@@ -1,6 +1,8 @@
 import React from "react";
 import styles from "./NavBar.module.css";
 
+const BASE = import.meta.env.BASE_URL;
+
 type NavLink = {
     label: string;
     href: string;
@@ -11,9 +13,9 @@ type NavLink = {
 };
 
 const NAV_LINKS: NavLink[] = [
-    {label: "Characters", href: "/", icon: "🧙"},
-    {label: "Campaigns", href: "/campaign", icon: "⚔️"},
-    {label: "Abilities", href: "/abilities", icon: "✨"},
+    {label: "Characters", href: `${BASE}`, icon: "🧙"},
+    {label: "Campaigns", href: `${BASE}campaign`, icon: "⚔️"},
+    {label: "Abilities", href: `${BASE}abilities`, icon: "✨"},
 ];
 
 type NavBarProps = {
