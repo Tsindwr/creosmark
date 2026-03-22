@@ -9,9 +9,9 @@ type CharacterSheetPageEntryProps = {
 };
 
 export default function CharacterSheetPageEntry({
-                                                    characterId,
-                                                    initialMode = "play",
-                                                }: CharacterSheetPageEntryProps) {
+    characterId,
+    initialMode = "play",
+}: CharacterSheetPageEntryProps) {
     return (
         <AuthGate fallback={<SignInScreen />}>
             <CharacterSheetFromDb characterId={characterId} initialMode={initialMode} />

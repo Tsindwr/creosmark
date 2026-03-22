@@ -8,8 +8,8 @@ type CampaignRosterFromDbProps = {
 };
 
 export default function CampaignRosterFromDb({
-                                                 campaignId,
-                                             }: CampaignRosterFromDbProps) {
+    campaignId,
+}: CampaignRosterFromDbProps) {
     const [campaign, setCampaign] = useState<CampaignRecord | null>(null);
     const [loading, setLoading] = useState(true);
     const [errorText, setErrorText] = useState<string | null>(null);

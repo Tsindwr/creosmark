@@ -1,6 +1,7 @@
 import React from "react";
 import type { CampaignAssignment, RollBroadcastMode } from "../../types/roll-feed";
 import styles from "./CampaignRollWidget.module.css";
+import {routes} from "../../lib/routing.ts";
 
 type CampaignRollWidgetProps = {
     campaign: CampaignAssignment;
@@ -10,11 +11,11 @@ type CampaignRollWidgetProps = {
 };
 
 export default function CampaignRollWidget({
-                                               campaign,
-                                               mode,
-                                               onModeChange,
-                                               onOpenHistory,
-                                           }: CampaignRollWidgetProps) {
+   campaign,
+   mode,
+   onModeChange,
+   onOpenHistory,
+}: CampaignRollWidgetProps) {
     return (
         <section className={styles.widget}>
             <div className={styles.topline}>
@@ -23,7 +24,7 @@ export default function CampaignRollWidget({
                     <strong>{campaign.name}</strong>
                 </div>
 
-                <a className={styles.linkButton} href={`/campaigns/${campaign.id}`}>
+                <a className={styles.linkButton} href={routes.campaignView(campaign.id)}>
                     View Campaign
                 </a>
             </div>

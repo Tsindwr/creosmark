@@ -10,7 +10,13 @@ export type CachedUserInfo = {
     updated_at: string;
 };
 
+function isBrowser() {
+    return typeof window !== `undefined`;
+}
+
 function saveUserInfo(user: any | null) {
+    if (!isBrowser()) return;
+
     if (!user) {
         window.localStorage.removeItem(USER_STORAGE_KEY);
         return;
@@ -61,6 +67,8 @@ function saveUserInfo(user: any | null) {
 }
 
 export function getCachedUserInfo(): CachedUserInfo | null {
+    if (!isBrowser()) return null;
+
     try {
         const cached = window.localStorage.getItem(USER_STORAGE_KEY);
         return cached ? (JSON.parse(cached) as CachedUserInfo) : null;
@@ -68,22 +76,6 @@ export function getCachedUserInfo(): CachedUserInfo | null {
         console.warn("Failed to read user info from localStorage:", error);
         return null;
     }
-}
-
-export async function getCurrentUser() {
-    const {
-        data: { user },
-        error,
-    } = await supabase.auth.getUser();
-
-    if (error) {
-        console.warn("getUser error:", error);
-        saveUserInfo(null);
-        return null;
-    }
-
-    saveUserInfo(user ?? null);
-    return user ?? null;
 }
 
 export async function getCurrentSession() {
@@ -97,7 +89,13 @@ export async function getCurrentSession() {
         return null;
     }
 
+    saveUserInfo(session?.user ?? null);
     return session ?? null;
+}
+
+export async function getCurrentUser() {
+    const session = await getCurrentSession();
+    return session?.user ?? null;
 }
 
 export async function signInWithDiscord() {
