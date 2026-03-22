@@ -1,9 +1,8 @@
 import React from 'react';
-import AuthGate from '../auth/AuthGate';
-import SignInScreen from "../auth/SignInScreen.tsx";
 import CharacterSheetFromDb from "./CharacterSheetFromDb.tsx";
 import CharacterBuilderPageEntry from "./CharacterBuilderPageEntry.tsx";
 import { useQueryParam} from "../../lib/useQueryParams.ts";
+import AppShell from "../app/AppShell.tsx";
 
 type CharacterSheetQueryPageEntryProps = {
     mode: 'play' | 'edit';
@@ -31,8 +30,8 @@ function InnerCharacterSheetQueryPageEntry({
 
 export default function CharacterSheetQueryPageEntry({ mode }: CharacterSheetQueryPageEntryProps) {
     return (
-        <AuthGate fallback={<SignInScreen />}>
+        <AppShell>
             <InnerCharacterSheetQueryPageEntry mode={mode} />
-        </AuthGate>
+        </AppShell>
     );
 }

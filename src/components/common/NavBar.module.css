@@ -91,6 +91,39 @@
   margin-left: auto;
 }
 
+.leftCluster {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(210, 178, 76, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sunder-ink, #f5f7fb);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.backButton:hover {
+  background: rgba(210, 178, 76, 0.12);
+  border-color: rgba(210, 178, 76, 0.34);
+  transform: translateY(-1px);
+}
+
+.backIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 @media (max-width: 540px) {
   .link {
     padding: 0.4rem 0.5rem;

@@ -59,32 +59,22 @@ export default function AuthStatus() {
     const avatar = resolveAvatar(cached);
 
     return (
-        <div className={styles.card}>
-            <div className={styles.topline}>Account</div>
+        <div className={styles.inlineAuth}>
+            <img className={styles.avatar} src={avatar} alt="" />
 
-            <div className={styles.row}>
-                <img className={styles.avatar} src={avatar} alt="" />
-                <div className={styles.identity}>
-                    <strong>{user ? name : "Not signed in"}</strong>
-                    <span>
-                        {user
-                            ? "Connected through Discord"
-                            : "Sign in to access sheets, campaign, and shared rolls"}
-                    </span>
-                </div>
+            <div className={styles.identity}>
+                <strong>{user ? name : "Guest"}</strong>
             </div>
 
-            <div className={styles.actions}>
-                {user ? (
-                    <button type="button" className={styles.secondary} onClick={() => void signOut()}>
-                        Sign out
-                    </button>
-                ) : (
-                    <button type="button" className={styles.primary} onClick={() => void signInWithDiscord()}>
-                        Continue with Discord
-                    </button>
-                )}
-            </div>
+            {user ? (
+                <button type="button" className={styles.secondary} onClick={() => void signOut()}>
+                    Sign out
+                </button>
+            ) : (
+                <button type="button" className={styles.primary} onClick={() => void signInWithDiscord()}>
+                    Continue with Discord
+                </button>
+            )}
         </div>
     );
 }

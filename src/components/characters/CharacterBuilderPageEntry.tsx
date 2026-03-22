@@ -15,6 +15,7 @@ function InnerBuilder({ characterId }: CharacterBuilderPageEntryProps) {
     const [errorText, setErrorText] = useState<string | null>(null);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const loadedRef = useRef(false);
+    const lastSavedJsonRef = useRef<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -29,6 +30,7 @@ function InnerBuilder({ characterId }: CharacterBuilderPageEntryProps) {
 
                 if (cancelled) return;
                 setSheet(row.sheet_json);
+                lastSavedJsonRef.current = JSON.stringify(row.sheet_json);
                 loadedRef.current = true;
             } catch (error) {
                 if (cancelled) return;
@@ -48,11 +50,16 @@ function InnerBuilder({ characterId }: CharacterBuilderPageEntryProps) {
     useEffect(() => {
         if (!loadedRef.current || !sheet) return;
 
+        const nextJson = JSON.stringify(sheet);
+        if (nextJson === lastSavedJsonRef.current) return;
+
         const handle = window.setTimeout(async () => {
             try {
                 setSaveState('saving');
                 await updateCharacterSheet(characterId, sheet);
+                lastSavedJsonRef.current = nextJson;
                 setSaveState('saved');
+
                 window.setTimeout(() => {
                     setSaveState((current) => (current === 'saved' ? 'idle' : current));
                 }, 1000);

@@ -5,6 +5,7 @@ import type {
     RollComposerDraft,
 } from "../../types/sheet.ts";
 import {
+    type ArchetypeData,
     getArchetypeLabel,
     getTierFromArchetypes,
     SHEET_TABS,
@@ -29,6 +30,7 @@ import { publishRollEvent } from "../../lib/supabase/rolls.ts";
 import type { CampaignAssignment, RollBroadcastMode } from "../../types/roll-feed.ts";
 import type { TestResult } from "../../lib/rolling/types.ts";
 import styles from "./CharacterSheetShell.module.css";
+import {routes} from "../../lib/routing.ts";
 
 type CharacterSheetShellProps = {
     initialSheet: CharacterSheetState;
@@ -84,6 +86,29 @@ export default function CharacterSheetShell({
         });
     };
 
+    function replaceSheet(next: CharacterSheetState) {
+        setSheet(next);
+    }
+
+    function setSheetField<K extends keyof CharacterSheetState>(
+        key: K,
+        value: CharacterSheetState[K],
+    ) {
+        setSheet((current) => ({
+            ...current,
+            [key]: value,
+        }));
+    }
+
+    function getLevels(archetypes: ArchetypeData[]): number {
+        let total = 0;
+        for (let i = 0; i < archetypes.length; i++) {
+            const archetype = archetypes[i];
+            total += archetype.levels;
+        }
+        return total;
+    }
+
     useEffect(() => {
         setSheet(initialSheet);
     }, [initialSheet]);
@@ -94,8 +119,6 @@ export default function CharacterSheetShell({
 
     return (
         <div className={styles.shell}>
-            <NavBar activePath="/" />
-
             <header className={styles.headerMain}>
                 <div className={"header-wrapper"}>
                     {sheet.header.partyName ? (
@@ -108,7 +131,10 @@ export default function CharacterSheetShell({
                         <button
                             type={'button'}
                             className={styles.manageButton}
-                            onClick={() => setManageOpen(true)}
+                            onClick={() => {
+                                if (!characterId) return;
+                                window.location.href = routes.characterEdit(characterId);
+                            }}
                         >
                             Manage
                         </button>
@@ -129,7 +155,7 @@ export default function CharacterSheetShell({
 
                 <div className={styles.sideMeta}>
                     <div className={styles.badge}>Player · {sheet.header.playerName}</div>
-                    <div className={styles.badge}>Level {sheet.header.level}</div>
+                    <div className={styles.badge}>Level {getLevels(sheet.header.archetypes)}</div>
                     <div className={styles.badge}>Tier {getTierFromArchetypes(sheet.header.archetypes)}</div>
                     <div className={styles.badge}>
                         {saveState === 'saving'
@@ -158,7 +184,7 @@ export default function CharacterSheetShell({
 
             <main className={styles.content}>
                 {mode === 'edit' ? (
-                    <EditorWorkspace sheet={sheet} onChange={setSheet} />
+                    <EditorWorkspace sheet={sheet} onChange={replaceSheet} />
                 ) : (
                     <>
                         {activeTab === "overview" ? <OverviewSection sheet={sheet} onChange={setSheet}/> : null}
@@ -166,7 +192,7 @@ export default function CharacterSheetShell({
                         {activeTab === "potentials" ? (
                             <PotentialsList
                                 potentials={sheet.potentials}
-                                onChange={(potentials) => setSheet({...sheet, potentials})}
+                                onChange={(potentials) => setSheetField("potentials", potentials)}
                                 onStartRoll={seedRoll}
                             />
                         ) : null}
@@ -185,14 +211,14 @@ export default function CharacterSheetShell({
                         {activeTab === "inventory" ? (
                             <InventoryPanel
                                 inventory={sheet.inventory}
-                                onChange={(inventory) => setSheet({...sheet, inventory})}
+                                onChange={(inventory) => setSheetField("inventory", inventory)}
                             />
                         ) : null}
 
                         {activeTab === "background" ? (
                             <div className={styles.storyLayout}>
                                 <GoalsPanel goals={sheet.goals}
-                                            onChange={(goals) => setSheet({...sheet, goals})}
+                                            onChange={(goals) => setSheetField("goals", goals)}
                                 />
                                 <KnacksDomainsPanel domains={sheet.domains} knacks={sheet.knacks}/>
                             </div>

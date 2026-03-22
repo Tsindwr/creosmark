@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import type { CharacterSheetState } from "../../types/sheet.ts";
+import type {
+    CharacterSheetState,
+    PotentialKey, PotentialScoreBonus,
+    PotentialState,
+} from "../../types/sheet.ts";
 import EditorWorkspace from "../manage/EditorWorkspace.tsx";
+import BuilderPotentialRoller, {
+    type BuilderPotentialRollRequest,
+} from "./BuilderPotentialRoller.tsx";
 import styles from './CharacterBuilderShell.module.css';
 
 const BUILDER_STEPS = [
     { id: 'identity', label: '1. Identity' },
-    { id: 'potentials', label: '2. Potentials' },
-    { id: 'proficiencies', label: '3. Proficiencies' },
-    { id: 'goals', label: '4. Goals' },
+    { id: 'origin', label: '2. Origin' },
+    { id: 'potentials', label: '3. Potentials' },
+    { id: 'proficiencies', label: '4. Proficiencies' },
+    { id: 'goals', label: '5. Goals' },
 ] as const;
 
 type BuilderStepId = (typeof BUILDER_STEPS)[number]['id'];
@@ -18,12 +26,38 @@ type CharacterBuilderShellProps = {
     saveState?: 'idle' | 'saving' | 'saved' | 'error';
 };
 
+function getPotentialBonusTotal(potential: PotentialState) {
+    return (potential.scoreBonuses ?? []).reduce(
+        (sum, source) => sum + source.amount,
+        0,
+    );
+}
+
 export default function CharacterBuilderShell({
     sheet,
     onChange,
     saveState = 'idle',
 }: CharacterBuilderShellProps) {
     const [step, setStep] = useState<BuilderStepId>('identity');
+    const [rollRequest, setRollRequest] =
+        useState<BuilderPotentialRollRequest | null>(null);
+
+    function applyRolledBaseScore(potentialKey: PotentialKey, total: number) {
+        onChange({
+            ...sheet,
+            potentials: sheet.potentials.map((potential) => {
+                if (potential.key !== potentialKey) return potential;
+
+                const bonusTotal = getPotentialBonusTotal(potential);
+
+                return {
+                    ...potential,
+                    baseScore: total,
+                    score: Math.max(1, total + bonusTotal),
+                };
+            }),
+        });
+    }
 
     return (
         <div className={styles.page}>
@@ -63,8 +97,24 @@ export default function CharacterBuilderShell({
                     onChange={onChange}
                     forcedTab={step}
                     hideNav
+                    onRequestPotentialRoll={(potential) => {
+                        setRollRequest({
+                            potentialKey: potential.key,
+                            potentialLabel: potential.title,
+                        })
+                    }}
                 />
             </main>
+
+            <BuilderPotentialRoller
+                request={rollRequest}
+                open={Boolean(rollRequest)}
+                onClose={() => setRollRequest(null)}
+                onApply={({ potentialKey, total }) => {
+                    applyRolledBaseScore(potentialKey, total);
+                    setRollRequest(null);
+                }}
+            />
         </div>
     )
 }

@@ -34,6 +34,7 @@ export default function HomePageContent() {
             title="Your world, your tables, your sheets"
             subtitle="Run characters, manage campaigns, and keep the table connected through a shared digital sheet experience."
             aside={!isSignedIn ? <SignInScreen /> : null}
+            activePath={'/'}
         >
             {loading ? (
                 <main style={{ padding: "0.5rem" }}>Loading…</main>
