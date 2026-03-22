@@ -13,14 +13,14 @@
 }
 
 .big {
-  font-size: 2.1rem;
+  font-size: 1.7rem;
   font-weight: 800;
   line-height: 1;
 }
 
 .separator,
 .small {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.68);
 }
 
@@ -55,12 +55,13 @@
 }
 
 .button {
-  padding: 0.55rem 0.85rem;
+  padding: 0.4rem 0.7rem;
   border-radius: 0.8rem;
   border: 1px solid rgba(210, 178, 76, 0.22);
   background: rgba(255, 255, 255, 0.04);
   color: white;
   font: inherit;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 

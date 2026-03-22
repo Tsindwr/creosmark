@@ -12,7 +12,7 @@ create index if not exists idx_campaign_members_user_id
 
 alter table public.campaign_members enable row level security;
 
--- Members can see membership rows for campaigns they belong to
+-- Members can see membership rows for campaign they belong to
 create policy "campaign members can read campaign_members"
 on public.campaign_members
 for select
@@ -53,7 +53,7 @@ using (
   )
 );
 
--- 2) Relax campaign read access so members can see campaigns too
+-- 2) Relax campaign read access so members can see campaign too
 drop policy if exists "users can read own campaigns" on public.campaigns;
 
 create policy "owners and members can read campaigns"

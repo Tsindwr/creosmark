@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import CharacterSheetShell from "../shell/CharacterSheetShell";
 import type { CampaignAssignment } from "../../types/roll-feed";
-import { getCampaignForCharacter, getMyCharacterSheet, updateCharacterSheet } from "../../lib/supabase/db";
+import {
+    getCampaignForCharacter,
+    getMyCharacterSheet,
+    updateCharacterSheet
+} from "../../lib/supabase/db";
 import type { CharacterSheetState } from "../../types/sheet";
 
 type CharacterSheetFromDbProps = {
@@ -20,6 +24,7 @@ export default function CharacterSheetFromDb({
     const [assignedCampaign, setAssignedCampaign] = useState<CampaignAssignment | null>(null);
 
     const loadedRef = useRef(false);
+    const lastSavedJsonRef = useRef<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -31,11 +36,15 @@ export default function CharacterSheetFromDb({
 
                 const row = await getMyCharacterSheet(characterId);
                 if (!row) throw new Error("Character sheet not found.");
+
                 const campaign = await getCampaignForCharacter(characterId);
                 if (cancelled) return;
+
                 setSheet(row.sheet_json);
                 setAssignedCampaign(campaign)
+
                 loadedRef.current = true;
+                setSaveState("idle");
             } catch (error) {
                 console.error("Failed to load library:", error);
 
@@ -66,12 +75,17 @@ export default function CharacterSheetFromDb({
     }, [characterId]);
 
     useEffect(() => {
-        if (!loadedRef.current || !sheet || initialMode !== "edit") return;
+        if (!loadedRef.current || !sheet) return;
+
+        const nextJson = JSON.stringify(sheet);
+        if (nextJson === lastSavedJsonRef.current) return;
 
         const handle = window.setTimeout(async () => {
             try {
                 setSaveState("saving");
                 await updateCharacterSheet(characterId, sheet);
+
+                lastSavedJsonRef.current = nextJson;
                 setSaveState("saved");
 
                 window.setTimeout(() => {
@@ -86,7 +100,7 @@ export default function CharacterSheetFromDb({
         return () => {
             window.clearTimeout(handle);
         };
-    }, [sheet, characterId, initialMode]);
+    }, [sheet, characterId]);
 
     if (loading) {
         return <main style={{ padding: "1.5rem" }}>Loading character sheet…</main>;

@@ -1,35 +1,25 @@
 import React from "react";
 import AuthStatus from "../auth/AuthStatus";
+import NavBar from "../common/NavBar.tsx";
 import styles from "./AppShell.module.css";
 
 type AppShellProps = {
-    eyebrow?: string;
-    title: string;
-    subtitle?: string;
     children: React.ReactNode;
     aside?: React.ReactNode;
+    activePath?: string;
 };
 
 export default function AppShell({
-    eyebrow = "Sunder Library",
-    title,
-    subtitle,
     children,
     aside,
+    activePath = '/',
 }: AppShellProps) {
     return (
-        <div className={styles.page}>
-            <header className={styles.header}>
-                <div className={styles.brandBlock}>
-                    <div className={styles.eyebrow}>{eyebrow}</div>
-                    <h1 className={styles.title}>{title}</h1>
-                    {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
-                </div>
-
-                <div className={styles.authBlock}>
-                    <AuthStatus />
-                </div>
-            </header>
+        <div className={`${styles.page}`}>
+            <NavBar
+                activePath={activePath}
+                authSlot={<AuthStatus />}
+            />
 
             <div className={styles.body}>
                 <main className={styles.main}>{children}</main>

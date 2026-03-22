@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CharacterSheetSummary } from "../../types/library.ts";
 import styles from './LibraryCards.module.css';
+import {routes} from "../../lib/routing.ts";
 
 type CharacterSheetCardProps = {
     character: CharacterSheetSummary;
@@ -31,10 +32,10 @@ export default function CharacterSheetCard({
             ) : null}
 
             <div className={styles.actions}>
-                <a className={styles.actionLink} href={`/characters/${character.id}`}>
+                <a className={styles.actionLink} href={routes.characterView(character.id)}>
                     View
                 </a>
-                <a className={styles.actionLinkSecondary} href={`/characters/${character.id}/edit`}>
+                <a className={styles.actionLinkSecondary} href={routes.characterEdit(character.id)}>
                     Edit
                 </a>
             </div>

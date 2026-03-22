@@ -1,6 +1,6 @@
 import type { InventoryState } from './inventory.ts'
 import type { AssignedPerkMap, PerkId } from "../lib/rolling/types.ts";
-import type {ArchetypeData, ArchetypeId, DomainData, DomainId} from "../lib/sheet-data.ts";
+import type {ArchetypeData, DomainData, DomainId} from "../lib/sheet-data.ts";
 
 export type PotentialPerkSlot = {
   perkId: PerkId,
@@ -16,16 +16,38 @@ export type PotentialKey =
   | "heart"
   | "tether";
 
+export type SheetSourceKind =
+  | "manual"
+  | "origin-profession"
+  | "origin-crux"
+  | "origin-descent"
+  | "origin-bloodline";
+
+export type SheetSourceTag = {
+  id: string;
+  kind: SheetSourceKind;
+  label: string;
+  locked?: boolean;
+};
+
+export type PotentialScoreBonus = SheetSourceTag & {
+  amount: number;
+};
+
 export type SkillDef = {
   name: string;
   summary: string;
   proficient?: boolean;
+  locked?: boolean;
+  sources?: SheetSourceTag[];
 };
 
 export type PotentialState = {
   key: PotentialKey;
   title: string;
   score: number;
+  baseScore?: number;
+  scoreBonuses?: PotentialScoreBonus[];
   stress: number;
   resistance: number;
   volatilityDieMax: 4 | 6 | 8 | 10 | 12;
@@ -138,6 +160,24 @@ export type RollComposerDraft = {
   selectedDomains: string[];
 };
 
+export type OriginFacetState = {
+  name?: string;
+  notes?: string;
+  skillName?: string;
+  knackName?: string;
+  equipmentNote?: string;
+  domainId?: DomainId;
+  potentialKey?: PotentialKey;
+  abilitySummary?: string;
+};
+
+export type OriginSelectionState = {
+  profession?: OriginFacetState;
+  crux?: OriginFacetState;
+  descent?: OriginFacetState;
+  bloodline?: OriginFacetState;
+};
+
 export type CharacterSheetState = {
   header: CharacterHeaderState;
   marks: MarksState;
@@ -150,4 +190,5 @@ export type CharacterSheetState = {
   knacks: KnackState[];
   attacks: AttackState[];
   inventory: InventoryState;
+  originSelections?: OriginSelectionState;
 };

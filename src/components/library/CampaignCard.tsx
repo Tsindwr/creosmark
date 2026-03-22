@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CampaignRecord } from '../../types/library';
 import styles from './LibraryCards.module.css';
+import {routes} from "../../lib/routing.ts";
 
 type CampaignCardProps = {
     campaign: CampaignRecord;
@@ -8,7 +9,7 @@ type CampaignCardProps = {
 
 export default function CampaignCard({ campaign }: CampaignCardProps) {
     async function copyShareLink() {
-        const relativePath = `/campaigns/${campaign.id}`;
+        const relativePath = routes.campaignView(campaign.id);
         const absolute =
             typeof window !== 'undefined'
                 ? `${window.location.origin}${relativePath}`
@@ -43,7 +44,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
             {campaign.pitch ? <p className={styles.copy}>{campaign.pitch}</p> : null}
 
             <div className={styles.actions}>
-                <a className={styles.actionLink} href={`/campaigns/${campaign.id}`}>
+                <a className={styles.actionLink} href={`/campaign/view?id=${encodeURIComponent(campaign.id)}`}>
                     View
                 </a>
                 <button type={'button'} className={styles.actionLinkSecondary} onClick={copyShareLink}>

@@ -411,7 +411,9 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "might",
                 title: "Might",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
@@ -419,7 +421,7 @@ export function createBlankSheet(): CharacterSheetState {
                 skills: [
                     { name: "Force", summary: "", proficient: false },
                     { name: "Brace", summary: "", proficient: false },
-                    { name: "Strike", summary: "", proficient: false },
+                    { name: "Feat", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -427,15 +429,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "finesse",
                 title: "Finesse",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
-                    { name: "Grace", summary: "", proficient: false },
-                    { name: "Shift", summary: "", proficient: false },
                     { name: "Sleight", summary: "", proficient: false },
+                    { name: "Grace", summary: "", proficient: false },
+                    { name: "Squirm", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -443,15 +447,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "nerve",
                 title: "Nerve",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
+                    { name: "Bear", summary: "", proficient: false },
+                    { name: "Steel", summary: "", proficient: false },
                     { name: "Grit", summary: "", proficient: false },
-                    { name: "Frame", summary: "", proficient: false },
-                    { name: "Read", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -459,15 +465,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "seep",
                 title: "Seep",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
-                    { name: "Weave", summary: "", proficient: false },
-                    { name: "Channel", summary: "", proficient: false },
-                    { name: "Esoterica", summary: "", proficient: false },
+                    { name: "Frame", summary: "", proficient: false },
+                    { name: "Draw", summary: "", proficient: false },
+                    { name: "Form", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -475,15 +483,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "instinct",
                 title: "Instinct",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
+                    { name: "Reflex", summary: "", proficient: false },
+                    { name: "Read", summary: "", proficient: false },
                     { name: "Sense", summary: "", proficient: false },
-                    { name: "Hunt", summary: "", proficient: false },
-                    { name: "Survive", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -491,15 +501,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "wit",
                 title: "Wit",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
-                    { name: "Recall", summary: "", proficient: false },
                     { name: "Reason", summary: "", proficient: false },
-                    { name: "Notice", summary: "", proficient: false },
+                    { name: "Recall", summary: "", proficient: false },
+                    { name: "Esoterica", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -507,15 +519,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "heart",
                 title: "Heart",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
+                    { name: "Aura", summary: "", proficient: false },
                     { name: "Sway", summary: "", proficient: false },
-                    { name: "Bolster", summary: "", proficient: false },
-                    { name: "Endear", summary: "", proficient: false },
+                    { name: "Hope", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -523,15 +537,17 @@ export function createBlankSheet(): CharacterSheetState {
             {
                 key: "tether",
                 title: "Tether",
-                score: 10,
+                score: 5,
+                baseScore: 10,
+                scoreBonuses: [],
                 stress: 0,
                 resistance: 0,
                 volatilityDieMax: 4,
                 charged: false,
                 skills: [
-                    { name: "Recall Self", summary: "", proficient: false },
                     { name: "Anchor", summary: "", proficient: false },
-                    { name: "Bind", summary: "", proficient: false },
+                    { name: "Grasp", summary: "", proficient: false },
+                    { name: "Weave", summary: "", proficient: false },
                 ],
                 perks: {},
                 resolverPerks: {},
@@ -551,5 +567,69 @@ export function createBlankSheet(): CharacterSheetState {
                 custom: [],
             },
         },
+    };
+}
+
+export async function createCampaignWithMembership(input: {
+    name: string;
+    gmName?: string;
+    pitch?: string;
+}): Promise<CampaignSummary & { joinCode?: string }> {
+    const userId = await requireUserId();
+
+    const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+            owner_id: userId,
+            name: input.name,
+            gm_name: input.gmName ?? null,
+            pitch: input.pitch ?? null,
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    const campaign = data as CampaignRow & { join_code?: string };
+
+    const { error: memberError } = await supabase
+        .from("campaign_members")
+        .insert({
+            campaign_id: campaign.id,
+            user_id: userId,
+            role: "gm",
+        });
+
+    if (memberError) throw memberError;
+
+    return {
+        id: campaign.id,
+        name: campaign.name,
+        gmName: campaign.gm_name ?? undefined,
+        pitch: campaign.pitch ?? undefined,
+        characterIds: [],
+        updatedLabel: new Date(campaign.updated_at).toLocaleString(),
+        joinCode: campaign.join_code,
+    };
+}
+
+export async function joinCampaignByCode(joinCode: string): Promise<{
+    id: string;
+    name: string;
+}> {
+    const { data, error } = await supabase.rpc("join_campaign_by_code", {
+        p_join_code: joinCode.trim().toUpperCase(),
+    });
+
+    if (error) throw error;
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+        throw new Error("Campaign not found.");
+    }
+
+    return {
+        id: row.campaign_id,
+        name: row.campaign_name,
     };
 }
