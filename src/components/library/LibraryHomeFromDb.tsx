@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import LibraryHome from "./LibraryHome";
+import CharacterLibraryHome from "./CharacterLibraryHome.tsx";
 import type { CampaignRecord, CharacterSheetSummary } from "../../types/library";
 import {
     listMyCampaigns,
@@ -113,7 +113,7 @@ export default function LibraryHomeFromDb() {
                 <div className={styles.actionsHeader}>
                     <div>
                         <div className={styles.eyebrow}>Quick Actions</div>
-                        <h2>Build or join</h2>
+                        <h2>Characters</h2>
                     </div>
                 </div>
 
@@ -121,27 +121,12 @@ export default function LibraryHomeFromDb() {
                     <button type={'button'} className={styles.primary} onClick={handleCreateCharacter} disabled={busy}>
                         New Character
                     </button>
-
-                    <button type={'button'} className={styles.secondary} onClick={handleCreateCampaign} disabled={busy}>
-                        New Campaign
-                    </button>
-
-                    <form className={styles.joinForm} onSubmit={handleJoinCampaign}>
-                        <input
-                            value={joinCode}
-                            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                            placeholder={"Join code"}
-                        />
-                        <button type={'submit'} className={styles.secondary} disabled={busy}>
-                            Join Campaign
-                        </button>
-                    </form>
                 </div>
             </section>
 
             {errorText ? <div className={styles.error}>Error: {errorText}</div> : null}
 
-            <LibraryHome characters={characters} campaigns={campaigns} />
+            <CharacterLibraryHome characters={characters} campaigns={campaigns} />
         </div>
     );
 }
