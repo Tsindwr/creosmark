@@ -5,7 +5,8 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://tsindwr.github.io/creosmark',
+    site: 'https://tsindwr.github.io',
     output: 'static',
+    base: '/creosmark',
   integrations: [react()]
 });
