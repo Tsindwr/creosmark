@@ -14,8 +14,8 @@ type NavLink = {
 
 const NAV_LINKS: NavLink[] = [
     {label: "Characters", href: `${BASE}`, icon: "🧙"},
-    {label: "Campaigns", href: `${BASE}campaign`, icon: "⚔️"},
-    {label: "Abilities", href: `${BASE}abilities`, icon: "✨"},
+    {label: "Campaigns", href: `${BASE}/campaign`, icon: "⚔️"},
+    {label: "Abilities", href: `${BASE}/abilities`, icon: "✨"},
 ];
 
 type NavBarProps = {
