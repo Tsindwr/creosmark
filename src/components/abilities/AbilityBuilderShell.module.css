@@ -357,7 +357,8 @@
 }
 
 .warning,
-.okay {
+.okay,
+.note {
     padding: 0.5rem 0.58rem;
     border-radius: 0.68rem;
     font-size: 0.8rem;
@@ -372,6 +373,17 @@
 .okay {
     background: rgba(120, 210, 150, 0.1);
     border: 1px solid rgba(120, 210, 150, 0.2);
+}
+
+.note {
+    background: rgba(101, 160, 255, 0.1);
+    border: 1px solid rgba(101, 160, 255, 0.22);
+    color: rgba(180, 210, 255, 0.9);
+}
+
+.summaryBlockOver {
+    border-color: rgba(255, 107, 107, 0.4);
+    background: rgba(255, 107, 107, 0.1);
 }
 
 :global(.react-flow__attribution) {
