@@ -11,8 +11,8 @@ type LibraryHomeProps = {
 };
 
 export default function CharacterLibraryHome({
-                                        characters,
-                                    }: LibraryHomeProps) {
+    characters,
+}: LibraryHomeProps) {
     return (
         <section className={styles.page}>
 
