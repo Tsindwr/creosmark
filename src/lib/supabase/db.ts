@@ -1,6 +1,7 @@
 import { supabase } from "./client";
 import type { CharacterSheetState } from "../../types/sheet";
 import type { CampaignRecord, CampaignSummary, CharacterSheetSummary } from "../../types/library";
+import {getCharacterLevelFromSummary} from "../library-data.ts";
 
 export type CharacterSheetRow = {
     id: string;
@@ -31,6 +32,12 @@ export type CampaignCharacterSheetRow = {
     created_at: string;
 };
 
+export type ArchetypeData = {
+    id: string;
+    label: string;
+    levels: number;
+}
+
 async function requireUserId(): Promise<string> {
     const {
         data: { user },
@@ -43,13 +50,34 @@ async function requireUserId(): Promise<string> {
     return user.id;
 }
 
+function archetypesToLabel(archetypesJson: string): string {
+    try {
+        const archetypes: ArchetypeData[] = JSON.parse(archetypesJson);
+        return archetypes.map((a) => a.label + " " + a.levels).join(" / ");
+    } catch (error) {
+        console.error("Failed to parse archetypes JSON:", error);
+        return archetypesJson;
+    }
+}
+
+function archetypesToLevel(archetypesJson: string): number {
+    try {
+        const archetypes: ArchetypeData[] = JSON.parse(archetypesJson);
+        return archetypes.reduce((sum, a) => sum + a.levels, 0);
+    } catch (error) {
+        console.error("Failed to parse archetypes JSON:", error);
+        return 1;
+    }
+}
+
 function toCharacterSummary(row: CharacterSheetRow): CharacterSheetSummary {
+    const archetypesLabel: string = archetypesToLabel(row.archetype);
     return {
         id: row.id,
         name: row.name,
-        archetype: row.archetype,
+        archetype: archetypesLabel,
         origin: row.origin,
-        level: row.level,
+        level: archetypesToLevel(row.archetype),
         playerName: row.player_name,
         updatedLabel: new Date(row.updated_at).toLocaleString(),
     };

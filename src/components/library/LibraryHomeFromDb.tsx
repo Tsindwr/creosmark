@@ -14,7 +14,6 @@ import {routes} from "../../lib/routing.ts";
 
 export default function LibraryHomeFromDb() {
     const [characters, setCharacters] = useState<CharacterSheetSummary[]>([]);
-    const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [errorText, setErrorText] = useState<string | null>(null);
     const [joinCode, setJoinCode] = useState("");
@@ -25,13 +24,9 @@ export default function LibraryHomeFromDb() {
             setLoading(true);
             setErrorText(null);
 
-            const [characterRows, campaignRows] = await Promise.all([
-                listMyCharacterSheets(),
-                listMyCampaigns(),
-            ]);
+            const characterRows = await listMyCharacterSheets();
 
             setCharacters(characterRows);
-            setCampaigns(campaignRows);
         } catch (error) {
             console.error("Failed to load library:", error);
 
@@ -126,7 +121,7 @@ export default function LibraryHomeFromDb() {
 
             {errorText ? <div className={styles.error}>Error: {errorText}</div> : null}
 
-            <CharacterLibraryHome characters={characters} campaigns={campaigns} />
+            <CharacterLibraryHome characters={characters} />
         </div>
     );
 }

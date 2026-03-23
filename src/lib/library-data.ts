@@ -1,4 +1,4 @@
-import { DEMO_SHEET } from "./sheet-data.ts";
+import {DEMO_SHEET} from "./sheet-data.ts";
 import type { CharacterSheetState } from "../types/sheet.ts";
 import type {
     CampaignSummary,
@@ -6,6 +6,7 @@ import type {
     CharacterSheetSummary,
     CampaignRecord,
 } from "../types/library.ts";
+import { type ArchetypeData } from '../lib/supabase/db.ts'
 
 function cloneSheet<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
@@ -33,7 +34,7 @@ function buildSheet(
         origin: next.header.origin,
         level: next.header.level,
         playerName: next.header.playerName,
-        updateLabel: "Updated recently",
+        updatedLabel: "Updated recently",
     };
 
     return {
@@ -113,6 +114,22 @@ export function getAllCharacterSummaries(): CharacterSheetSummary[] {
 
 export function getCharacterSheetById(id: string): CharacterSheetRecord | undefined {
     return CHARACTER_SHEETS.find((entry) => entry.id === id);
+}
+
+export function getTotalCharacterLevels(character: CharacterSheetState) {
+    return character.header.archetypes.map((archetype) => archetype.levels)
+        .reduce((prev, currentValue) => prev + currentValue, 0);
+}
+
+export function getCharacterLevelFromSummary(summary: CharacterSheetSummary) {
+    try {
+        const archetypes: ArchetypeData[] = JSON.parse(summary.archetype);
+        return Array.from(archetypes).map((archetype) => archetype.levels)
+            .reduce((prev, curr) => prev + curr, 0);
+    } catch (error) {
+        console.log("Failed to parse archetype for character summary:", error, summary.archetype);
+        return summary.level;
+    }
 }
 
 export function getCampaignById(id: string): CampaignRecord | undefined {

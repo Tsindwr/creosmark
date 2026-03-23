@@ -2,6 +2,7 @@ import React from 'react';
 import type { CharacterSheetSummary } from "../../types/library.ts";
 import styles from './LibraryCards.module.css';
 import {routes} from "../../lib/routing.ts";
+import {getCharacterLevelFromSummary, getTotalCharacterLevels} from "../../lib/library-data.ts";
 
 type CharacterSheetCardProps = {
     character: CharacterSheetSummary;
