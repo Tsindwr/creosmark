@@ -21,7 +21,7 @@ function resolveAvatar(userInfo: CachedUserInfo | null) {
     if (/^(https?:)?\/\//.test(String(avatar))) return String(avatar);
 
     const normalized = String(avatar).replace(/^\/+/, "");
-    return `${base}${normalized}`;
+    return `${base}/${normalized}`;
 }
 
 export default function AuthStatus() {
