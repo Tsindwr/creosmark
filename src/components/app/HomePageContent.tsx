@@ -32,7 +32,7 @@ export default function HomePageContent() {
     return (
         <AppShell
             aside={!isSignedIn ? <SignInScreen /> : null}
-            activePath={'/'}
+            activePath={'/creosmark/'}
         >
             {loading ? (
                 <main style={{ padding: "0.5rem" }}>Loading…</main>

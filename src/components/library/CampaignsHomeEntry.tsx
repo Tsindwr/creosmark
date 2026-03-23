@@ -6,7 +6,7 @@ import CampaignsLibraryFromDb from './CampaignsLibraryFromDb';
 
 export default function CampaignsHomeEntry() {
     return (
-        <AppShell activePath={'/campaign'}>
+        <AppShell activePath={'/creosmark/campaign'}>
             <AuthGate fallback={<SignInScreen />}>
                 <CampaignsLibraryFromDb />
             </AuthGate>
