@@ -4,7 +4,7 @@ import AbilityBuilderShell from "./AbilityBuilderShell.tsx";
 
 export default function AbilityBuilderPageEntry() {
     return (
-        <AppShell activePath={'/abilities'}>
+        <AppShell activePath={'/creosmark/abilities'}>
             <AbilityBuilderShell />
         </AppShell>
     );
