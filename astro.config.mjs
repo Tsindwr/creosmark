@@ -8,5 +8,10 @@ export default defineConfig({
     site: 'https://tsindwr.github.io',
     output: 'static',
     base: '/creosmark',
-  integrations: [react()]
+    integrations: [react()],
+    vite: {
+        optimizeDeps: {
+            include: ['@xyflow/react'],
+        },
+    },
 });

@@ -19,7 +19,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import styles from './AbilityBuilderShell.module.css';
 
-type AbilityKind = 'action' | 'surge' | 'trait' | 'option';
+type AbilityKind = 'action' | 'surge' | 'trait' | 'option' | 'spell';
 type AbilityLane = 'body' | 'focus' | 'flipside' | 'option';
 type ModifierFamily =
     | 'activation'
@@ -91,6 +91,15 @@ const PALETTE: Record<string, PaletteTemplate[]> = {
                 abilityKind: 'action',
                 summary: 'Focus + Flipside action card.',
             },
+        },
+        {
+            kind: 'abilityRoot',
+            label: 'Surge Card',
+            data: {
+                title: 'New Surge',
+                abilityKind: 'surge',
+                summary: 'Activate anytime within a round, once per turn.'
+            }
         },
         {
             kind: 'abilityRoot',
@@ -749,7 +758,86 @@ const PALETTE: Record<string, PaletteTemplate[]> = {
                 description: 'Optional expenditure of a Resistance to activate an advanced part of this ability.',
                 cost: { strings: 0, beats: 0, enhancements: -1 },
             }
-        }
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Generates Options',
+            data: {
+                label: 'Generates Options',
+                family: 'special',
+                lane: 'body',
+                description: 'This Ability creates a format for Option Cards. Players may build Option Cards using this Ability as their Parent Ability.',
+                cost: { strings: 1, beats: 0, enhancements: 0 },
+            },
+        },
+    ],
+    "Flipside (Movement)": [
+        {
+            kind: 'marketModifier',
+            label: 'Movement: Here',
+            data: {
+                label: 'Movement · Here',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move a short distance (5 ft) as part of this action.',
+                cost: { strings: -1, beats: 0, enhancements: 0 },
+            },
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Movement: Near',
+            data: {
+                label: 'Movement · Near',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move up to Near range (10 feet) as part of this action.',
+                cost: { strings: 0, beats: 0, enhancements: 0 },
+            },
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Movement: Close',
+            data: {
+                label: 'Movement · Close',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move up to Close range (30 feet) as part of this action.',
+                cost: { strings: 1, beats: 0, enhancements: 0 },
+            },
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Movement: There',
+            data: {
+                label: 'Movement · There',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move up to There range (60 feet) as part of this action.',
+                cost: { strings: 2, beats: 0, enhancements: 0 },
+            },
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Movement: Far',
+            data: {
+                label: 'Movement · Far',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move up to Far range (120 feet) as part of this action.',
+                cost: { strings: 3, beats: 0, enhancements: 0 },
+            },
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Movement: Yonder',
+            data: {
+                label: 'Movement · Yonder',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move up to Yonder range (240 feet) or within Line of Sight as part of this action.',
+                cost: { strings: 5, beats: 0, enhancements: 0 },
+            },
+        },
     ],
     Fallback: [
         {
@@ -926,6 +1014,11 @@ function buildPaletteSections(): PaletteSection[] {
             ),
         },
         {
+            id: 'flipside',
+            title: 'Flipside (Movement)',
+            items: PALETTE['Flipside (Movement)'] ?? [],
+        },
+        {
             id: 'fallback',
             title: 'Fallback',
             items: PALETTE['Fallback'] ?? [],
@@ -1002,6 +1095,53 @@ function buildBlankActionPreset(): { nodes: AbilityBuilderNode[]; edges: Edge[] 
             { id: nextId(), source: rootId, target: prereqId },
             { id: nextId(), source: resetId, target: focusTextId },
             { id: nextId(), source: resetId, target: flipsideTextId },
+        ],
+    };
+}
+
+function buildBlankSurgePreset(): { nodes: AbilityBuilderNode[]; edges: Edge[] } {
+    const rootId = nextId();
+    const resetId = nextId();
+    const effectTextId = nextId();
+
+    return {
+        nodes: [
+            {
+                id: rootId,
+                type: "abilityRoot",
+                position: { x: 380, y: 40 },
+                data: {
+                    title: "New Surge",
+                    abilityKind: 'surge',
+                    summary: 'A minor effect activatable at any time, once per turn.',
+                },
+            },
+            {
+                id: resetId,
+                type: "marketModifier",
+                position: { x: 380, y: 220 },
+                data: {
+                    label: "Activation · Surge",
+                    family: "activation",
+                    lane: "body",
+                    description: "Turns the ability into a Surge.",
+                    cost: { strings: 0, beats: 0, enhancements: 1 },
+                },
+            },
+            {
+                id: effectTextId,
+                type: "freeformText",
+                position: { x: 380, y: 420 },
+                data: {
+                    title: "Surge Effect",
+                    lane: "body",
+                    text: "Describe the Surge effect here. Surges only affect the user.",
+                },
+            },
+        ],
+        edges: [
+            { id: nextId(), source: rootId, target: resetId },
+            { id: nextId(), source: resetId, target: effectTextId },
         ],
     };
 }
@@ -1136,7 +1276,6 @@ function AbilityBuilderInner() {
     );
 
     const summary = useMemo(() => {
-        const total = sumCosts(modifierNodes.map((node) => node.data.cost));
         const root = nodes.find(
             (node): node is AbilityRootNodeType => node.type === 'abilityRoot'
         );
@@ -1159,15 +1298,41 @@ function AbilityBuilderInner() {
                 .map((node) => node.data.cost),
         );
 
+        const isActionCard = root?.data.abilityKind === 'action' || root?.data.abilityKind === 'spell';
+        // check if any nodes are under the option lane
+        const hasOptionNodes = modifierNodes.some((node) => node.data.lane === 'option');
+
+        // Flipside budget: floor(focus.strings / 2). Flipside is free within this budget.
+        // Enhancement budget: Flipside may have at most the same number of Enhancements as Focus.
+        const flipsideBudgetStrings = isActionCard ? Math.floor(focus.strings / 2) : 0;
+        const flipsideBudgetEnhancements = isActionCard ? Math.max(0, focus.enhancements) : 0;
+
+        // What the player actually pays: Focus + Body for Actions (Flipside is complimentary).
+        // For non-Actions, all lanes contribute to the paid cost.
+        const paid = isActionCard
+            ? sumCosts([focus, body])
+            : sumCosts([focus, body, flipside]);
+
+        // Total raw cost across all modifier nodes (informational).
+        const total = sumCosts(modifierNodes.map((node) => node.data.cost));
+
         const warnings: string[] = [];
+        const notes: string[] = [];
 
         if (!root) warnings.push("Add an Ability Root node first.");
-        if (root?.data.abilityKind === 'action') {
-            const focusStringBudgetEstimate = Math.floor(focus.strings / 2);
-            if (focus.strings <= 0) warnings.push('Action cards need a real Focus before the Flipside budget means anything.');
-            if (flipside.strings > focusStringBudgetEstimate && focus.strings > 0) {
+
+        if (isActionCard) {
+            if (focus.strings <= 0) {
+                warnings.push('Action cards need a real Focus before the Flipside budget means anything.');
+            }
+            if (focus.strings > 0 && flipside.strings > flipsideBudgetStrings) {
                 warnings.push(
-                    `Flipside strings (${flipside.strings}) exceed the current strings-only budget estimate (${focusStringBudgetEstimate}).`,
+                    `Flipside strings used (${flipside.strings}) exceed the budget (${flipsideBudgetStrings}). Budget = ⌊Focus Strings ÷ 2⌋.`,
+                );
+            }
+            if (flipside.enhancements > flipsideBudgetEnhancements) {
+                warnings.push(
+                    `Flipside enhancements (${flipside.enhancements}) exceed the Focus enhancements (${flipsideBudgetEnhancements}). The Flipside may use at most the same number of Enhancements as the Focus.`,
                 );
             }
         }
@@ -1179,7 +1344,54 @@ function AbilityBuilderInner() {
             warnings.push('Spell reset is present without any consequence block.');
         }
 
-        return { root, total, focus, flipside, body, warnings };
+        // Spells and attacks already require a Test — "Test Required" caveat gives no discount.
+        const hasTestRequired = modifierNodes.some(
+            (node) => node.data.label === 'Caveat · Test Required',
+        );
+        const hasSpellReset = modifierNodes.some((node) =>
+            node.data.label.includes('Reset · Spell'),
+        );
+        const hasDamage = modifierNodes.some((node) =>
+            node.data.label.startsWith('Damage'),
+        );
+        if (hasTestRequired && (hasSpellReset || hasDamage)) {
+            warnings.push(
+                'Spells and attacks already require a Test — the "Test Required" caveat cannot reduce their cost.',
+            );
+        }
+
+        // Option Cards must have a Parent Ability that generates Options.
+        if (root?.data.abilityKind === 'option') {
+            notes.push(
+                'Option Cards require a Parent Ability with a "Generates Options" modifier. Make sure that Ability is built first.',
+            );
+            const hasGenOpt = modifierNodes.some(
+                (node) => node.data.label === 'Generates Options',
+            );
+            if (!hasGenOpt) {
+                warnings.push(
+                    'This Option Card has no associated "Generates Options" modifier on its graph. Add one if this card is self-referential, or confirm the Parent Ability has that modifier.',
+                );
+            }
+        }
+
+        // Concentration discount note.
+        const hasConcentration = modifierNodes.some(
+            (node) => node.data.label === 'Duration · Concentration',
+        );
+        if (hasConcentration) {
+            if (root?.data.abilityKind === 'trait') {
+                notes.push(
+                    'Concentration on a Trait: Traits are already constant effects, so the –1 Enhancement discount may be reduced. Confirm the discount with your GM.',
+                );
+            } else {
+                notes.push(
+                    'Concentration grants a –1 Enhancement discount. The exact discount may vary based on the Ability type — confirm with your GM.',
+                );
+            }
+        }
+
+        return { root, total, focus, flipside, body, paid, flipsideBudgetStrings, flipsideBudgetEnhancements, isAction: isActionCard, isFlipsideOverBudget: isActionCard && focus.strings > 0 && flipside.strings > flipsideBudgetStrings, warnings, notes };
     }, [modifierNodes, nodes])
 
     function updateSelectedAbilityRoot(
@@ -1232,8 +1444,8 @@ function AbilityBuilderInner() {
         );
     }
 
-    function loadPreset(kind: 'blank' | 'menial' | 'toxins') {
-        const next = buildBlankActionPreset();
+    function loadPreset(kind: 'action' | 'surge') {
+        const next = kind === 'surge' ? buildBlankSurgePreset() : buildBlankActionPreset();
 
         setNodes(next.nodes);
         setEdges(next.edges);
@@ -1307,9 +1519,16 @@ function AbilityBuilderInner() {
                                     <button
                                         type="button"
                                         className={styles.smallButton}
-                                        onClick={() => loadPreset('blank')}
+                                        onClick={() => loadPreset('action')}
                                     >
                                         Blank Action
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.smallButton}
+                                        onClick={() => loadPreset('surge')}
+                                    >
+                                        Blank Surge
                                     </button>
                                 </div>
                             </div>
@@ -1602,6 +1821,11 @@ function AbilityBuilderInner() {
                                                     No obvious structural warnings yet.
                                                 </div>
                                             )}
+                                            {summary.notes.map((note) => (
+                                                <div key={note} className={styles.note}>
+                                                    {note}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </>
@@ -1617,27 +1841,43 @@ function AbilityBuilderInner() {
 
             <section className={styles.workspace} onDragOver={onDragOver} onDrop={onDrop}>
                 <div className={styles.toolbar}>
-                    <div className={styles.summaryBlock}>
-                        <span className={styles.toolbarLabel}>Total</span>
-                        <strong>{formatCost(summary.total)}</strong>
-                    </div>
-
-                    {summary.root?.data.abilityKind === 'action' ? (
+                    {summary.isAction ? (
                         <>
                             <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Focus</span>
-                                <strong>{formatCost(summary.focus)}</strong>
+                                <span className={styles.toolbarLabel}>Paid (Focus + Base)</span>
+                                <strong>{formatCost(summary.paid)}</strong>
                             </div>
-                            <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Flipside</span>
-                                <strong>{formatCost(summary.flipside)}</strong>
+                            {/*<div className={styles.summaryBlock}>*/}
+                            {/*    <span className={styles.toolbarLabel}>Focus</span>*/}
+                            {/*    <strong>{formatCost(summary.focus)}</strong>*/}
+                            {/*</div>*/}
+                            {/*<div className={styles.summaryBlock}>*/}
+                            {/*    <span className={styles.toolbarLabel}>Body</span>*/}
+                            {/*    <strong>{formatCost(summary.body)}</strong>*/}
+                            {/*</div>*/}
+                            <div className={`${styles.summaryBlock} ${summary.isFlipsideOverBudget ? styles.summaryBlockOver : ''}`}>
+                                <span className={styles.toolbarLabel}>
+                                    Flipside used / budget
+                                </span>
+                                <strong>
+                                    {summary.flipside.strings} / {summary.flipsideBudgetStrings} Strings
+                                    {summary.flipsideBudgetEnhancements > 0
+                                        ? ` · ${summary.flipside.enhancements} / ${summary.flipsideBudgetEnhancements} Enh.`
+                                        : ''}
+                                </strong>
                             </div>
                         </>
                     ) : (
-                        <div className={styles.summaryBlock}>
-                            <span className={styles.toolbarLabel}>Body</span>
-                            <strong>{formatCost(summary.body)}</strong>
-                        </div>
+                        <>
+                            <div className={styles.summaryBlock}>
+                                <span className={styles.toolbarLabel}>Total</span>
+                                <strong>{formatCost(summary.total)}</strong>
+                            </div>
+                            <div className={styles.summaryBlock}>
+                                <span className={styles.toolbarLabel}>Body</span>
+                                <strong>{formatCost(summary.body)}</strong>
+                            </div>
+                        </>
                     )}
 
                     <button type={'button'} className={styles.exportButton} onClick={exportJson}>

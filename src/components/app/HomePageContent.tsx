@@ -3,6 +3,7 @@ import AppShell from "./AppShell";
 import { getCurrentSession, onAuthStateChange } from "../../lib/auth";
 import SignInScreen from "../auth/SignInScreen";
 import LibraryHomeFromDb from "../library/LibraryHomeFromDb";
+import { routes } from "../../lib/routing.ts";
 
 export default function HomePageContent() {
     const [loading, setLoading] = useState(true);
@@ -32,7 +33,7 @@ export default function HomePageContent() {
     return (
         <AppShell
             aside={!isSignedIn ? <SignInScreen /> : null}
-            activePath={'/creosmark/'}
+            activePath={routes.home()}
         >
             {loading ? (
                 <main style={{ padding: "0.5rem" }}>Loading…</main>

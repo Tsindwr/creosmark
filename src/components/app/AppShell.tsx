@@ -2,6 +2,7 @@ import React from "react";
 import AuthStatus from "../auth/AuthStatus";
 import NavBar from "../common/NavBar.tsx";
 import styles from "./AppShell.module.css";
+import { routes } from "../../lib/routing.ts";
 
 type AppShellProps = {
     children: React.ReactNode;
@@ -12,7 +13,7 @@ type AppShellProps = {
 export default function AppShell({
     children,
     aside,
-    activePath = '/',
+    activePath = routes.home(),
 }: AppShellProps) {
     return (
         <div className={`${styles.page}`}>
