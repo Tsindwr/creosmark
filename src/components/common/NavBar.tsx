@@ -1,7 +1,6 @@
 import React from "react";
 import styles from "./NavBar.module.css";
-
-const BASE = import.meta.env.BASE_URL;
+import { routes } from "../../lib/routing.ts";
 
 type NavLink = {
     label: string;
@@ -13,9 +12,9 @@ type NavLink = {
 };
 
 const NAV_LINKS: NavLink[] = [
-    {label: "Characters", href: `${BASE}`, icon: "🧙"},
-    {label: "Campaigns", href: `${BASE}/campaign`, icon: "⚔️"},
-    {label: "Abilities", href: `${BASE}/abilities`, icon: "✨"},
+    {label: "Characters", href: routes.home(), icon: "🧙"},
+    {label: "Campaigns", href: routes.campaignHome(), icon: "⚔️"},
+    {label: "Abilities", href: routes.abilitiesHome(), icon: "✨"},
 ];
 
 type NavBarProps = {
@@ -32,11 +31,15 @@ type NavBarProps = {
  * Include in any page that needs site-wide navigation.
  */
 export default function NavBar({
-   activePath = "/",
+   activePath = routes.home(),
    authSlot,
    showBackButton = true,
-    backHref = '/'
+    backHref = routes.home(),
 }: NavBarProps) {
+    function normalizePath(path: string): string {
+        return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+    }
+
     function handleBack() {
         if (typeof window === 'undefined') return;
 
@@ -45,7 +48,7 @@ export default function NavBar({
             return;
         }
 
-        window.location.assign(backHref);
+        window.location.assign(routes.appHref(backHref));
     }
 
     return (
@@ -63,7 +66,7 @@ export default function NavBar({
                     </button>
                 ) : null}
 
-                <a href="/" className={styles.brand} aria-label="Creosmark home">
+                <a href={routes.home()} className={styles.brand} aria-label="Creosmark home">
                     <span className={styles.brandName}>CREOSMARK</span>
                 </a>
             </div>
@@ -71,7 +74,7 @@ export default function NavBar({
 
             <div className={styles.links}>
                 {NAV_LINKS.map((link) => {
-                    const isActive = activePath === link.href;
+                    const isActive = normalizePath(activePath) === normalizePath(link.href);
                     const cls = [
                         styles.link,
                         isActive ? styles.active : "",

@@ -44,7 +44,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
             {campaign.pitch ? <p className={styles.copy}>{campaign.pitch}</p> : null}
 
             <div className={styles.actions}>
-                <a className={styles.actionLink} href={`/campaign/view?id=${encodeURIComponent(campaign.id)}`}>
+                <a className={styles.actionLink} href={routes.campaignView(campaign.id)}>
                     View
                 </a>
                 <button type={'button'} className={styles.actionLinkSecondary} onClick={copyShareLink}>

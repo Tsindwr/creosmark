@@ -72,7 +72,7 @@ export default function LibraryHomeFromDb() {
         try {
             setBusy(true);
             const campaign = await createCampaignWithMembership({ name: name.trim() });
-            window.location.href = `/campaign/view?id=${encodeURIComponent(campaign.id)}`;
+            window.location.href = routes.campaignView(campaign.id);
         } catch (error) {
             console.error(error);
             alert(error instanceof Error ? error.message : "Failed to create campaign.");
@@ -89,7 +89,7 @@ export default function LibraryHomeFromDb() {
             setBusy(true);
             const campaign = await joinCampaignByCode(joinCode);
             setJoinCode("");
-            window.location.href = `/campaign/view?id=${encodeURIComponent(campaign.id)}`;
+            window.location.href = routes.campaignView(campaign.id);
         } catch (error) {
             console.error(error);
             alert(error instanceof Error ? error.message : "Failed to join campaign.");

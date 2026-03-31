@@ -19,7 +19,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import styles from './AbilityBuilderShell.module.css';
 
-type AbilityKind = 'action' | 'surge' | 'trait' | 'option';
+type AbilityKind = 'action' | 'surge' | 'trait' | 'option' | 'spell';
 type AbilityLane = 'body' | 'focus' | 'flipside' | 'option';
 type ModifierFamily =
     | 'activation'
@@ -91,6 +91,15 @@ const PALETTE: Record<string, PaletteTemplate[]> = {
                 abilityKind: 'action',
                 summary: 'Focus + Flipside action card.',
             },
+        },
+        {
+            kind: 'abilityRoot',
+            label: 'Surge Card',
+            data: {
+                title: 'New Surge',
+                abilityKind: 'surge',
+                summary: 'Activate anytime within a round, once per turn.'
+            }
         },
         {
             kind: 'abilityRoot',
@@ -758,75 +767,75 @@ const PALETTE: Record<string, PaletteTemplate[]> = {
                 family: 'special',
                 lane: 'body',
                 description: 'This Ability creates a format for Option Cards. Players may build Option Cards using this Ability as their Parent Ability.',
-                cost: { strings: 0, beats: 0, enhancements: 1 },
+                cost: { strings: 1, beats: 0, enhancements: 0 },
             },
         },
     ],
     "Flipside (Movement)": [
         {
             kind: 'marketModifier',
-            label: 'Movement: Step',
+            label: 'Movement: Here',
             data: {
-                label: 'Movement · Step',
+                label: 'Movement · Here',
                 family: 'effect',
                 lane: 'flipside',
-                description: 'Move a short distance (Here → Near) as part of this action.',
+                description: 'Move a short distance (5 ft) as part of this action.',
+                cost: { strings: -1, beats: 0, enhancements: 0 },
+            },
+        },
+        {
+            kind: 'marketModifier',
+            label: 'Movement: Near',
+            data: {
+                label: 'Movement · Near',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Move up to Near range (10 feet) as part of this action.',
                 cost: { strings: 0, beats: 0, enhancements: 0 },
             },
         },
         {
             kind: 'marketModifier',
-            label: 'Movement: Dash',
+            label: 'Movement: Close',
             data: {
-                label: 'Movement · Dash',
+                label: 'Movement · Close',
                 family: 'effect',
                 lane: 'flipside',
-                description: 'Move up to Close range as part of this action.',
+                description: 'Move up to Close range (30 feet) as part of this action.',
                 cost: { strings: 1, beats: 0, enhancements: 0 },
             },
         },
         {
             kind: 'marketModifier',
-            label: 'Movement: Sprint',
+            label: 'Movement: There',
             data: {
-                label: 'Movement · Sprint',
+                label: 'Movement · There',
                 family: 'effect',
                 lane: 'flipside',
-                description: 'Move up to Near range as part of this action.',
-                cost: { strings: 1, beats: 0, enhancements: 0 },
+                description: 'Move up to There range (60 feet) as part of this action.',
+                cost: { strings: 2, beats: 0, enhancements: 0 },
             },
         },
         {
             kind: 'marketModifier',
-            label: 'Movement: Reposition (Target)',
+            label: 'Movement: Far',
             data: {
-                label: 'Movement · Reposition',
+                label: 'Movement · Far',
                 family: 'effect',
                 lane: 'flipside',
-                description: 'Forcibly reposition a target within Close range.',
-                cost: { strings: 1, beats: 0, enhancements: 1 },
+                description: 'Move up to Far range (120 feet) as part of this action.',
+                cost: { strings: 3, beats: 0, enhancements: 0 },
             },
         },
         {
             kind: 'marketModifier',
-            label: 'Movement: Disengage',
+            label: 'Movement: Yonder',
             data: {
-                label: 'Movement · Disengage',
+                label: 'Movement · Yonder',
                 family: 'effect',
                 lane: 'flipside',
-                description: 'Move without triggering opportunity-style reactions.',
-                cost: { strings: 1, beats: 0, enhancements: 0 },
-            },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Flipside: Self Buff',
-            data: {
-                label: 'Flipside · Self Buff',
-                family: 'narrative',
-                lane: 'flipside',
-                description: 'Apply a minor beneficial effect to yourself as the indirect part of this action.',
-                cost: { strings: 1, beats: 0, enhancements: 0 },
+                description: 'Move up to Yonder range (240 feet) or within Line of Sight as part of this action.',
+                cost: { strings: 5, beats: 0, enhancements: 0 },
             },
         },
     ],
@@ -1289,16 +1298,18 @@ function AbilityBuilderInner() {
                 .map((node) => node.data.cost),
         );
 
-        const isAction = root?.data.abilityKind === 'action';
+        const isActionCard = root?.data.abilityKind === 'action' || root?.data.abilityKind === 'spell';
+        // check if any nodes are under the option lane
+        const hasOptionNodes = modifierNodes.some((node) => node.data.lane === 'option');
 
         // Flipside budget: floor(focus.strings / 2). Flipside is free within this budget.
         // Enhancement budget: Flipside may have at most the same number of Enhancements as Focus.
-        const flipsideBudgetStrings = isAction ? Math.floor(focus.strings / 2) : 0;
-        const flipsideBudgetEnhancements = isAction ? Math.max(0, focus.enhancements) : 0;
+        const flipsideBudgetStrings = isActionCard ? Math.floor(focus.strings / 2) : 0;
+        const flipsideBudgetEnhancements = isActionCard ? Math.max(0, focus.enhancements) : 0;
 
         // What the player actually pays: Focus + Body for Actions (Flipside is complimentary).
         // For non-Actions, all lanes contribute to the paid cost.
-        const paid = isAction
+        const paid = isActionCard
             ? sumCosts([focus, body])
             : sumCosts([focus, body, flipside]);
 
@@ -1310,7 +1321,7 @@ function AbilityBuilderInner() {
 
         if (!root) warnings.push("Add an Ability Root node first.");
 
-        if (isAction) {
+        if (isActionCard) {
             if (focus.strings <= 0) {
                 warnings.push('Action cards need a real Focus before the Flipside budget means anything.');
             }
@@ -1380,7 +1391,7 @@ function AbilityBuilderInner() {
             }
         }
 
-        return { root, total, focus, flipside, body, paid, flipsideBudgetStrings, flipsideBudgetEnhancements, isAction, isFlipsideOverBudget: isAction && focus.strings > 0 && flipside.strings > flipsideBudgetStrings, warnings, notes };
+        return { root, total, focus, flipside, body, paid, flipsideBudgetStrings, flipsideBudgetEnhancements, isAction: isActionCard, isFlipsideOverBudget: isActionCard && focus.strings > 0 && flipside.strings > flipsideBudgetStrings, warnings, notes };
     }, [modifierNodes, nodes])
 
     function updateSelectedAbilityRoot(
@@ -1833,17 +1844,17 @@ function AbilityBuilderInner() {
                     {summary.isAction ? (
                         <>
                             <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Paid (Focus + Body)</span>
+                                <span className={styles.toolbarLabel}>Paid (Focus + Base)</span>
                                 <strong>{formatCost(summary.paid)}</strong>
                             </div>
-                            <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Focus</span>
-                                <strong>{formatCost(summary.focus)}</strong>
-                            </div>
-                            <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Body</span>
-                                <strong>{formatCost(summary.body)}</strong>
-                            </div>
+                            {/*<div className={styles.summaryBlock}>*/}
+                            {/*    <span className={styles.toolbarLabel}>Focus</span>*/}
+                            {/*    <strong>{formatCost(summary.focus)}</strong>*/}
+                            {/*</div>*/}
+                            {/*<div className={styles.summaryBlock}>*/}
+                            {/*    <span className={styles.toolbarLabel}>Body</span>*/}
+                            {/*    <strong>{formatCost(summary.body)}</strong>*/}
+                            {/*</div>*/}
                             <div className={`${styles.summaryBlock} ${summary.isFlipsideOverBudget ? styles.summaryBlockOver : ''}`}>
                                 <span className={styles.toolbarLabel}>
                                     Flipside used / budget
