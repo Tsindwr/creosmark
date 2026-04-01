@@ -85,7 +85,7 @@ export default function DiceRoller({
 
             try {
                 const box = new DiceBox({
-                    assetPath: "/assets/dice-box/",
+                    assetPath: `${import.meta.env.BASE_URL}/assets/dice-box/`,
                     container: "#sunder-dice-stage",
                     offscreen: false,
                     theme: "default",
