@@ -60,4 +60,5 @@ export const routes = {
     characterView: (id: string) => withQuery("character/view", { id }),
     characterEdit: (id: string) => withQuery("character/edit", { id }),
     campaignView: (id: string) => withQuery("campaign/view", { id }),
+    assetsPath: (address: string) => withBase("assets") + "/" + address.replace(/^\/+/, ""),
 };

@@ -23,6 +23,85 @@ export type SheetSourceKind =
   | "origin-descent"
   | "origin-bloodline";
 
+export type ArchetypeKey =
+  | "spellslinger"
+  | "summoner"
+  | "control"
+  | "face"
+  | "saboteur"
+  | "support"
+  | "frontliner"
+  | "halfcaster"
+  | "healer"
+  | "tank";
+
+export const ARCHETYPE_LABELS: Record<ArchetypeKey, string> = {
+  spellslinger: "Spellslinger",
+  summoner: "Summoner",
+  control: "Control",
+  face: "Face",
+  saboteur: "Saboteur",
+  support: "Support",
+  frontliner: "Frontliner",
+  halfcaster: "Halfcaster",
+  healer: "Healer",
+  tank: "Tank",
+};
+
+export const ARCHETYPE_MARKS: Record<ArchetypeKey, number> = {
+  spellslinger: 2,
+  summoner: 2,
+  control: 3,
+  face: 3,
+  saboteur: 4,
+  support: 4,
+  frontliner: 5,
+  halfcaster: 5,
+  healer: 6,
+  tank: 6,
+};
+
+export type LevelRewardChoice =  "" | "knack" | "perk";
+
+export type LevelStatIncrease =
+  | { kind: "marks" }
+  | { kind: "potential"; potentialKey: string };
+
+export type PurchasedArchetypeLevel = {
+  id: string;
+  archetype: ArchetypeKey;
+  rank: number;
+  rewardChoice: LevelRewardChoice;
+  knackName: string;
+  perkId: PerkId | null;
+  statIncrease: LevelStatIncrease | null;
+  specialStrings: number;
+  notes: string;
+};
+
+export type FirstArchetypeBoons = {
+  domainId: string;
+  skillIds: [string, string];
+  heroicGoalLabel: string;
+};
+
+export function createEmptyArchetypeLevel(
+    archetype: ArchetypeKey = "frontliner",
+    rank = 1,
+): PurchasedArchetypeLevel {
+  return {
+    id: crypto.randomUUID(),
+    archetype,
+    rank,
+    rewardChoice: "",
+    knackName: "",
+    perkId: null,
+    statIncrease: null,
+    specialStrings: 9,
+    notes: "",
+  };
+}
+
 export type SheetSourceTag = {
   id: string;
   kind: SheetSourceKind;
@@ -191,4 +270,6 @@ export type CharacterSheetState = {
   attacks: AttackState[];
   inventory: InventoryState;
   originSelections?: OriginSelectionState;
+  archetypeLevels: PurchasedArchetypeLevel[];
+  firstArchetypeBoons: FirstArchetypeBoons;
 };

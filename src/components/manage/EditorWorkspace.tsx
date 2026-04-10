@@ -7,7 +7,12 @@ import {
     type PotentialKey,
     type SkillDef,
     type SheetSourceTag,
-    REWARD_FROM_GOAL
+    REWARD_FROM_GOAL,
+    ARCHETYPE_LABELS,
+    ARCHETYPE_MARKS,
+    createEmptyArchetypeLevel,
+    type ArchetypeKey,
+    type PurchasedArchetypeLevel,
 } from "../../types/sheet.ts";
 import {
     type ArchetypeId,
@@ -553,6 +558,155 @@ export default function EditorWorkspace({
         });
     }
 
+    // ============ ADDING ARCHETYPE LEVEL BOONS ==============
+    const totalArchetypeLevels = sheet.archetypeLevels.length;
+
+    const characterTier =
+        totalArchetypeLevels === 0
+            ? 0
+            : Math.floor((totalArchetypeLevels - 1) / 4) + 1;
+
+    const firstArchetype = sheet.archetypeLevels[0]?.archetype ?? null;
+
+    const firstArchetypeBaseMarks =
+        firstArchetype ? ARCHETYPE_MARKS[firstArchetype] : 1;
+
+    const bonusMarksFromLevels = sheet.archetypeLevels.filter(
+        (level) => level.statIncrease?.kind === "marks",
+    ).length;
+
+    const effectiveMarkPool =
+        totalArchetypeLevels > 0
+            ? firstArchetypeBaseMarks + bonusMarksFromLevels
+            : 1;
+
+    const totalSpecialStrings = sheet.archetypeLevels.reduce(
+        (sum, level) => sum + level.specialStrings,
+        0,
+    );
+
+    const skillOptions = useMemo(
+        () =>
+            sheet.potentials.flatMap((potential) =>
+                potential.skills.map((skill) => ({
+                    id: `${potential.key}:${skill.name}`,
+                    label: `${potential.title} · ${skill.name}`,
+                })),
+            ),
+        [sheet.potentials],
+    );
+
+    const potentialOptions = useMemo(
+        () =>
+            sheet.potentials.map((potential) => ({
+                key: String(potential.key),
+                label: potential.title,
+            })),
+        [sheet.potentials],
+    );
+
+    function normalizeArchetypeLevels(
+        levels: PurchasedArchetypeLevel[],
+    ): PurchasedArchetypeLevel[] {
+        const counts = new Map<ArchetypeKey, number>();
+
+        return levels.map((level) => {
+            const nextRank = (counts.get(level.archetype) ?? 0) + 1;
+            counts.set(level.archetype, nextRank);
+
+            return {
+                ...level,
+                rank: nextRank,
+            };
+        });
+    }
+
+    function updateArchetypeLevels(nextLevels: PurchasedArchetypeLevel[]) {
+        onChange({
+            ...sheet,
+            archetypeLevels: normalizeArchetypeLevels(nextLevels),
+        });
+    }
+
+    function addArchetypeLevel(archetype: ArchetypeKey = 'frontliner') {
+        const next = normalizeArchetypeLevels([
+            ...sheet.archetypeLevels,
+            createEmptyArchetypeLevel(archetype),
+        ]);
+        onChange({
+            ...sheet,
+            archetypeLevels: next,
+        });
+    }
+
+    function removeArchetypeLevel(levelId: string) {
+        updateArchetypeLevels(
+            sheet.archetypeLevels.filter((level) => level.id !== levelId),
+        );
+    }
+
+    function updateArchetypeLevel(
+        levelId: string,
+        patch: Partial<PurchasedArchetypeLevel>,
+    ) {
+        updateArchetypeLevels(
+            sheet.archetypeLevels.map((level) =>
+                level.id === levelId ? { ...level, ...patch } : level,
+            ),
+        );
+    }
+
+    function updateFirstArchetypeBoons(
+        patch: Partial<typeof sheet.firstArchetypeBoons>,
+    ) {
+        onChange({
+            ...sheet,
+            firstArchetypeBoons: {
+                ...sheet.firstArchetypeBoons,
+                ...patch,
+            },
+        });
+    }
+
+    function getTierForAbsoluteLevelIndex(index: number) {
+        return Math.floor(index / 4) + 1;
+    }
+
+    function getBlockedPotentialKeysForTier(
+        tier: number,
+        currentLevelId: string,
+    ): Set<string> {
+        const blocked = new Set<string>();
+
+        sheet.archetypeLevels.forEach((level, index) => {
+            if (level.id === currentLevelId) return;
+            if (getTierForAbsoluteLevelIndex(index) !== tier) return;
+            if (level.statIncrease?.kind !== "potential") return;
+            blocked.add(level.statIncrease.potentialKey);
+        });
+
+        return blocked;
+    }
+
+    function setLevelStatIncrease(levelId: string, rawValue: string) {
+        if (rawValue === "") {
+            updateArchetypeLevel(levelId, { statIncrease: null });
+            return;
+        }
+
+        if (rawValue === "marks") {
+            updateArchetypeLevel(levelId, { statIncrease: { kind: "marks" } });
+            return;
+        }
+
+        updateArchetypeLevel(levelId, {
+            statIncrease: {
+                kind: "potential",
+                potentialKey: rawValue,
+            },
+        });
+    }
+
     return (
         <section className={`${styles.editor} ${hideNav ? styles.editorFull : ""}`}>
             {!hideNav ? (
@@ -1020,6 +1174,301 @@ export default function EditorWorkspace({
                                     </label>
                                 </div>
                             </article>
+                        </div>
+                    </section>
+                ) : null}
+
+                {tab === "levels" ? (
+                    <section className={styles.section}>
+                        <header className={styles.sectionHeader}>
+                            <div className={styles.sectionEyebrow}>Archetype Leveling</div>
+                            <h3>Levels</h3>
+                        </header>
+
+                        <div className={styles.levelSummaryRow}>
+                            <div className={styles.summaryChip}>
+                                <span>Total Levels</span>
+                                <strong>{totalArchetypeLevels}</strong>
+                            </div>
+                            <div className={styles.summaryChip}>
+                                <span>Tier</span>
+                                <strong>{characterTier}</strong>
+                            </div>
+                            <div className={styles.summaryChip}>
+                                <span>Effective Marks</span>
+                                <strong>{effectiveMarkPool}</strong>
+                            </div>
+                            <div className={styles.summaryChip}>
+                                <span>Special Strings</span>
+                                <strong>{totalSpecialStrings}</strong>
+                            </div>
+                        </div>
+
+                        <div className={styles.levelActionsRow}>
+                            <button
+                                type="button"
+                                className={styles.smallButton}
+                                onClick={() => addArchetypeLevel()}
+                            >
+                                Add Archetype Level
+                            </button>
+                        </div>
+
+                        {totalArchetypeLevels > 0 ? (
+                            <article className={`${styles.card} ${styles.levelCard}`}>
+                                <div className={styles.cardHeader}>
+                                    <div>
+                                        <strong>1st-Level Boons</strong>
+                                        <div className={styles.metaMuted}>
+                                            Granted by your first archetype level.
+                                        </div>
+                                    </div>
+                                    <div className={styles.metaMuted}>
+                                        {firstArchetype
+                                            ? ARCHETYPE_LABELS[firstArchetype]
+                                            : "No archetype selected"}
+                                    </div>
+                                </div>
+
+                                <div className={styles.levelGrid}>
+                                    <label className={styles.field}>
+                                        <span>Starting Marks</span>
+                                        <input
+                                            value={String(firstArchetypeBaseMarks)}
+                                            readOnly
+                                        />
+                                    </label>
+
+                                    <label className={styles.field}>
+                                        <span>Domain</span>
+                                        <select
+                                            value={sheet.firstArchetypeBoons.domainId}
+                                            onChange={(e) =>
+                                                updateFirstArchetypeBoons({
+                                                    domainId: e.target.value,
+                                                })
+                                            }
+                                        >
+                                            <option value="">Select domain...</option>
+                                            {DOMAINS.map((domain) => (
+                                                <option key={domain.id} value={domain.id}>
+                                                    {domain.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+
+                                    <label className={styles.field}>
+                                        <span>Skill 1</span>
+                                        <select
+                                            value={sheet.firstArchetypeBoons.skillIds[0]}
+                                            onChange={(e) =>
+                                                updateFirstArchetypeBoons({
+                                                    skillIds: [
+                                                        e.target.value,
+                                                        sheet.firstArchetypeBoons.skillIds[1],
+                                                    ],
+                                                })
+                                            }
+                                        >
+                                            <option value="">Select skill...</option>
+                                            {skillOptions.map((skill) => (
+                                                <option key={skill.id} value={skill.id}>
+                                                    {skill.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+
+                                    <label className={styles.field}>
+                                        <span>Skill 2</span>
+                                        <select
+                                            value={sheet.firstArchetypeBoons.skillIds[1]}
+                                            onChange={(e) =>
+                                                updateFirstArchetypeBoons({
+                                                    skillIds: [
+                                                        sheet.firstArchetypeBoons.skillIds[0],
+                                                        e.target.value,
+                                                    ],
+                                                })
+                                            }
+                                        >
+                                            <option value="">Select skill...</option>
+                                            {skillOptions.map((skill) => (
+                                                <option key={skill.id} value={skill.id}>
+                                                    {skill.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+
+                                    <label className={styles.field}>
+                                        <span>Heroic Goal</span>
+                                        <input
+                                            value={sheet.firstArchetypeBoons.heroicGoalLabel}
+                                            placeholder="Describe the heroic goal"
+                                            onChange={(e) =>
+                                                updateFirstArchetypeBoons({
+                                                    heroicGoalLabel: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </label>
+                                </div>
+                            </article>
+                        ) : null}
+
+                        <div className={styles.levelList}>
+                            {sheet.archetypeLevels.map((level, index) => {
+                                const absoluteLevel = index + 1;
+                                const levelTier = getTierForAbsoluteLevelIndex(index);
+                                const blockedPotentialKeys = getBlockedPotentialKeysForTier(
+                                    levelTier,
+                                    level.id,
+                                );
+
+                                return (
+                                    <article
+                                        key={level.id}
+                                        className={`${styles.card} ${styles.levelCard}`}
+                                    >
+                                        <div className={styles.cardHeader}>
+                                            <div>
+                                                <strong>
+                                                    Level {absoluteLevel} ·{" "}
+                                                    {ARCHETYPE_LABELS[level.archetype]} {level.rank}
+                                                </strong>
+                                                <div className={styles.metaMuted}>
+                                                    Tier {levelTier} · grants 9 special Strings
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className={styles.removeButton}
+                                                onClick={() => removeArchetypeLevel(level.id)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+
+                                        <div className={styles.levelGrid}>
+                                            <label className={styles.field}>
+                                                <span>Archetype</span>
+                                                <select
+                                                    value={level.archetype}
+                                                    onChange={(e) =>
+                                                        updateArchetypeLevel(level.id, {
+                                                            archetype: e.target.value as ArchetypeKey,
+                                                        })
+                                                    }
+                                                >
+                                                    {(
+                                                        Object.keys(
+                                                            ARCHETYPE_LABELS,
+                                                        ) as ArchetypeKey[]
+                                                    ).map((archetype) => (
+                                                        <option key={archetype} value={archetype}>
+                                                            {ARCHETYPE_LABELS[archetype]}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+
+                                            <label className={styles.field}>
+                                                <span>Reward Type</span>
+                                                <select
+                                                    value={level.rewardChoice}
+                                                    onChange={(e) =>
+                                                        updateArchetypeLevel(level.id, {
+                                                            rewardChoice: e.target.value as
+                                                                | ""
+                                                                | "knack"
+                                                                | "perk",
+                                                        })
+                                                    }
+                                                >
+                                                    <option value="">Choose…</option>
+                                                    <option value="knack">Knack</option>
+                                                    <option value="perk">Perk</option>
+                                                </select>
+                                            </label>
+
+                                            {level.rewardChoice === "knack" ? (
+                                                <label className={styles.field}>
+                                                    <span>Knack</span>
+                                                    <input
+                                                        value={level.knackName}
+                                                        placeholder="Enter knack name"
+                                                        onChange={(e) =>
+                                                            updateArchetypeLevel(level.id, {
+                                                                knackName: e.target.value,
+                                                            })
+                                                        }
+                                                    />
+                                                </label>
+                                            ) : null}
+
+                                            <label className={styles.field}>
+                                                <span>Stat Increase</span>
+                                                <select
+                                                    value={
+                                                        level.statIncrease?.kind === "marks"
+                                                            ? "marks"
+                                                            : level.statIncrease?.kind === "potential"
+                                                                ? level.statIncrease.potentialKey
+                                                                : ""
+                                                    }
+                                                    onChange={(e) =>
+                                                        setLevelStatIncrease(level.id, e.target.value)
+                                                    }
+                                                >
+                                                    <option value="">Choose…</option>
+                                                    <option value="marks">+1 Mark Pool</option>
+                                                    {potentialOptions.map((potential) => (
+                                                        <option
+                                                            key={potential.key}
+                                                            value={potential.key}
+                                                            disabled={blockedPotentialKeys.has(
+                                                                potential.key,
+                                                            )}
+                                                        >
+                                                            +1 {potential.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+
+                                            <label className={styles.field}>
+                                                <span>Special Strings</span>
+                                                <input
+                                                    type="number"
+                                                    value={level.specialStrings}
+                                                    onChange={(e) =>
+                                                        updateArchetypeLevel(level.id, {
+                                                            specialStrings:
+                                                                Number(e.target.value) || 0,
+                                                        })
+                                                    }
+                                                />
+                                            </label>
+
+                                            <label className={styles.field}>
+                                                <span>Notes</span>
+                                                <input
+                                                    value={level.notes}
+                                                    placeholder="Optional notes"
+                                                    onChange={(e) =>
+                                                        updateArchetypeLevel(level.id, {
+                                                            notes: e.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </label>
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
                     </section>
                 ) : null}
