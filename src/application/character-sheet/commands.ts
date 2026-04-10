@@ -14,7 +14,6 @@ import type {
 } from "../../types/sheet.ts";
 import {
   getAllowedPerkFaces,
-  getPotentialBonusTotal,
   mapPotential,
   normalizeArchetypeLevels,
   normalizePotentialState,
@@ -31,6 +30,22 @@ function toResolverPerks(
 
 function getPotential(sheet: CharacterSheetState, potentialKey: PotentialKey) {
   return sheet.potentials.find((entry) => entry.key === potentialKey);
+}
+
+function getResolverPerkRecord(
+  resolverPerks: CharacterSheetState["potentials"][number]["resolverPerks"],
+): Record<number, PerkDefinition> {
+  const result: Record<number, PerkDefinition> = {};
+
+  for (const [face, perk] of Object.entries(resolverPerks ?? {})) {
+    const parsedFace = Number(face);
+    const perkDef = perk as PerkDefinition | undefined;
+    if (!Number.isInteger(parsedFace) || parsedFace <= 0) continue;
+    if (!perkDef?.id) continue;
+    result[parsedFace] = perkDef;
+  }
+
+  return result;
 }
 
 function getTierForAbsoluteLevelIndex(index: number): number {
@@ -59,10 +74,11 @@ export function applyRolledPotentialBaseScore(
   potentialKey: PotentialKey,
   total: number,
 ): CharacterSheetState {
+  const nextBaseScore = Math.max(1, Math.floor(total));
+
   return mapPotential(sheet, potentialKey, (potential) => ({
     ...potential,
-    baseScore: Math.max(1, Math.floor(total) || 1),
-    score: Math.max(1, (Math.floor(total) || 1) + getPotentialBonusTotal(potential)),
+    baseScore: nextBaseScore,
   }));
 }
 
@@ -117,7 +133,7 @@ export function addPotentialPerk(
   if (!perkDef) return sheet;
 
   return mapPotential(sheet, potentialKey, (current) => {
-    const nextResolverPerks = { ...(current.resolverPerks ?? {}) } as Record<number, PerkDefinition>;
+    const nextResolverPerks = getResolverPerkRecord(current.resolverPerks);
     nextResolverPerks[allowedFaces[0]] = perkDef;
     return {
       ...current,
@@ -226,8 +242,15 @@ export function applyOriginSkillSelection(
   nextSkillName?: string,
 ): CharacterSheetState {
   const sourceId = `origin:${facet}:skill`;
-  const kind = facet === "profession" ? "origin-profession" : facet === "crux" ? "origin-crux" : "origin-descent";
-  const label = facet === "profession" ? "Profession boon" : facet === "crux" ? "Crux boon" : "Descent boon";
+  const originSkillMeta: Record<
+    "profession" | "crux" | "descent",
+    { kind: "origin-profession" | "origin-crux" | "origin-descent"; label: string }
+  > = {
+    profession: { kind: "origin-profession", label: "Profession boon" },
+    crux: { kind: "origin-crux", label: "Crux boon" },
+    descent: { kind: "origin-descent", label: "Descent boon" },
+  };
+  const { kind, label } = originSkillMeta[facet];
 
   return {
     ...sheet,
@@ -413,9 +436,11 @@ export function updateFirstArchetypeBoons(
     ...patch,
   };
 
+  // Rules model: first archetype boons always store exactly two chosen skills.
+  const candidateSkillIds = Array.isArray(next.skillIds) ? next.skillIds : [];
   const nextSkills: [string, string] = [
-    next.skillIds[0] ?? "",
-    next.skillIds[1] ?? "",
+    typeof candidateSkillIds[0] === "string" ? candidateSkillIds[0] : "",
+    typeof candidateSkillIds[1] === "string" ? candidateSkillIds[1] : "",
   ];
 
   return {

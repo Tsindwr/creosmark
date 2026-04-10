@@ -11,7 +11,7 @@ import type { PerkDefinition, PerkId } from "../../lib/rolling/types.ts";
 const ALLOWED_DIE_FACES = new Set<PotentialState["volatilityDieMax"]>([4, 6, 8, 10, 12]);
 
 function toFiniteNumber(value: number | undefined, fallback: number): number {
-  if (typeof value !== "number" || Number.isNaN(value) || !Number.isFinite(value)) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
   }
   return value;
@@ -29,10 +29,16 @@ function normalizeDieFace(value: number | undefined): PotentialState["volatility
 }
 
 export function getPotentialBaseScore(potential: PotentialState): number {
-  return toPositiveInteger(potential.baseScore ?? potential.score, 1);
+  if (typeof potential.baseScore === "number" && Number.isFinite(potential.baseScore)) {
+    return toPositiveInteger(potential.baseScore, 1);
+  }
+
+  const inferredBase = toFiniteNumber(potential.score, 1) - getPotentialBonusTotal(potential);
+  return toPositiveInteger(inferredBase, 1);
 }
 
 export function getPotentialBonusTotal(potential: PotentialState): number {
+  // Keep negative modifiers valid so future penalties/debuffs can reuse the same pipeline.
   return (potential.scoreBonuses ?? []).reduce((sum, bonus) => {
     const amount = Math.floor(toFiniteNumber(bonus.amount, 0));
     return sum + amount;
