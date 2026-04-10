@@ -217,7 +217,7 @@ export const BASE_PERKS: Record<PerkId, PerkDefinition> = {
     category: "die-transform",
     timing: "on-kept-die",
     description:
-      "If activated while in the jinx threshold, the result is considered the die maximum. Otherwise, it is considered, the die minimum.",
+      "If activated while in the jinx threshold, the result is considered the die maximum. Otherwise, it is considered the die minimum.",
     shortLabel: "Fracture",
     resolve: (context) => ({
       face: context.keptFace <= context.jinxThreshold ? context.dieType : 1,
