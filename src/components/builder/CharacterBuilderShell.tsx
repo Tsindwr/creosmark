@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import type {
     CharacterSheetState,
-    PotentialKey, PotentialScoreBonus,
-    PotentialState,
+    PotentialKey,
 } from "../../types/sheet.ts";
 import EditorWorkspace from "../manage/EditorWorkspace.tsx";
 import BuilderPotentialRoller, {
     type BuilderPotentialRollRequest,
 } from "./BuilderPotentialRoller.tsx";
 import styles from './CharacterBuilderShell.module.css';
+import { applyRolledPotentialBaseScore } from "../../application/character-sheet/commands.ts";
 
 const BUILDER_STEPS = [
     { id: 'identity', label: '1. Identity' },
@@ -26,13 +26,6 @@ type CharacterBuilderShellProps = {
     saveState?: 'idle' | 'saving' | 'saved' | 'error';
 };
 
-function getPotentialBonusTotal(potential: PotentialState) {
-    return (potential.scoreBonuses ?? []).reduce(
-        (sum, source) => sum + source.amount,
-        0,
-    );
-}
-
 export default function CharacterBuilderShell({
     sheet,
     onChange,
@@ -43,20 +36,7 @@ export default function CharacterBuilderShell({
         useState<BuilderPotentialRollRequest | null>(null);
 
     function applyRolledBaseScore(potentialKey: PotentialKey, total: number) {
-        onChange({
-            ...sheet,
-            potentials: sheet.potentials.map((potential) => {
-                if (potential.key !== potentialKey) return potential;
-
-                const bonusTotal = getPotentialBonusTotal(potential);
-
-                return {
-                    ...potential,
-                    baseScore: total,
-                    score: Math.max(1, total + bonusTotal),
-                };
-            }),
-        });
+        onChange(applyRolledPotentialBaseScore(sheet, potentialKey, total));
     }
 
     return (

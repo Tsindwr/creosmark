@@ -5,8 +5,6 @@ import {
     type PotentialState,
     type GoalState,
     type PotentialKey,
-    type SkillDef,
-    type SheetSourceTag,
     REWARD_FROM_GOAL,
     ARCHETYPE_LABELS,
     ARCHETYPE_MARKS,
@@ -16,7 +14,6 @@ import {
 } from "../../types/sheet.ts";
 import {
     type ArchetypeId,
-    ARCHETYPES,
     DOMAINS,
     EDITOR_TABS,
     type EditorTabId,
@@ -24,6 +21,32 @@ import {
 } from '../../lib/sheet-data.ts';
 import { BASE_PERKS } from "../../lib/rolling/perkData.ts";
 import type {PerkDefinition, PerkId} from "../../lib/rolling/types.ts";
+import {
+    addArchetypeLevel as addArchetypeLevelCommand,
+    addPotentialPerk,
+    applyOriginPotentialBonus as applyOriginPotentialBonusCommand,
+    applyOriginSkillSelection as applyOriginSkillSelectionCommand,
+    patchOriginFacet as patchOriginFacetCommand,
+    removeArchetypeLevel as removeArchetypeLevelCommand,
+    removePotentialPerk as removePotentialPerkCommand,
+    setArchetypeLevel as setArchetypeLevelCommand,
+    setArchetypeLevelStatIncrease,
+    setManualSkillProficiency as setManualSkillProficiencyCommand,
+    setPotentialBaseScore as setPotentialBaseScoreCommand,
+    setPotentialCharged as setPotentialChargedCommand,
+    setPotentialVolatilityDie,
+    toggleDomain as toggleDomainCommand,
+    updateArchetypeLevel as updateArchetypeLevelCommand,
+    updateArchetypeLevels as updateArchetypeLevelsCommand,
+    updateFirstArchetypeBoons as updateFirstArchetypeBoonsCommand,
+    movePotentialPerk as movePotentialPerkCommand,
+} from "../../application/character-sheet/commands.ts";
+import {
+    getAllowedPerkFaces,
+    getPotentialBaseScore,
+    getPotentialBonusTotal,
+    getPotentialTotalScore,
+} from "../../domain/character-sheet/invariants.ts";
 
 type BuilderTabId = EditorTabId | "origin";
 
@@ -34,16 +57,6 @@ type EditorWorkspaceProps = {
     hideNav?: boolean;
     onRequestPotentialRoll?: (potential: PotentialState) => void;
 };
-
-function updatePotential(
-    potentials: PotentialState[],
-    key: PotentialState["key"],
-    patch: Partial<PotentialState>,
-) {
-    return potentials.map((entry) =>
-        entry.key === key ? { ...entry, ...patch } : entry,
-    );
-}
 
 export default function EditorWorkspace({
     sheet,
@@ -86,100 +99,26 @@ export default function EditorWorkspace({
         [],
     );
 
-    function normalizeSkill(skill: SkillDef, sources: SheetSourceTag[]) {
-        const nextSources = sources.length > 0 ? sources : undefined;
-
-        return {
-            ...skill,
-            sources: nextSources,
-            proficient: Boolean(nextSources?.length),
-            locked: Boolean(nextSources?.some((source) => source.locked)),
-        };
-    }
-
-    function getPotentialBaseScore(potential: PotentialState) {
-        return potential.baseScore ?? potential.score;
-    }
-
-    function getPotentialBonusTotal(potential: PotentialState) {
-        return (potential.scoreBonuses ?? []).reduce(
-            (sum, bonus) => sum + bonus.amount,
-            0,
-        );
+    function applyCommand(next: CharacterSheetState) {
+        onChange(next);
     }
 
     function setPotentialBaseScore(potentialKey: PotentialKey, baseScore: number) {
-        onChange({
-            ...sheet,
-            potentials: sheet.potentials.map((potential) => {
-                if (potential.key !== potentialKey) return potential;
-
-                const nextBase = Math.max(1, baseScore || 1);
-                const bonusTotal = getPotentialBonusTotal(potential);
-
-                return {
-                    ...potential,
-                    baseScore: nextBase,
-                    score: nextBase + bonusTotal,
-                };
-            }),
-        });
+        applyCommand(setPotentialBaseScoreCommand(sheet, potentialKey, baseScore));
     }
 
     function setPotentialDie(
         potentialKey: PotentialKey,
         die: 4 | 6 | 8 | 10 | 12,
     ) {
-        onChange({
-            ...sheet,
-            potentials: updatePotential(sheet.potentials, potentialKey, {
-                volatilityDieMax: die,
-            }),
-        });
-    }
-
-    function asResolverPerks(
-        nextResolverPerks: Record<number, PerkDefinition>,
-    ): PotentialState["resolverPerks"] | undefined {
-        return Object.keys(nextResolverPerks).length > 0
-            ? (nextResolverPerks as unknown as PotentialState["resolverPerks"])
-            : undefined;
-    }
-
-    function getPotentialTotal(potential: PotentialState) {
-        return getPotentialBaseScore(potential) + getPotentialBonusTotal(potential);
+        applyCommand(setPotentialVolatilityDie(sheet, potentialKey, die));
     }
 
     function setPotentialCharged(
         potentialKey: PotentialKey,
         charged: boolean,
     ) {
-        onChange({
-            ...sheet,
-            potentials: sheet.potentials.map((potential) => {
-                if (potential.key !== potentialKey) return potential;
-
-                const nextResolverPerks = { ...(potential.resolverPerks ?? {}) } as Record<
-                    number,
-                    PerkDefinition
-                >;
-
-                if (!charged) {
-                    for (const [face, perk] of Object.entries(nextResolverPerks)) {
-                        const perkDef = perk as PerkDefinition | undefined;
-                        if (perkDef?.id === "charge") {
-                            delete nextResolverPerks[Number(face)];
-                        }
-                    }
-                }
-
-                return {
-                    ...potential,
-                    charged,
-                    resolverPerks: asResolverPerks(nextResolverPerks),
-                };
-            }),
-        });
+        applyCommand(setPotentialChargedCommand(sheet, potentialKey, charged));
     }
 
     function getAssignedPerkEntries(potential: PotentialState) {
@@ -228,68 +167,19 @@ export default function EditorWorkspace({
         perkId: PerkId,
         currentFace?: number,
     ) {
-        const total = getPotentialTotal(potential);
-        const dieMax = potential.volatilityDieMax;
-
         const occupiedFaces = new Set(
             getAssignedPerkEntries(potential)
                 .filter((entry) => entry.face !== currentFace)
                 .map((entry) => entry.face),
         );
-
-        if (perkId === "charge") {
-            const chargeFace = dieMax;
-
-            if (
-                potential.charged &&
-                chargeFace <= total &&
-                !occupiedFaces.has(chargeFace)
-            ) {
-                return [chargeFace];
-            }
-
-            return typeof currentFace === "number" ? [currentFace] : [];
-        }
-
-        const faces: number[] = [];
-        const upperBound = Math.min(total, dieMax);
-
-        for (let face = 2; face <= upperBound; face += 1) {
-            if (face === dieMax) continue;
-            if (occupiedFaces.has(face)) continue;
-            faces.push(face);
-        }
-
-        if (typeof currentFace === "number" && !faces.includes(currentFace)) {
-            faces.unshift(currentFace);
-        }
-
-        return Array.from(new Set(faces)).sort((a, b) => a - b);
+        return getAllowedPerkFaces(potential, perkId, occupiedFaces, currentFace);
     }
 
     function addPerkToPotential(
         potentialKey: PotentialKey,
         perkId: PerkId,
     ) {
-        const potential = sheet.potentials.find((entry) => entry.key === potentialKey);
-        if (!potential) return;
-
-        const allowedFaces = getAllowedFaces(potential, perkId);
-        if (allowedFaces.length === 0) return;
-
-        const nextResolverPerks = { ...(potential.resolverPerks ?? {}) } as Record<
-            number,
-            PerkDefinition
-        >;
-
-        nextResolverPerks[allowedFaces[0]] = BASE_PERKS[perkId];
-
-        onChange({
-            ...sheet,
-            potentials: updatePotential(sheet.potentials, potentialKey, {
-                resolverPerks: asResolverPerks(nextResolverPerks),
-            }),
-        });
+        applyCommand(addPotentialPerk(sheet, potentialKey, perkId));
     }
 
     function movePotentialPerk(
@@ -297,52 +187,14 @@ export default function EditorWorkspace({
         perkId: PerkId,
         nextFace: number,
     ) {
-        const potential = sheet.potentials.find((entry) => entry.key === potentialKey);
-        if (!potential) return;
-
-        const nextResolverPerks = {} as Record<number, PerkDefinition>;
-
-        for (const [face, perk] of Object.entries(potential.resolverPerks ?? {})) {
-            const perkDef = perk as PerkDefinition | undefined;
-            if (!perkDef?.id) continue;
-            if (perkDef.id === perkId) continue;
-
-            nextResolverPerks[Number(face)] = perkDef;
-        }
-
-        nextResolverPerks[nextFace] = BASE_PERKS[perkId];
-
-        onChange({
-            ...sheet,
-            potentials: updatePotential(sheet.potentials, potentialKey, {
-                resolverPerks: asResolverPerks(nextResolverPerks),
-            }),
-        });
+        applyCommand(movePotentialPerkCommand(sheet, potentialKey, perkId, nextFace));
     }
 
     function removePotentialPerk(
         potentialKey: PotentialKey,
         perkId: PerkId,
     ) {
-        const potential = sheet.potentials.find((entry) => entry.key === potentialKey);
-        if (!potential) return;
-
-        const nextResolverPerks = {} as Record<number, PerkDefinition>;
-
-        for (const [face, perk] of Object.entries(potential.resolverPerks ?? {})) {
-            const perkDef = perk as PerkDefinition | undefined;
-            if (!perkDef?.id) continue;
-            if (perkDef.id === perkId) continue;
-
-            nextResolverPerks[Number(face)] = perkDef;
-        }
-
-        onChange({
-            ...sheet,
-            potentials: updatePotential(sheet.potentials, potentialKey, {
-                resolverPerks: asResolverPerks(nextResolverPerks),
-            }),
-        });
+        applyCommand(removePotentialPerkCommand(sheet, potentialKey, perkId));
     }
 
     function setManualSkillProficiency(
@@ -350,212 +202,36 @@ export default function EditorWorkspace({
         skillName: string,
         enabled: boolean,
     ) {
-        const sourceId = `manual:${potentialKey}:${skillName}`;
-
-        onChange({
-            ...sheet,
-            potentials: sheet.potentials.map((potential) => {
-                if (potential.key !== potentialKey) return potential;
-
-                return {
-                    ...potential,
-                    skills: potential.skills.map((skill) => {
-                        if (skill.name !== skillName) return skill;
-
-                        const nextSources = (skill.sources ?? []).filter(
-                            (source) => source.id !== sourceId,
-                        );
-
-                        if (enabled) {
-                            nextSources.push({
-                                id: sourceId,
-                                kind: "manual",
-                                label: "Manual builder choice",
-                            });
-                        }
-
-                        return normalizeSkill(skill, nextSources);
-                    }),
-                };
-            }),
-        });
+        applyCommand(setManualSkillProficiencyCommand(sheet, potentialKey, skillName, enabled));
     }
 
     function applyOriginSkillSelection(
         facet: "profession" | "crux" | "descent",
         nextSkillName?: string,
     ) {
-        const sourceId = `origin:${facet}:skill`;
-
-        const kind =
-            facet === 'profession'
-                ? 'origin-profession'
-                : facet === 'crux'
-                    ? 'origin-crux'
-                    : 'origin-descent';
-
-        const label =
-            facet === 'profession'
-                ? "Profession boon"
-                : facet === 'crux'
-                    ? "Crux boon"
-                    : "Descent boon";
-
-        onChange({
-            ...sheet,
-            originSelections: {
-                ...sheet.originSelections,
-                [facet]: {
-                    ...(sheet.originSelections?.[facet] ?? {}),
-                    skillName: nextSkillName || undefined,
-                },
-            },
-            potentials: sheet.potentials.map((potential) => ({
-                ...potential,
-                skills: potential.skills.map((skill) => {
-                    const nextSources = (skill.sources ?? []).filter(
-                        (source) => source.id !== sourceId,
-                    );
-
-                    if (nextSkillName && skill.name === nextSkillName) {
-                        nextSources.push({
-                            id: sourceId,
-                            kind,
-                            label,
-                            locked: true,
-                        });
-                    }
-
-                    return normalizeSkill(skill, nextSources);
-                }),
-            })),
-        });
+        applyCommand(applyOriginSkillSelectionCommand(sheet, facet, nextSkillName));
     }
 
     function applyOriginPotentialBonus(
         facet: 'crux' | 'bloodline',
         nextPotentialKey?: PotentialKey,
     ) {
-        const sourceId = `origin:${facet}:potential`;
-        const kind =
-            facet === 'crux' ? 'origin-crux' : 'origin-bloodline';
-        const label =
-            facet === 'crux' ? 'Crux bonus' : 'Bloodline bonus';
-
-        onChange({
-            ...sheet,
-            originSelections: {
-                ...sheet.originSelections,
-                [facet]: {
-                    ...(sheet.originSelections?.[facet] ?? {}),
-                    potentialKey: nextPotentialKey || undefined,
-                },
-            },
-            potentials: sheet.potentials.map((potential) => {
-                const nextBonuses = (potential.scoreBonuses ?? []).filter(
-                    (bonus) => bonus.id !== sourceId,
-                );
-
-                if (nextPotentialKey && potential.key === nextPotentialKey) {
-                    nextBonuses.push({
-                        id: sourceId,
-                        kind,
-                        label,
-                        amount: 1,
-                        locked: true,
-                    });
-                }
-
-                const baseScore = potential.baseScore ?? potential.score;
-                const nextTotal =
-                    baseScore +
-                    nextBonuses.reduce((sum, bonus) => sum + bonus.amount, 0);
-
-                return {
-                    ...potential,
-                    score: nextTotal,
-                    scoreBonuses: nextBonuses.length > 0 ? nextBonuses : undefined,
-                };
-            }),
-        });
+        applyCommand(applyOriginPotentialBonusCommand(sheet, facet, nextPotentialKey));
     }
 
     function patchOriginFacet(
         facet: "profession" | 'crux' | 'descent' | 'bloodline',
         patch: Record<string, unknown>,
     ) {
-        onChange({
-            ...sheet,
-            originSelections: {
-                ...sheet.originSelections,
-                [facet]: {
-                    ...(sheet.originSelections?.[facet] ?? {}),
-                    ...patch,
-                },
-            },
-        });
+        applyCommand(patchOriginFacetCommand(sheet, facet, patch));
     }
 
     function setArchetypeLevel(archetypeId: ArchetypeId, levels: number) {
-        const nextLevels = Math.max(0, levels);
-
-        const existing = sheet.header.archetypes.find(
-            (entry) => entry.id === archetypeId,
-        );
-
-        let nextArchetypes = sheet.header.archetypes.filter(
-            (entry) => entry.id !== archetypeId,
-        );
-
-        if (nextLevels > 0) {
-            const base = ARCHETYPES.find((entry) => entry.id === archetypeId);
-            if (!base) return;
-
-            nextArchetypes = [
-                ...nextArchetypes,
-                {
-                    id: archetypeId,
-                    label: base.label,
-                    levels: nextLevels,
-                },
-            ];
-        }
-
-        onChange({
-            ...sheet,
-            header: {
-                ...sheet.header,
-                archetypes: nextArchetypes,
-            },
-        });
+        applyCommand(setArchetypeLevelCommand(sheet, archetypeId, levels));
     }
 
     function toggleDomain(domainId: DomainId) {
-        const isProficient = proficientDomainIds.has(domainId);
-
-        if (isProficient) {
-            onChange({
-                ...sheet,
-                domains: sheet.domains.filter((entry) => entry.id !== domainId),
-            });
-            return;
-        }
-
-        const domain = DOMAINS.find((entry) => entry.id === domainId);
-        if (!domain) return;
-
-        onChange({
-            ...sheet,
-            domains: [
-                ...sheet.domains,
-                {
-                    id: domain.id,
-                    label: domain.label,
-                    deity: domain.deity,
-                    summary: domain.summary,
-                },
-            ],
-        });
+        applyCommand(toggleDomainCommand(sheet, domainId));
     }
 
     // ============ ADDING ARCHETYPE LEVEL BOONS ==============
@@ -605,106 +281,33 @@ export default function EditorWorkspace({
         [sheet.potentials],
     );
 
-    function normalizeArchetypeLevels(
-        levels: PurchasedArchetypeLevel[],
-    ): PurchasedArchetypeLevel[] {
-        const counts = new Map<ArchetypeKey, number>();
-
-        return levels.map((level) => {
-            const nextRank = (counts.get(level.archetype) ?? 0) + 1;
-            counts.set(level.archetype, nextRank);
-
-            return {
-                ...level,
-                rank: nextRank,
-            };
-        });
-    }
-
     function updateArchetypeLevels(nextLevels: PurchasedArchetypeLevel[]) {
-        onChange({
-            ...sheet,
-            archetypeLevels: normalizeArchetypeLevels(nextLevels),
-        });
+        applyCommand(updateArchetypeLevelsCommand(sheet, nextLevels));
     }
 
     function addArchetypeLevel(archetype: ArchetypeKey = 'frontliner') {
-        const next = normalizeArchetypeLevels([
-            ...sheet.archetypeLevels,
-            createEmptyArchetypeLevel(archetype),
-        ]);
-        onChange({
-            ...sheet,
-            archetypeLevels: next,
-        });
+        applyCommand(addArchetypeLevelCommand(sheet, createEmptyArchetypeLevel(archetype)));
     }
 
     function removeArchetypeLevel(levelId: string) {
-        updateArchetypeLevels(
-            sheet.archetypeLevels.filter((level) => level.id !== levelId),
-        );
+        applyCommand(removeArchetypeLevelCommand(sheet, levelId));
     }
 
     function updateArchetypeLevel(
         levelId: string,
         patch: Partial<PurchasedArchetypeLevel>,
     ) {
-        updateArchetypeLevels(
-            sheet.archetypeLevels.map((level) =>
-                level.id === levelId ? { ...level, ...patch } : level,
-            ),
-        );
+        applyCommand(updateArchetypeLevelCommand(sheet, levelId, patch));
     }
 
     function updateFirstArchetypeBoons(
         patch: Partial<typeof sheet.firstArchetypeBoons>,
     ) {
-        onChange({
-            ...sheet,
-            firstArchetypeBoons: {
-                ...sheet.firstArchetypeBoons,
-                ...patch,
-            },
-        });
-    }
-
-    function getTierForAbsoluteLevelIndex(index: number) {
-        return Math.floor(index / 4) + 1;
-    }
-
-    function getBlockedPotentialKeysForTier(
-        tier: number,
-        currentLevelId: string,
-    ): Set<string> {
-        const blocked = new Set<string>();
-
-        sheet.archetypeLevels.forEach((level, index) => {
-            if (level.id === currentLevelId) return;
-            if (getTierForAbsoluteLevelIndex(index) !== tier) return;
-            if (level.statIncrease?.kind !== "potential") return;
-            blocked.add(level.statIncrease.potentialKey);
-        });
-
-        return blocked;
+        applyCommand(updateFirstArchetypeBoonsCommand(sheet, patch));
     }
 
     function setLevelStatIncrease(levelId: string, rawValue: string) {
-        if (rawValue === "") {
-            updateArchetypeLevel(levelId, { statIncrease: null });
-            return;
-        }
-
-        if (rawValue === "marks") {
-            updateArchetypeLevel(levelId, { statIncrease: { kind: "marks" } });
-            return;
-        }
-
-        updateArchetypeLevel(levelId, {
-            statIncrease: {
-                kind: "potential",
-                potentialKey: rawValue,
-            },
-        });
+        applyCommand(setArchetypeLevelStatIncrease(sheet, levelId, rawValue));
     }
 
     return (
@@ -1482,7 +1085,7 @@ export default function EditorWorkspace({
 
                         <div className={styles.potentialGrid}>
                             {sheet.potentials.map((potential) => {
-                                const totalScore = getPotentialTotal(potential);
+                                const totalScore = getPotentialTotalScore(potential);
                                 const assignedPerks = getAssignedPerkEntries(potential);
                                 const availablePerks = getAvailablePerks(potential);
 

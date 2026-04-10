@@ -5,3 +5,4 @@ export * from "./rules/perks.ts";
 export * from "./rolling/resolve-base-roll.ts";
 export * from "./rolling/resolve-volatility-pool.ts";
 export * from "./rolling/resolve-sunder-roll.ts";
+export * from "./character-sheet/invariants.ts";
