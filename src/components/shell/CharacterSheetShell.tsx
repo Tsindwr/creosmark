@@ -19,7 +19,7 @@ import SheetCard from "../common/SheetCard.tsx";
 import AttacksPanel from "../attacks/AttacksPanel.tsx";
 import GoalsPanel from "../story/GoalsPanel.tsx";
 import KnacksDomainsPanel from "../story/KnacksDomainsPanel.tsx";
-import InventoryPanel from "../iventory/InventoryPanel.tsx";
+import InventoryPanel from "../inventory/InventoryPanel.tsx";
 import DiceRoller from "../roll/DiceRoller.tsx";
 import EditorWorkspace from "../manage/EditorWorkspace.tsx";
 import ManageDrawer from "../manage/ManageDrawer";
