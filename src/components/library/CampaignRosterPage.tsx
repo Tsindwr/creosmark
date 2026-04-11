@@ -3,6 +3,7 @@ import type { CampaignRecord } from "../../types/library.ts";
 import CharacterSheetCard from "./CharacterSheetCard.tsx";
 import styles from './CampaignRosterPage.module.css';
 import CampaignCard from "./CampaignCard.tsx";
+import {routes} from "../../lib/routing.ts";
 
 type CampaignRosterPageProps = {
     campaign: CampaignRecord;
@@ -13,7 +14,7 @@ export default function CampaignRosterPage({
 }: CampaignRosterPageProps) {
     return (
         <main className={styles.page}>
-            <a className={styles.backLink} href={"/"}>
+            <a className={styles.backLink} href={routes.campaignHome()}>
                 ← Back to Library
             </a>
 

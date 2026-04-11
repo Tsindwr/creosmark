@@ -32,6 +32,7 @@ import type {
 } from '../../domain/ability-builder/types';
 import { buildPaletteSections } from '../../domain/ability-builder/palette';
 import {
+    calculateTotalFromCost,
     computeAbilitySummary,
     formatCost,
     toneForFamily,
@@ -658,7 +659,7 @@ function AbilityBuilderInner() {
                                     Flipside used / budget
                                 </span>
                                 <strong>
-                                    {summary.flipside.strings} / {summary.flipsideBudgetStrings} Strings
+                                    {calculateTotalFromCost(summary.flipside)} / {summary.flipsideBudgetStrings} Strings
                                     {summary.flipsideBudgetEnhancements > 0
                                         ? ` · ${summary.flipside.enhancements} / ${summary.flipsideBudgetEnhancements} Enh.`
                                         : ''}

@@ -62,6 +62,34 @@ export type AbilitySummary = {
     notes: string[];
 };
 
+function fibonacci(index: number): number {
+    // follow pattern: 2, 3, 5, 8, 13 ...
+    if (index <= 0) return 0;
+    if (index === 1) return 2;
+    if (index === 2) return 3;
+
+    let a = 2; // F(1)
+    let b = 3; // F(2)
+    for (let i = 3; i <= index; i++) {
+        const next = a + b;
+        a = b;
+        b = next;
+    }
+    return b;
+}
+
+export function calculateTotalFromCost(cost: CostState): number {
+    // beats are 0.1
+    // strings are 1
+    // enhancements follow a fibonacci-like sequence: 2, 3, 5, 8, 13 ...
+
+    const enhancementCost = cost.enhancements > 0
+        ? fibonacci(cost.enhancements) // +1 because the sequence starts at 2 for 1 enhancement
+        : 0;
+
+    return cost.strings + (cost.beats * 0.1) + enhancementCost;
+}
+
 export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySummary {
     const root = nodes.find((node): node is AbilityRootNodeType => node.type === 'abilityRoot');
 
@@ -75,9 +103,10 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
 
     const isActionCard = root?.data.abilityKind === 'action' || root?.data.abilityKind === 'spell';
 
-    // Flipside budget: floor(focus.strings / 2). Flipside is free within this budget.
+    // Flipside budget: body.strings / 2. Flipside is free within this budget.
     // Enhancement budget: Flipside may have at most the same number of Enhancements as Focus.
-    const flipsideBudgetStrings = isActionCard ? Math.floor(focus.strings / 2) : 0;
+
+    const flipsideBudgetStrings = isActionCard ? Math.round((calculateTotalFromCost(focus) + calculateTotalFromCost(body) / 2) * 10) / 10 : 0;
     const flipsideBudgetEnhancements = isActionCard ? Math.max(0, focus.enhancements) : 0;
 
     // What the player actually pays: Focus + Body for Actions (Flipside is complimentary).
@@ -161,7 +190,7 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
         flipsideBudgetStrings,
         flipsideBudgetEnhancements,
         isAction: isActionCard,
-        isFlipsideOverBudget: isActionCard && focus.strings > 0 && flipside.strings > flipsideBudgetStrings,
+        isFlipsideOverBudget: isActionCard && calculateTotalFromCost(flipside) > 0 && calculateTotalFromCost(flipside) > flipsideBudgetStrings,
         warnings,
         notes,
     };
