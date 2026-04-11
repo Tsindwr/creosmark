@@ -14,6 +14,7 @@ import {
 } from "../../types/sheet.ts";
 import {
     type ArchetypeId,
+    ARCHETYPES,
     DOMAINS,
     EDITOR_TABS,
     type EditorTabId,
