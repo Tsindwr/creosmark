@@ -37,7 +37,7 @@ export default function CharacterSheetFromDb({
                 if (cancelled) return;
 
                 setSheet(row.sheet);
-                setAssignedCampaign(campaign)
+                setAssignedCampaign(campaign);
 
                 loadedRef.current = true;
                 setSaveState("idle");
