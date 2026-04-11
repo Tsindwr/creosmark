@@ -2,17 +2,17 @@ import type { Node } from "@xyflow/react";
 
 // ── Ability taxonomy ──────────────────────────────────────────────────────────
 
-export type AbilityKind = 'action' | 'surge' | 'trait' | 'option' | 'spell';
+export type AbilityKind = "action" | "surge" | "trait" | "option" | "spell";
 
-export type AbilityLane = 'body' | 'focus' | 'flipside' | 'option';
+export type AbilityLane = "body" | "focus" | "flipside" | "option";
 
 export type ModifierFamily =
-    | 'activation'
-    | 'effect'
-    | 'narrative'
-    | 'caveat'
-    | 'consequence'
-    | 'special';
+    | "activation"
+    | "effect"
+    | "narrative"
+    | "caveat"
+    | "consequence"
+    | "special";
 
 // ── Node data shapes ──────────────────────────────────────────────────────────
 

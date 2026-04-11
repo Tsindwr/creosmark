@@ -72,8 +72,8 @@ function ItemDetail({
                         value={item.category}
                         onChange={(e) => onChange({ category: e.target.value as InventoryItem["category"] })}
                     >
-                        {Object.entries(INVENTORY_ITEM_CATEGORY_LABELS).map(([v, l]) => (
-                            <option key={v} value={v}>{l}</option>
+                        {Object.entries(INVENTORY_ITEM_CATEGORY_LABELS).map(([category, categoryLabel]) => (
+                            <option key={category} value={category}>{categoryLabel}</option>
                         ))}
                     </select>
                 </div>

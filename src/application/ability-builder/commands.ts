@@ -26,11 +26,12 @@ export function createNodeFromTemplate(
             data: { ...template.data },
         };
     }
+    // template.kind === 'freeformText'
     return {
         id: nextId(),
         type: 'freeformText',
         position,
-        data: { ...(template as { kind: 'freeformText'; label: string; data: { title: string; lane: 'body' | 'focus' | 'flipside' | 'option'; text: string } }).data },
+        data: { ...template.data },
     };
 }
 
