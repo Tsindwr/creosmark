@@ -595,6 +595,12 @@ export function createBlankSheet(): CharacterSheetState {
                 custom: [],
             },
         },
+        archetypeLevels: [],
+        firstArchetypeBoons: {
+            domainId: "",
+            skillIds: ["", ""],
+            heroicGoalLabel: "",
+        },
     };
 }
 

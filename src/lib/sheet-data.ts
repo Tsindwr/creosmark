@@ -14,6 +14,7 @@ export type SheetTabId = (typeof SHEET_TABS)[number]["id"];
 
 export type EditorTabId =
   | "identity"
+  | "levels"
   | "potentials"
   | "proficiencies"
   | "goals"
@@ -22,6 +23,7 @@ export type EditorTabId =
 
 export const EDITOR_TABS: Array<{ id: EditorTabId; label: string }> = [
     { id: "identity", label: "Identity" },
+    { id: "levels", label: "Levels" },
     { id: "potentials", label: "Potentials" },
     { id: "proficiencies", label: "Proficiencies" },
     { id: "goals", label: "Goals" },
@@ -540,5 +542,11 @@ export const DEMO_SHEET: CharacterSheetState = {
         },
       ],
     },
+  },
+  archetypeLevels: [],
+  firstArchetypeBoons: {
+    domainId: "",
+    skillIds: ["", ""],
+    heroicGoalLabel: "",
   },
 };

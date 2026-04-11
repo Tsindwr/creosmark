@@ -8,7 +8,7 @@
     min-height: 420px;
     min-width: 0;
     align-items: stretch;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .sidebar,

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import DiceBox from "@3d-dice/dice-box";
 import type {PotentialKey, PotentialState} from '../../types/sheet.ts';
 import styles from '../roll/SunderDiceBoxOverlay.module.css';
+import {routes} from "../../lib/routing.ts";
 
 export type BuilderPotentialRollRequest = {
     potentialKey: PotentialKey;
@@ -47,7 +48,7 @@ export default function BuilderPotentialRoller({
 
             try {
                 const box = new DiceBox({
-                    assetPath: "/assets/dice-box/",
+                    assetPath: routes.assetsPath("/dice-box/"),
                     container: "#builder-dice-stage",
                     offscreen: false,
                     theme: "default",
@@ -109,8 +110,13 @@ export default function BuilderPotentialRoller({
                     throw new Error("Expected exactly 3 results.");
                 }
 
-                const nextDropped = Math.max(...nextRolls);
-                const nextTotal = nextRolls.reduce((sum, value) => sum + value, 0) - nextDropped;
+                let nextDropped = Math.max(...nextRolls);
+                let nextTotal = nextRolls.reduce((sum, value) => sum + value, 0) - nextDropped;
+
+                // check if all values in nextRolls are 1
+                if (nextRolls.every((value) => value === 1)) {
+                    nextTotal = 1;
+                }
 
                 setRolls(nextRolls);
                 setDropped(nextDropped);

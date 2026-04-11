@@ -8,6 +8,31 @@ import type {
     InventoryItem,
     InventoryState,
 } from '../../types/inventory';
+import {
+    addContainer as addContainerCommand,
+    addCustomCurrency as addCustomCurrencyCommand,
+    addItem as addItemCommand,
+    equipItem as equipItemCommand,
+    removeContainer as removeContainerCommand,
+    removeCustomCurrency as removeCustomCurrencyCommand,
+    removeItem as removeItemCommand,
+    renameContainer as renameContainerCommand,
+    renameCustomCurrency as renameCustomCurrencyCommand,
+    setBaseCurrency,
+    unequipSlot as unequipSlotCommand,
+    updateContainerNotes,
+    updateCustomCurrencyAmount,
+    updateItem as updateItemCommand,
+} from '../../application/inventory/commands';
+import {
+    canEquipToSlot,
+    computeCurrencyTotalInSilver,
+    EQUIPMENT_SLOTS,
+    filterItemsByContainer,
+    getContainerName,
+    getEquippedBySlot,
+    INVENTORY_ITEM_CATEGORY_LABELS,
+} from '../../domain/inventory/invariants';
 
 type InventoryPanelProps = {
     inventory: InventoryState;
@@ -15,45 +40,6 @@ type InventoryPanelProps = {
 };
 
 type InventoryView = 'equipped' | 'items' | 'containers' | 'currency';
-
-const EQUIPMENT_SLOTS: EquipmentSlot[] = [
-    { id: "mainHand", label: "Main Hand", accepts: ["weapon", "tool", "other"] },
-    { id: "offHand", label: "Off Hand", accepts: ["weapon", "tool", "armor", "other"] },
-    { id: 'head', label: 'Head', accepts: ['armor', 'other'] },
-    { id: 'body', label: 'Body', accepts: ['armor', 'other'] },
-    { id: 'back', label: 'Back', accepts: ['armor', 'gear', 'other'] },
-    { id: 'hands', label: 'Hands', accepts: ['armor', 'gear', 'other'] },
-    { id: 'feet', label: 'Feet', accepts: ['armor', 'other'] },
-    { id: 'accessory1', label: 'Accessory I', accepts: ['any'] },
-    { id: 'accessory2', label: 'Accessory II', accepts: ['any'] },
-];
-
-function canEquipToSlot(item: InventoryItem, slot: EquipmentSlot) {
-    return slot.accepts.includes('any') || slot.accepts.includes(item.category);
-}
-
-function getContainerName(containers: InventoryContainer[], containerId?: string | null) {
-    if (!containerId) return null;
-    return containers.find((c) => c.id === containerId)?.name ?? "Unknown";
-}
-
-function silverValueLabel(inventory: InventoryState) {
-    const base =
-        inventory.currency.silver +
-        inventory.currency.iron / 10 +
-        inventory.currency.copper / 100;
-    const custom = inventory.currency.custom.reduce(
-        (sum, e) => sum + e.amount * e.valueInSilver,
-        0,
-    );
-    return (base + custom).toFixed(2);
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-    weapon: "Weapon", armor: "Armor", tool: "Tool", gear: "Gear",
-    consumable: "Consumable", treasure: "Treasure", ammo: "Ammo",
-    material: "Material", other: "Other",
-};
 
 // ── Item Detail Panel (renders inside Sidebar body) ────────────────────────
 function ItemDetail({
@@ -86,8 +72,8 @@ function ItemDetail({
                         value={item.category}
                         onChange={(e) => onChange({ category: e.target.value as InventoryItem["category"] })}
                     >
-                        {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
-                            <option key={v} value={v}>{l}</option>
+                        {Object.entries(INVENTORY_ITEM_CATEGORY_LABELS).map(([category, categoryLabel]) => (
+                            <option key={category} value={category}>{categoryLabel}</option>
                         ))}
                     </select>
                 </div>
@@ -309,62 +295,38 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
     const sidebarContainer = sidebarContainerId ? inventory.containers.find((c) => c.id === sidebarContainerId) ?? null : null;
 
     const equippedBySlot = useMemo(() => {
-        const map = new Map<EquipSlotId, InventoryItem>();
-        inventory.items.forEach((item) => {
-            if (item.equippedSlot) map.set(item.equippedSlot, item);
-        });
-        return map;
+        return getEquippedBySlot(inventory);
     }, [inventory.items]);
 
     const visibleItems = useMemo(() => {
-        if (selectedContainerId === "all") return inventory.items;
-        if (selectedContainerId === "loose") return inventory.items.filter((i) => !i.containerId);
-        return inventory.items.filter((i) => i.containerId === selectedContainerId);
+        return filterItemsByContainer(inventory, selectedContainerId);
     }, [inventory.items, selectedContainerId]);
 
+    function applyCommand(next: InventoryState) {
+        onChange(next);
+    }
+
     function updateItem(itemId: string, patch: Partial<InventoryItem>) {
-        onChange({
-            ...inventory,
-            items: inventory.items.map((item) => item.id === itemId ? { ...item, ...patch } : item),
-        });
+        applyCommand(updateItemCommand(inventory, itemId, patch));
     }
 
     function removeItem(itemId: string) {
         if (sidebarItemId === itemId) setSidebarItemId(null);
-        onChange({ ...inventory, items: inventory.items.filter((i) => i.id !== itemId) });
+        applyCommand(removeItemCommand(inventory, itemId));
     }
 
     function equipItem(itemId: string, slotId: EquipSlotId) {
-        const slot = EQUIPMENT_SLOTS.find((s) => s.id === slotId);
-        const item = inventory.items.find((i) => i.id === itemId);
-        if (!slot || !item || !canEquipToSlot(item, slot)) return;
-        onChange({
-            ...inventory,
-            items: inventory.items.map((entry) => {
-                if (entry.equippedSlot === slotId) return { ...entry, equippedSlot: null };
-                if (entry.id === itemId) return { ...entry, equippedSlot: slotId };
-                return entry;
-            }),
-        });
+        applyCommand(equipItemCommand(inventory, itemId, slotId));
     }
 
     function unequipSlot(slotId: EquipSlotId) {
-        onChange({
-            ...inventory,
-            items: inventory.items.map((i) => i.equippedSlot === slotId ? { ...i, equippedSlot: null } : i),
-        });
+        applyCommand(unequipSlotCommand(inventory, slotId));
     }
 
     function addItem() {
         const name = newItemName.trim();
         if (!name) return;
-        onChange({
-            ...inventory,
-            items: [...inventory.items, {
-                id: crypto.randomUUID(), name, category: "gear", quantity: 1,
-                containerId: null, equippedSlot: null,
-            }],
-        });
+        applyCommand(addItemCommand(inventory, name));
         setNewItemName("");
         setView("items");
     }
@@ -372,10 +334,7 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
     function addContainer() {
         const name = newContainerName.trim();
         if (!name) return;
-        onChange({
-            ...inventory,
-            containers: [...inventory.containers, { id: crypto.randomUUID(), name, parentContainerId: null }],
-        });
+        applyCommand(addContainerCommand(inventory, name));
         setNewContainerName("");
         setView("containers");
     }
@@ -383,61 +342,29 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
     function addCustomCurrency() {
         const name = newCurrencyName.trim();
         if (!name) return;
-        onChange({
-            ...inventory,
-            currency: {
-                ...inventory.currency,
-                custom: [...inventory.currency.custom, {
-                    id: crypto.randomUUID(), name, amount: 0, valueInSilver: 10,
-                }],
-            },
-        });
+        applyCommand(addCustomCurrencyCommand(inventory, name));
         setNewCurrencyName("");
     }
 
     function updateCurrency<K extends "copper" | "iron" | "silver">(key: K, value: number) {
-        onChange({ ...inventory, currency: { ...inventory.currency, [key]: Math.max(0, Math.floor(value)) } });
+        applyCommand(setBaseCurrency(inventory, key, value));
     }
 
     function updateCustomCurrency(id: string, amount: number) {
-        onChange({
-            ...inventory,
-            currency: {
-                ...inventory.currency,
-                custom: inventory.currency.custom.map((e) =>
-                    e.id === id ? { ...e, amount: Math.max(0, Math.floor(amount)) } : e,
-                ),
-            },
-        });
+        applyCommand(updateCustomCurrencyAmount(inventory, id, amount));
     }
 
     function renameCustomCurrency(id: string, name: string) {
-        onChange({
-            ...inventory,
-            currency: {
-                ...inventory.currency,
-                custom: inventory.currency.custom.map((e) => e.id === id ? { ...e, name } : e),
-            },
-        });
+        applyCommand(renameCustomCurrencyCommand(inventory, id, name));
     }
 
     function removeCustomCurrency(id: string) {
-        onChange({
-            ...inventory,
-            currency: {
-                ...inventory.currency,
-                custom: inventory.currency.custom.filter((e) => e.id !== id),
-            },
-        });
+        applyCommand(removeCustomCurrencyCommand(inventory, id));
     }
 
     function removeContainer(containerId: string) {
         if (sidebarContainerId === containerId) setSidebarContainerId(null);
-        onChange({
-            ...inventory,
-            containers: inventory.containers.filter((c) => c.id !== containerId),
-            items: inventory.items.map((i) => i.containerId === containerId ? { ...i, containerId: null } : i),
-        });
+        applyCommand(removeContainerCommand(inventory, containerId));
     }
 
     const VIEWS: { id: InventoryView; label: string }[] = [
@@ -530,7 +457,7 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
                                                 {equipped.name}
                                             </button>
                                             <div className={styles.rowMeta}>
-                                                <span className={styles.catPill}>{CATEGORY_LABELS[equipped.category]}</span>
+                                                <span className={styles.catPill}>{INVENTORY_ITEM_CATEGORY_LABELS[equipped.category]}</span>
                                                 {equipped.properties?.map((p) => (
                                                     <span key={p} className={styles.propPill}>{p}</span>
                                                 ))}
@@ -622,9 +549,9 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
                                 {item.name}
                                 {item.equippedSlot ? <span className={styles.equippedBadge}>E</span> : null}
                             </button>
-                            <span className={styles.catPill}>{CATEGORY_LABELS[item.category]}</span>
+                            <span className={styles.catPill}>{INVENTORY_ITEM_CATEGORY_LABELS[item.category]}</span>
                             <span className={styles.qty}>{item.quantity}</span>
-                            <span className={styles.container}>{getContainerName(inventory.containers, item.containerId) ?? "—"}</span>
+                            <span className={styles.container}>{getContainerName(inventory, item.containerId) ?? "—"}</span>
                             <button
                                 type="button"
                                 className={styles.detailBtn}
@@ -688,7 +615,7 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
             {view === "currency" && (
                 <div className={styles.content}>
                     <div className={styles.currencyTotal}>
-                        Total value: <strong>{silverValueLabel(inventory)} silver</strong>
+                        Total value: <strong>{computeCurrencyTotalInSilver(inventory.currency).toFixed(2)} silver</strong>
                     </div>
 
                     <div className={styles.currencyBaseRow}>
@@ -769,20 +696,10 @@ export default function InventoryPanel({ inventory, onChange }: InventoryPanelPr
                         containedItems={inventory.items.filter((i) => i.containerId === sidebarContainer.id)}
                         inventory={inventory}
                         onRename={(name) =>
-                            onChange({
-                                ...inventory,
-                                containers: inventory.containers.map((c) =>
-                                    c.id === sidebarContainer.id ? { ...c, name } : c,
-                                ),
-                            })
+                            applyCommand(renameContainerCommand(inventory, sidebarContainer.id, name))
                         }
                         onNotes={(notes) =>
-                            onChange({
-                                ...inventory,
-                                containers: inventory.containers.map((c) =>
-                                    c.id === sidebarContainer.id ? { ...c, notes } : c,
-                                ),
-                            })
+                            applyCommand(updateContainerNotes(inventory, sidebarContainer.id, notes))
                         }
                         onRemoveItem={(itemId) => updateItem(itemId, { containerId: null })}
                         onRemoveContainer={() => removeContainer(sidebarContainer.id)}

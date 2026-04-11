@@ -24,7 +24,8 @@
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     color: var(--sunder-text);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .pageCompact {
@@ -112,7 +113,7 @@
     height: 100%;
     padding: 1.1rem;
     border-radius: 1.5rem;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .aside {

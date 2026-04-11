@@ -25,6 +25,12 @@ function buildSheet(
             ...base.header,
             ...(patch.header || {}),
         },
+        archetypeLevels: [],
+        firstArchetypeBoons: {
+            domainId: "",
+            skillIds: ["", ""],
+            heroicGoalLabel: "",
+        },
     };
 
     const summary: CharacterSheetSummary = {
