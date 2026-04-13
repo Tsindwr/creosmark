@@ -30,7 +30,11 @@ import type {
     ModifierNodeType,
     PaletteTemplate,
 } from '../../domain/ability-builder/types';
-import { buildPaletteSections } from '../../domain/ability-builder/palette';
+import {
+    buildPaletteSections,
+    getModifierOptionPool,
+    resolveModifierData,
+} from '../../domain/ability-builder/palette';
 import {
     calculateTotalFromCost,
     computeAbilitySummary,
@@ -65,7 +69,12 @@ function AbilityRootNode({ data, selected }: NodeProps<AbilityRootNodeType>) {
     );
 }
 
-function ModifierNode({ data, selected }: NodeProps<ModifierNodeType>) {
+function ModifierNode({ id, data, selected }: NodeProps<ModifierNodeType>) {
+    const { setNodes } = useReactFlow<AbilityBuilderNode, Edge>();
+    const resolvedData = resolveModifierData(data);
+    const optionPool = data.optionPoolId ? getModifierOptionPool(data.optionPoolId) : undefined;
+    const selectedOptionId = resolvedData.selectedOptionId ?? optionPool?.options[0]?.id ?? "";
+
     return (
         <div
             className={`${styles.node} ${styles.modifierNode} ${styles[`tone${toneForFamily(data.family)}`]} ${
@@ -75,11 +84,39 @@ function ModifierNode({ data, selected }: NodeProps<ModifierNodeType>) {
             <Handle type={'target'} position={Position.Top} className={styles.handle} />
             <div className={styles.nodeHeader}>
                 <span className={styles.nodeEyebrow}>{data.family}</span>
-                <strong>{data.label}</strong>
+                <strong>{resolvedData.label}</strong>
             </div>
-            <LaneBadge lane={data.lane} />
-            <p className={styles.nodeCopy}>{data.description}</p>
-            <div className={styles.nodeCost}>{formatCost(data.cost)}</div>
+            <LaneBadge lane={resolvedData.lane} />
+            {optionPool ? (
+                <select
+                    className={`nodrag ${styles.nodeOptionSelect}`}
+                    value={selectedOptionId}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => {
+                        const nextOptionId = event.target.value;
+                        setNodes((current) =>
+                            current.map((node): AbilityBuilderNode => {
+                                if (node.id !== id || node.type !== 'marketModifier') return node;
+                                return {
+                                    ...node,
+                                    data: {
+                                        ...node.data,
+                                        selectedOptionId: nextOptionId,
+                                    },
+                                };
+                            }),
+                        );
+                    }}
+                >
+                    {optionPool.options.map((option) => (
+                        <option key={option.id} value={option.id}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            ) : null}
+            <p className={styles.nodeCopy}>{resolvedData.description}</p>
+            <div className={styles.nodeCost}>{formatCost(resolvedData.cost)}</div>
             <Handle type={'source'} position={Position.Bottom} className={styles.handle} />
         </div>
     );
@@ -111,9 +148,7 @@ function AbilityBuilderInner() {
     const [nodes, setNodes, onNodesChange] = useNodesState<AbilityBuilderNode>(initial.nodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initial.nodes[0]?.id ?? null);
-    const [sidebarMode, setSidebarMode] = useState<'palette' | 'inspector'>(
-        initial.nodes[0] ? 'inspector' : 'palette',
-    )
+    const [sidebarMode, setSidebarMode] = useState<'palette' | 'inspector'>('palette');
     const [openPaletteId, setOpenPaletteId] = useState<string>('roots');
     const paletteSections = useMemo(() => buildPaletteSections(), []);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -156,6 +191,7 @@ function AbilityBuilderInner() {
 
     const onConnect = useCallback(
         (connection: Connection) => {
+            const sourceLane = getNodeLane(nodes.find((node) => node.id === connection.source));
             setEdges((current) => {
                 return addEdge(
                     {
@@ -166,8 +202,26 @@ function AbilityBuilderInner() {
                     current,
                 )
             });
+
+            if (sourceLane && connection.target) {
+                setNodes((current) =>
+                    current.map((node): AbilityBuilderNode => {
+                        if (node.id !== connection.target) return node;
+                        if (node.type === 'marketModifier' || node.type === 'freeformText') {
+                            return {
+                                ...node,
+                                data: {
+                                    ...node.data,
+                                    lane: sourceLane,
+                                },
+                            };
+                        }
+                        return node;
+                    }),
+                );
+            }
         },
-        [setEdges],
+        [nodes, setEdges, setNodes],
     );
 
     const onDragStart = useCallback((event: React.DragEvent, template: PaletteTemplate) => {
@@ -197,7 +251,6 @@ function AbilityBuilderInner() {
 
             setNodes((current) => [...current, newNode]);
             setSelectedNodeId(newNode.id);
-            setSidebarMode('inspector');
         },
         [screenToFlowPosition, setNodes],
     );
@@ -206,8 +259,29 @@ function AbilityBuilderInner() {
         () => nodes.find((node) => node.id === selectedNodeId) ?? null,
         [nodes, selectedNodeId],
     );
+    const selectedModifierResolved = useMemo(
+        () => selectedNode && selectedNode.type === 'marketModifier'
+            ? resolveModifierData(selectedNode.data)
+            : null,
+        [selectedNode],
+    );
+    const selectedModifierOptionPool = useMemo(
+        () =>
+            selectedNode?.type === 'marketModifier' && selectedNode.data.optionPoolId
+                ? getModifierOptionPool(selectedNode.data.optionPoolId)
+                : undefined,
+        [selectedNode],
+    );
 
     const summary = useMemo(() => computeAbilitySummary(nodes), [nodes]);
+
+    function getNodeLane(node: AbilityBuilderNode | undefined): AbilityLane | null {
+        if (!node) return null;
+        if (node.type === 'marketModifier' || node.type === 'freeformText') {
+            return node.data.lane;
+        }
+        return null;
+    }
 
     function updateSelectedAbilityRoot(
         updater: (data: AbilityRootData) => AbilityRootData,
@@ -265,7 +339,7 @@ function AbilityBuilderInner() {
         setNodes(next.nodes);
         setEdges(next.edges);
         setSelectedNodeId(next.nodes[0]?.id ?? null);
-        setSidebarMode(next.nodes[0] ? 'inspector' : 'palette');
+        setSidebarMode('palette');
 
         requestAnimationFrame(() => {
             fitView({ padding: 0.2, duration: 300 });
@@ -436,6 +510,27 @@ function AbilityBuilderInner() {
 
                                     {selectedNode.type === 'marketModifier' ? (
                                         <div className={styles.editorStack}>
+                                            {selectedModifierOptionPool ? (
+                                                <label className={styles.field}>
+                                                    <span>{selectedModifierOptionPool.title}</span>
+                                                    <select
+                                                        value={selectedModifierResolved?.selectedOptionId ?? selectedModifierOptionPool.options[0]?.id ?? ""}
+                                                        onChange={(event) =>
+                                                            updateSelectedModifier((data) => ({
+                                                                ...data,
+                                                                selectedOptionId: event.target.value,
+                                                            }))
+                                                        }
+                                                    >
+                                                        {selectedModifierOptionPool.options.map((option) => (
+                                                            <option key={option.id} value={option.id}>
+                                                                {option.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+                                            ) : null}
+
                                             <label className={styles.field}>
                                                 <span>Label</span>
                                                 <input
@@ -446,6 +541,7 @@ function AbilityBuilderInner() {
                                                             label: event.target.value,
                                                         }))
                                                     }
+                                                    disabled={Boolean(selectedModifierOptionPool)}
                                                 />
                                             </label>
 
@@ -490,13 +586,14 @@ function AbilityBuilderInner() {
                                             <label className={styles.field}>
                                                 <span>Description</span>
                                                 <textarea
-                                                    value={selectedNode.data.description}
+                                                    value={selectedModifierOptionPool ? selectedModifierResolved?.description ?? '' : selectedNode.data.description}
                                                     onChange={(event) =>
                                                         updateSelectedModifier((data) => ({
                                                             ...data,
                                                             description: event.target.value,
                                                         }))
                                                     }
+                                                    disabled={Boolean(selectedModifierOptionPool)}
                                                 />
                                             </label>
 
@@ -506,7 +603,7 @@ function AbilityBuilderInner() {
                                                     <input
                                                         type="number"
                                                         step="1"
-                                                        value={selectedNode.data.cost.strings}
+                                                        value={selectedModifierOptionPool ? selectedModifierResolved?.cost.strings ?? 0 : selectedNode.data.cost.strings}
                                                         onChange={(event) =>
                                                             updateSelectedModifier((data) => ({
                                                                 ...data,
@@ -516,6 +613,7 @@ function AbilityBuilderInner() {
                                                                 },
                                                             }))
                                                         }
+                                                        disabled={Boolean(selectedModifierOptionPool)}
                                                     />
                                                 </label>
 
@@ -524,7 +622,7 @@ function AbilityBuilderInner() {
                                                     <input
                                                         type="number"
                                                         step="1"
-                                                        value={selectedNode.data.cost.beats}
+                                                        value={selectedModifierOptionPool ? selectedModifierResolved?.cost.beats ?? 0 : selectedNode.data.cost.beats}
                                                         onChange={(event) =>
                                                             updateSelectedModifier((data) => ({
                                                                 ...data,
@@ -534,6 +632,7 @@ function AbilityBuilderInner() {
                                                                 },
                                                             }))
                                                         }
+                                                        disabled={Boolean(selectedModifierOptionPool)}
                                                     />
                                                 </label>
 
@@ -542,7 +641,7 @@ function AbilityBuilderInner() {
                                                     <input
                                                         type="number"
                                                         step="1"
-                                                        value={selectedNode.data.cost.enhancements}
+                                                        value={selectedModifierOptionPool ? selectedModifierResolved?.cost.enhancements ?? 0 : selectedNode.data.cost.enhancements}
                                                         onChange={(event) =>
                                                             updateSelectedModifier((data) => ({
                                                                 ...data,
@@ -552,6 +651,7 @@ function AbilityBuilderInner() {
                                                                 },
                                                             }))
                                                         }
+                                                        disabled={Boolean(selectedModifierOptionPool)}
                                                     />
                                                 </label>
                                             </div>

@@ -1,6 +1,38 @@
-import type { PaletteSection, PaletteTemplate } from "./types.ts";
+import type {
+    ModifierData,
+    ModifierOptionPool,
+    PaletteSection,
+    PaletteTemplate,
+} from "./types.ts";
 
 // ── Block catalog ─────────────────────────────────────────────────────────────
+
+export const MODIFIER_OPTION_POOLS: Record<string, ModifierOptionPool> = {
+    rangeDistance: {
+        id: "rangeDistance",
+        title: "Range Distance",
+        options: [
+            { id: "here", label: "Here", description: "Affects a Here target or point.", cost: { strings: 0, beats: 0, enhancements: 0 } },
+            { id: "near", label: "Near", description: "Affects a Near target or point.", cost: { strings: 0, beats: 5, enhancements: 0 } },
+            { id: "close", label: "Close", description: "Affects a Close target or point.", cost: { strings: 1, beats: 0, enhancements: 0 } },
+            { id: "there", label: "There", description: "Affects a There target or point.", cost: { strings: 1, beats: 5, enhancements: 0 } },
+            { id: "far", label: "Far", description: "Affects a Far target or point.", cost: { strings: 2, beats: 0, enhancements: 0 } },
+            { id: "yonder", label: "Yonder", description: "Affects a Yonder target or point.", cost: { strings: 3, beats: 0, enhancements: 0 } },
+        ],
+    },
+    movementDistance: {
+        id: "movementDistance",
+        title: "Movement Distance",
+        options: [
+            { id: "here", label: "Here", description: "Move a short distance (5 ft) as part of this action.", cost: { strings: -1, beats: 0, enhancements: 0 } },
+            { id: "near", label: "Near", description: "Move up to Near range (10 feet) as part of this action.", cost: { strings: 0, beats: 0, enhancements: 0 } },
+            { id: "close", label: "Close", description: "Move up to Close range (30 feet) as part of this action.", cost: { strings: 1, beats: 0, enhancements: 0 } },
+            { id: "there", label: "There", description: "Move up to There range (60 feet) as part of this action.", cost: { strings: 2, beats: 0, enhancements: 0 } },
+            { id: "far", label: "Far", description: "Move up to Far range (120 feet) as part of this action.", cost: { strings: 3, beats: 0, enhancements: 0 } },
+            { id: "yonder", label: "Yonder", description: "Move up to Yonder range (240 feet) or within Line of Sight as part of this action.", cost: { strings: 5, beats: 0, enhancements: 0 } },
+        ],
+    },
+};
 
 export const ABILITY_PALETTE: Record<string, PaletteTemplate[]> = {
     "Ability Roots": [
@@ -103,33 +135,16 @@ export const ABILITY_PALETTE: Record<string, PaletteTemplate[]> = {
         },
         {
             kind: 'marketModifier',
-            label: 'Range: Here',
-            data: { label: 'Range · Here', family: 'effect', lane: 'focus', description: 'Affects a Here target or point.', cost: { strings: 0, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Range: Near',
-            data: { label: 'Range · Near', family: 'effect', lane: 'focus', description: 'Affects a Near target or point.', cost: { strings: 0, beats: 5, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Range: Close',
-            data: { label: 'Range · Close', family: 'effect', lane: 'focus', description: 'Affects a Close target or point.', cost: { strings: 1, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Range: There',
-            data: { label: 'Range · There', family: 'effect', lane: 'focus', description: 'Affects a There target or point.', cost: { strings: 1, beats: 5, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Range: Far',
-            data: { label: 'Range · Far', family: 'effect', lane: 'focus', description: 'Affects a Far target or point.', cost: { strings: 2, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Range: Yonder',
-            data: { label: 'Range · Yonder', family: 'effect', lane: 'focus', description: 'Affects a Yonder target or point.', cost: { strings: 3, beats: 0, enhancements: 0 } },
+            label: 'Range',
+            data: {
+                label: 'Range',
+                family: 'effect',
+                lane: 'focus',
+                description: 'Set the effect range distance.',
+                cost: { strings: 0, beats: 0, enhancements: 0 },
+                optionPoolId: 'rangeDistance',
+                selectedOptionId: 'here',
+            },
         },
         {
             kind: 'marketModifier',
@@ -325,33 +340,16 @@ export const ABILITY_PALETTE: Record<string, PaletteTemplate[]> = {
     "Movement": [
         {
             kind: 'marketModifier',
-            label: 'Movement: Here',
-            data: { label: 'Movement · Here', family: 'effect', lane: 'flipside', description: 'Move a short distance (5 ft) as part of this action.', cost: { strings: -1, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Movement: Near',
-            data: { label: 'Movement · Near', family: 'effect', lane: 'flipside', description: 'Move up to Near range (10 feet) as part of this action.', cost: { strings: 0, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Movement: Close',
-            data: { label: 'Movement · Close', family: 'effect', lane: 'flipside', description: 'Move up to Close range (30 feet) as part of this action.', cost: { strings: 1, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Movement: There',
-            data: { label: 'Movement · There', family: 'effect', lane: 'flipside', description: 'Move up to There range (60 feet) as part of this action.', cost: { strings: 2, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Movement: Far',
-            data: { label: 'Movement · Far', family: 'effect', lane: 'flipside', description: 'Move up to Far range (120 feet) as part of this action.', cost: { strings: 3, beats: 0, enhancements: 0 } },
-        },
-        {
-            kind: 'marketModifier',
-            label: 'Movement: Yonder',
-            data: { label: 'Movement · Yonder', family: 'effect', lane: 'flipside', description: 'Move up to Yonder range (240 feet) or within Line of Sight as part of this action.', cost: { strings: 5, beats: 0, enhancements: 0 } },
+            label: 'Movement',
+            data: {
+                label: 'Movement',
+                family: 'effect',
+                lane: 'flipside',
+                description: 'Set the movement distance.',
+                cost: { strings: 0, beats: 0, enhancements: 0 },
+                optionPoolId: 'movementDistance',
+                selectedOptionId: 'here',
+            },
         },
     ],
     "Fallback": [
@@ -379,4 +377,27 @@ export function buildPaletteSections(): PaletteSection[] {
         { id: 'special', title: 'Special', items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'special') },
         { id: 'fallback', title: 'Fallback', items: ABILITY_PALETTE['Fallback'] ?? [] },
     ].filter((section) => section.items.length > 0);
+}
+
+export function getModifierOptionPool(poolId: string): ModifierOptionPool | undefined {
+    return MODIFIER_OPTION_POOLS[poolId];
+}
+
+export function resolveModifierData(data: ModifierData): ModifierData {
+    if (!data.optionPoolId) return data;
+
+    const pool = getModifierOptionPool(data.optionPoolId);
+    if (!pool || pool.options.length === 0) return data;
+
+    const option =
+        pool.options.find((candidate) => candidate.id === data.selectedOptionId) ??
+        pool.options[0];
+
+    return {
+        ...data,
+        selectedOptionId: option.id,
+        label: `${data.label} · ${option.label}`,
+        description: option.description,
+        cost: option.cost,
+    };
 }

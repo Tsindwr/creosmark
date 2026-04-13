@@ -5,6 +5,7 @@ import type {
     ModifierFamily,
     ModifierNodeType,
 } from "./types.ts";
+import { resolveModifierData } from "./palette.ts";
 
 // ── Cost math ─────────────────────────────────────────────────────────────────
 
@@ -96,10 +97,11 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
     const modifierNodes = nodes.filter(
         (node): node is ModifierNodeType => node.type === 'marketModifier',
     );
+    const resolvedModifierData = modifierNodes.map((node) => resolveModifierData(node.data));
 
-    const focus = sumCosts(modifierNodes.filter((node) => node.data.lane === 'focus').map((node) => node.data.cost));
-    const flipside = sumCosts(modifierNodes.filter((node) => node.data.lane === 'flipside').map((node) => node.data.cost));
-    const body = sumCosts(modifierNodes.filter((node) => node.data.lane === 'body' || node.data.lane === 'option').map((node) => node.data.cost));
+    const focus = sumCosts(resolvedModifierData.filter((node) => node.lane === 'focus').map((node) => node.cost));
+    const flipside = sumCosts(resolvedModifierData.filter((node) => node.lane === 'flipside').map((node) => node.cost));
+    const body = sumCosts(resolvedModifierData.filter((node) => node.lane === 'body' || node.lane === 'option').map((node) => node.cost));
 
     const isActionCard = root?.data.abilityKind === 'action' || root?.data.abilityKind === 'spell';
 
@@ -118,7 +120,7 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
     // For non-Actions, all lanes contribute to the paid cost.
     const paid = isActionCard ? sumCosts([focus, body]) : sumCosts([focus, body, flipside]);
 
-    const total = sumCosts(modifierNodes.map((node) => node.data.cost));
+    const total = sumCosts(resolvedModifierData.map((node) => node.cost));
 
     const warnings: string[] = [];
     const notes: string[] = [];
@@ -142,16 +144,16 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
     }
 
     if (
-        modifierNodes.some((node) => node.data.label.includes("Reset · Spell")) &&
-        !modifierNodes.some((node) => node.data.family === 'consequence')
+        resolvedModifierData.some((node) => node.label.includes("Reset · Spell")) &&
+        !resolvedModifierData.some((node) => node.family === 'consequence')
     ) {
         warnings.push('Spell reset is present without any consequence block.');
     }
 
     // Spells and attacks already require a Test — "Test Required" caveat gives no discount.
-    const hasTestRequired = modifierNodes.some((node) => node.data.label === 'Caveat · Test Required');
-    const hasSpellReset = modifierNodes.some((node) => node.data.label.includes('Reset · Spell'));
-    const hasDamage = modifierNodes.some((node) => node.data.label.startsWith('Damage'));
+    const hasTestRequired = resolvedModifierData.some((node) => node.label === 'Caveat · Test Required');
+    const hasSpellReset = resolvedModifierData.some((node) => node.label.includes('Reset · Spell'));
+    const hasDamage = resolvedModifierData.some((node) => node.label.startsWith('Damage'));
     if (hasTestRequired && (hasSpellReset || hasDamage)) {
         warnings.push(
             'Spells and attacks already require a Test — the "Test Required" caveat cannot reduce their cost.',
@@ -163,7 +165,7 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
         notes.push(
             'Option Cards require a Parent Ability with a "Generates Options" modifier. Make sure that Ability is built first.',
         );
-        const hasGenOpt = modifierNodes.some((node) => node.data.label === 'Generates Options');
+        const hasGenOpt = resolvedModifierData.some((node) => node.label === 'Generates Options');
         if (!hasGenOpt) {
             warnings.push(
                 'This Option Card has no associated "Generates Options" modifier on its graph. Add one if this card is self-referential, or confirm the Parent Ability has that modifier.',
@@ -172,7 +174,7 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
     }
 
     // Concentration discount note.
-    const hasConcentration = modifierNodes.some((node) => node.data.label === 'Duration · Concentration');
+    const hasConcentration = resolvedModifierData.some((node) => node.label === 'Duration · Concentration');
     if (hasConcentration) {
         if (root?.data.abilityKind === 'trait') {
             notes.push(

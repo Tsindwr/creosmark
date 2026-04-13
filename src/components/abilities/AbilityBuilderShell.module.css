@@ -302,6 +302,18 @@
     width: fit-content;
 }
 
+.nodeOptionSelect {
+    margin-top: 0.38rem;
+    width: 100%;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(8, 10, 16, 0.88);
+    color: var(--sunder-ink, #f5f7fb);
+    padding: 0.34rem 0.42rem;
+    font: inherit;
+    font-size: 0.74rem;
+}
+
 .handle {
     width: 10px;
     height: 10px;

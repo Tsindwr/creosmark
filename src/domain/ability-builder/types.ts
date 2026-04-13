@@ -34,6 +34,8 @@ export type ModifierData = {
     lane: AbilityLane;
     description: string;
     cost: CostState;
+    optionPoolId?: string;
+    selectedOptionId?: string;
 };
 
 export type FreeformData = {
@@ -64,6 +66,19 @@ export type PaletteSection = {
     id: string;
     title: string;
     items: PaletteTemplate[];
+};
+
+export type ModifierOption = {
+    id: string;
+    label: string;
+    description: string;
+    cost: CostState;
+};
+
+export type ModifierOptionPool = {
+    id: string;
+    title: string;
+    options: ModifierOption[];
 };
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
