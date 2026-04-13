@@ -348,7 +348,7 @@ export const ABILITY_PALETTE: Record<string, PaletteTemplate[]> = {
                 description: 'Set the movement distance.',
                 cost: { strings: 0, beats: 0, enhancements: 0 },
                 optionPoolId: 'movementDistance',
-                selectedOptionId: 'here',
+                selectedOptionId: 'near',
             },
         },
     ],
@@ -392,6 +392,7 @@ export function resolveModifierData(data: ModifierData): ModifierData {
     const option =
         pool.options.find((candidate) => candidate.id === data.selectedOptionId) ??
         pool.options[0];
+    if (!option) return data;
 
     return {
         ...data,

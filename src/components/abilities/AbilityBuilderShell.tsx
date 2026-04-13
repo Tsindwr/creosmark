@@ -55,6 +55,18 @@ function LaneBadge({ lane }: { lane: AbilityLane }) {
     return <span className={styles.laneBadge}>{lane}</span>;
 }
 
+function resolveOptionId(selectedOptionId: string | undefined, fallbackOptionId: string | undefined): string {
+    return selectedOptionId ?? fallbackOptionId ?? "";
+}
+
+function getNodeLane(node: AbilityBuilderNode | undefined): AbilityLane | null {
+    if (!node) return null;
+    if (node.type === 'marketModifier' || node.type === 'freeformText') {
+        return node.data.lane;
+    }
+    return null;
+}
+
 function AbilityRootNode({ data, selected }: NodeProps<AbilityRootNodeType>) {
     return (
         <div className={`${styles.node} ${styles.rootNode} ${selected ? styles.nodeSelected : ""}`}>
@@ -73,7 +85,7 @@ function ModifierNode({ id, data, selected }: NodeProps<ModifierNodeType>) {
     const { setNodes } = useReactFlow<AbilityBuilderNode, Edge>();
     const resolvedData = resolveModifierData(data);
     const optionPool = data.optionPoolId ? getModifierOptionPool(data.optionPoolId) : undefined;
-    const selectedOptionId = resolvedData.selectedOptionId ?? optionPool?.options[0]?.id ?? "";
+    const selectedOptionId = resolveOptionId(resolvedData.selectedOptionId, optionPool?.options[0]?.id);
 
     return (
         <div
@@ -260,7 +272,7 @@ function AbilityBuilderInner() {
         [nodes, selectedNodeId],
     );
     const selectedModifierResolved = useMemo(
-        () => selectedNode && selectedNode.type === 'marketModifier'
+        () => selectedNode?.type === 'marketModifier'
             ? resolveModifierData(selectedNode.data)
             : null,
         [selectedNode],
@@ -274,14 +286,6 @@ function AbilityBuilderInner() {
     );
 
     const summary = useMemo(() => computeAbilitySummary(nodes), [nodes]);
-
-    function getNodeLane(node: AbilityBuilderNode | undefined): AbilityLane | null {
-        if (!node) return null;
-        if (node.type === 'marketModifier' || node.type === 'freeformText') {
-            return node.data.lane;
-        }
-        return null;
-    }
 
     function updateSelectedAbilityRoot(
         updater: (data: AbilityRootData) => AbilityRootData,
@@ -514,7 +518,10 @@ function AbilityBuilderInner() {
                                                 <label className={styles.field}>
                                                     <span>{selectedModifierOptionPool.title}</span>
                                                     <select
-                                                        value={selectedModifierResolved?.selectedOptionId ?? selectedModifierOptionPool.options[0]?.id ?? ""}
+                                                        value={resolveOptionId(
+                                                            selectedModifierResolved?.selectedOptionId,
+                                                            selectedModifierOptionPool.options[0]?.id,
+                                                        )}
                                                         onChange={(event) =>
                                                             updateSelectedModifier((data) => ({
                                                                 ...data,
