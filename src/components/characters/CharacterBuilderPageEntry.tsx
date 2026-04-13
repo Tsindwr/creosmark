@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import AuthGate from '../auth/AuthGate';
 import SignInScreen from "../auth/SignInScreen.tsx";
 import CharacterBuilderShell from "../builder/CharacterBuilderShell.tsx";
-import { getMyCharacterSheet, updateCharacterSheet } from "../../lib/supabase/db.ts";
 import type { CharacterSheetState } from "../../types/sheet.ts";
+import { supabaseLibraryCampaignService } from "../../infrastructure/library/supabase-library-campaign-service.ts";
 
 type CharacterBuilderPageEntryProps = {
     characterId: string;
@@ -25,12 +25,12 @@ function InnerBuilder({ characterId }: CharacterBuilderPageEntryProps) {
                 setLoading(true);
                 setErrorText(null);
 
-                const row = await getMyCharacterSheet(characterId);
+                const row = await supabaseLibraryCampaignService.getMyCharacterSheet(characterId);
                 if (!row) throw new Error('Character sheet not found.');
 
                 if (cancelled) return;
-                setSheet(row.sheet_json);
-                lastSavedJsonRef.current = JSON.stringify(row.sheet_json);
+                setSheet(row.sheet);
+                lastSavedJsonRef.current = JSON.stringify(row.sheet);
                 loadedRef.current = true;
             } catch (error) {
                 if (cancelled) return;
@@ -56,7 +56,7 @@ function InnerBuilder({ characterId }: CharacterBuilderPageEntryProps) {
         const handle = window.setTimeout(async () => {
             try {
                 setSaveState('saving');
-                await updateCharacterSheet(characterId, sheet);
+                await supabaseLibraryCampaignService.updateCharacterSheet(characterId, sheet);
                 lastSavedJsonRef.current = nextJson;
                 setSaveState('saved');
 

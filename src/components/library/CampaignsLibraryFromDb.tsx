@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import type { CampaignRecord } from "../../types/library.ts";
-import {
-    listMyCampaigns,
-    createCampaignWithMembership,
-    joinCampaignByCode
-} from "../../lib/supabase/db.ts";
 import CampaignCard from "./CampaignCard.tsx";
 import styles from './CampaignsLibraryFromDb.module.css';
 import {routes} from "../../lib/routing.ts";
+import { supabaseLibraryCampaignService } from "../../infrastructure/library/supabase-library-campaign-service.ts";
 
 export default function CampaignsLibraryFromDb() {
     const [campaigns, setCampaigns] = useState<CampaignRecord[]>([]);
@@ -20,7 +16,7 @@ export default function CampaignsLibraryFromDb() {
         try {
             setLoading(true);
             setErrorText(null);
-            const rows = await listMyCampaigns();
+            const rows = await supabaseLibraryCampaignService.listMyCampaigns();
             setCampaigns(rows);
         } catch (err) {
             console.error("Failed to load campaigns:", err);
@@ -40,7 +36,9 @@ export default function CampaignsLibraryFromDb() {
 
         try {
             setBusy(true);
-            const campaign = await createCampaignWithMembership({ name: name.trim() });
+            const campaign = await supabaseLibraryCampaignService.createCampaignWithMembership({
+                name: name.trim(),
+            });
             window.location.href = routes.campaignView(campaign.id);
         } catch (error) {
             console.error(error);
@@ -56,7 +54,7 @@ export default function CampaignsLibraryFromDb() {
 
         try {
             setBusy(true);
-            const campaign = await joinCampaignByCode(joinCode);
+            const campaign = await supabaseLibraryCampaignService.joinCampaignByCode(joinCode);
             setJoinCode("");
             window.location.href = routes.campaignView(campaign.id);
         } catch (error) {

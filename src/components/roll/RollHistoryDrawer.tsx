@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { CampaignAssignment, RollFeedItem } from "../../types/roll-feed";
-import { listCampaignRollEvents, subscribeToCampaignRollEvents } from "../../lib/supabase/rolls";
 import styles from "./RollHistoryDrawer.module.css";
+import { supabaseLibraryCampaignService } from "../../infrastructure/library/supabase-library-campaign-service.ts";
 
 type RollHistoryDrawerProps = {
     open: boolean;
@@ -39,7 +39,7 @@ export default function RollHistoryDrawer({
             try {
                 setLoading(true);
                 setErrorText(null);
-                const rows = await listCampaignRollEvents(campaign.id, 100);
+                const rows = await supabaseLibraryCampaignService.listCampaignRollEvents(campaign.id, 100);
                 if (cancelled) return;
                 setItems(rows);
             } catch (error) {
@@ -52,7 +52,7 @@ export default function RollHistoryDrawer({
 
         load();
 
-        const unsubscribe = subscribeToCampaignRollEvents(campaign.id, (item) => {
+        const unsubscribe = supabaseLibraryCampaignService.subscribeToCampaignRollEvents(campaign.id, (item) => {
             setItems((current) => {
                 if (current.some((entry) => entry.id === item.id)) return current;
                 return [...current, item];
