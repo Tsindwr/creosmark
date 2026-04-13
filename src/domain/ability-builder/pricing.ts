@@ -105,8 +105,13 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
 
     // Flipside budget: body.strings / 2. Flipside is free within this budget.
     // Enhancement budget: Flipside may have at most the same number of Enhancements as Focus.
-
-    const flipsideBudgetStrings = isActionCard ? Math.round((calculateTotalFromCost(focus) + calculateTotalFromCost(body) / 2) * 10) / 10 : 0;
+    const focusTotal = calculateTotalFromCost(focus);
+    const bodyTotal = calculateTotalFromCost(body);
+    console.log("Focus total:", focusTotal, "Body total:", bodyTotal);
+    const flipBudget10 = ((focusTotal + bodyTotal) / 2) * 10;
+    console.log("Raw Flipside Budget (x10):", flipBudget10);
+    const flipsideBudgetStrings = isActionCard ? Math.round(flipBudget10) / 10 : 0;
+    console.log("Flipside Budget:", flipsideBudgetStrings);
     const flipsideBudgetEnhancements = isActionCard ? Math.max(0, focus.enhancements) : 0;
 
     // What the player actually pays: Focus + Body for Actions (Flipside is complimentary).

@@ -322,7 +322,7 @@ export const ABILITY_PALETTE: Record<string, PaletteTemplate[]> = {
             data: { label: 'Generates Options', family: 'special', lane: 'body', description: 'This Ability creates a format for Option Cards. Players may build Option Cards using this Ability as their Parent Ability.', cost: { strings: 1, beats: 0, enhancements: 0 } },
         },
     ],
-    "Flipside (Movement)": [
+    "Movement": [
         {
             kind: 'marketModifier',
             label: 'Movement: Here',
@@ -372,11 +372,11 @@ export function buildPaletteSections(): PaletteSection[] {
         { id: "roots", title: 'Ability Roots', items: ABILITY_PALETTE['Ability Roots'] ?? [] },
         { id: 'activation', title: 'Activation', items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'activation') },
         { id: 'effect', title: 'Effects', items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'effect') },
+        { id: 'movement', title: 'Movement', items: ABILITY_PALETTE['Movement'] ?? [] },
         { id: 'narrative', title: 'Narrative', items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'narrative') },
         { id: 'caveat', title: 'Caveats', items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'caveat') },
         { id: 'consequence', title: "Consequences", items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'consequence') },
         { id: 'special', title: 'Special', items: marketItems.filter((item) => item.kind === 'marketModifier' && item.data.family === 'special') },
-        { id: 'flipside', title: 'Flipside (Movement)', items: ABILITY_PALETTE['Flipside (Movement)'] ?? [] },
         { id: 'fallback', title: 'Fallback', items: ABILITY_PALETTE['Fallback'] ?? [] },
     ].filter((section) => section.items.length > 0);
 }
