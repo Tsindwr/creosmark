@@ -2,6 +2,9 @@ import type { Edge } from "@xyflow/react";
 import type { AbilityBuilderNode } from "./types.ts";
 import { nextId } from "./types.ts";
 
+const ACTIVATION_DIRECT_HANDLE_ID = "activation-direct";
+const ACTIVATION_INDIRECT_HANDLE_ID = "activation-indirect";
+
 export type AbilityPreset = {
     nodes: AbilityBuilderNode[];
     edges: Edge[];
@@ -10,7 +13,7 @@ export type AbilityPreset = {
 // ── Blank Action preset ───────────────────────────────────────────────────────
 
 export function buildBlankActionPreset(): AbilityPreset {
-    const rootId = nextId();
+    const activationId = nextId();
     const resetId = nextId();
     const prereqId = nextId();
     const focusTextId = nextId();
@@ -19,25 +22,31 @@ export function buildBlankActionPreset(): AbilityPreset {
     return {
         nodes: [
             {
-                id: rootId,
-                type: "abilityRoot",
-                position: { x: 380, y: 40 },
+                id: activationId,
+                type: "marketModifier",
+                position: { x: 380, y: 220 },
                 data: {
-                    title: "New Action",
-                    abilityKind: 'action',
-                    summary: 'Build your Focus on the left, your Flipside on the right.',
+                    label: "Activate · Action",
+                    family: "activation",
+                    lane: "body",
+                    description: "Base Action Card activation condition.",
+                    cost: { strings: 0, beats: 0, enhancements: 0 },
+                    optionPoolId: "activationType",
+                    selectedOptionId: "action",
                 },
             },
             {
                 id: resetId,
                 type: "marketModifier",
-                position: { x: 380, y: 220 },
+                position: { x: 400, y: 20 },
                 data: {
                     label: "Reset · General",
                     family: "activation",
                     lane: "body",
                     description: "Base reset condition.",
                     cost: { strings: 4, beats: 0, enhancements: 0 },
+                    optionPoolId: "resetCondition",
+                    selectedOptionId: "general",
                 },
             },
             {
@@ -55,7 +64,7 @@ export function buildBlankActionPreset(): AbilityPreset {
             {
                 id: focusTextId,
                 type: "freeformText",
-                position: { x: 160, y: 420 },
+                position: { x: 160, y: 500 },
                 data: {
                     title: "Focus Description",
                     lane: "focus",
@@ -65,7 +74,7 @@ export function buildBlankActionPreset(): AbilityPreset {
             {
                 id: flipsideTextId,
                 type: "freeformText",
-                position: { x: 600, y: 420 },
+                position: { x: 600, y: 500 },
                 data: {
                     title: "Flipside Description",
                     lane: "flipside",
@@ -74,10 +83,20 @@ export function buildBlankActionPreset(): AbilityPreset {
             },
         ],
         edges: [
-            { id: nextId(), source: rootId, target: resetId },
-            { id: nextId(), source: rootId, target: prereqId },
-            { id: nextId(), source: resetId, target: focusTextId },
-            { id: nextId(), source: resetId, target: flipsideTextId },
+            { id: nextId(), source: resetId, target: activationId },
+            { id: nextId(), source: resetId, target: prereqId },
+            {
+                id: nextId(),
+                source: activationId,
+                sourceHandle: ACTIVATION_DIRECT_HANDLE_ID,
+                target: focusTextId,
+            },
+            {
+                id: nextId(),
+                source: activationId,
+                sourceHandle: ACTIVATION_INDIRECT_HANDLE_ID,
+                target: flipsideTextId,
+            },
         ],
     };
 }
@@ -85,32 +104,38 @@ export function buildBlankActionPreset(): AbilityPreset {
 // ── Blank Surge preset ────────────────────────────────────────────────────────
 
 export function buildBlankSurgePreset(): AbilityPreset {
-    const rootId = nextId();
+    const activationId = nextId();
     const resetId = nextId();
     const effectTextId = nextId();
 
     return {
         nodes: [
             {
-                id: rootId,
-                type: "abilityRoot",
-                position: { x: 380, y: 40 },
-                data: {
-                    title: "New Surge",
-                    abilityKind: 'surge',
-                    summary: 'A minor effect activatable at any time, once per turn.',
-                },
-            },
-            {
-                id: resetId,
+                id: activationId,
                 type: "marketModifier",
-                position: { x: 380, y: 220 },
+                position: { x: 520, y: 220 },
                 data: {
                     label: "Activation · Surge",
                     family: "activation",
                     lane: "body",
                     description: "Turns the ability into a Surge.",
                     cost: { strings: 0, beats: 0, enhancements: 1 },
+                    optionPoolId: "activationType",
+                    selectedOptionId: "surge",
+                },
+            },
+            {
+                id: resetId,
+                type: "marketModifier",
+                position: { x: 220, y: 220 },
+                data: {
+                    label: "Reset · General",
+                    family: "activation",
+                    lane: "body",
+                    description: "Base reset condition.",
+                    cost: { strings: 4, beats: 0, enhancements: 0 },
+                    optionPoolId: "resetCondition",
+                    selectedOptionId: "general",
                 },
             },
             {
@@ -125,8 +150,8 @@ export function buildBlankSurgePreset(): AbilityPreset {
             },
         ],
         edges: [
-            { id: nextId(), source: rootId, target: resetId },
-            { id: nextId(), source: resetId, target: effectTextId },
+            { id: nextId(), source: resetId, target: activationId },
+            { id: nextId(), source: activationId, target: effectTextId },
         ],
     };
 }
