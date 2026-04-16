@@ -1,170 +1,63 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactFlowProvider, useReactFlow, type Edge, type NodeProps } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import styles from "./AbilityBuilderShell.module.css";
+import type { AbilityBuilderNode, ModifierNodeType } from "../../domain";
+import { buildPaletteSections, computeAbilitySummary } from "../../domain";
+import { exportBlueprintJson } from "../../application";
+import { useAbilityBuilderGraph } from "../../presentation/abilities/hooks/useAbilityBuilderGraph";
+import { useAbilityBuilderCard } from "../../presentation/abilities/hooks/useAbilityBuilderCard";
+import { useAbilityBuilderPublish } from "../../presentation/abilities/hooks/useAbilityBuilderPublish";
+import { useAbilityBuilderWorkspace } from "../../presentation/abilities/hooks/useAbilityBuilderWorkspace";
+import AbilityRootNode from "../../presentation/abilities/nodes/AbilityRootNode";
+import FreeformNode from "../../presentation/abilities/nodes/FreeformNode";
+import ModifierNode from "../../presentation/abilities/nodes/ModifierNode";
 import {
-    addEdge,
-    Background,
-    Controls,
-    Handle,
-    MiniMap,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    useEdgesState,
-    useNodesState,
-    useReactFlow,
-    type Connection,
-    type Edge,
-    type NodeProps,
-} from "@xyflow/react";
-import '@xyflow/react/dist/style.css';
-import styles from './AbilityBuilderShell.module.css';
-import type {
-    AbilityBuilderNode,
-    AbilityKind,
-    AbilityLane,
-    AbilityRootData,
-    AbilityRootNodeType,
-    FreeformData,
-    FreeformNodeType,
-    ModifierData,
-    ModifierFamily,
-    ModifierNodeType,
-    PaletteTemplate,
-} from '../../domain/ability-builder/types';
-import {
-    buildPaletteSections,
-    getModifierOptionPool,
-    resolveModifierData,
-} from '../../domain/ability-builder/palette';
-import {
-    calculateTotalFromCost,
-    computeAbilitySummary,
-    formatCost,
-    toneForFamily,
-} from '../../domain/ability-builder/pricing';
-import {
-    buildBlankActionPreset,
-    buildBlankSurgePreset,
-} from '../../domain/ability-builder/presets';
-import {
-    createNodeFromTemplate,
-    exportBlueprintJson,
-} from '../../application/ability-builder/commands';
-
-
-function LaneBadge({ lane }: { lane: AbilityLane }) {
-    return <span className={styles.laneBadge}>{lane}</span>;
-}
-
-function resolveOptionId(selectedOptionId: string | undefined, fallbackOptionId: string | undefined): string {
-    return selectedOptionId ?? fallbackOptionId ?? "";
-}
-
-function getNodeLane(node: AbilityBuilderNode | undefined): AbilityLane | null {
-    if (!node) return null;
-    if (node.type === 'marketModifier' || node.type === 'freeformText') {
-        return node.data.lane;
-    }
-    return null;
-}
-
-function AbilityRootNode({ data, selected }: NodeProps<AbilityRootNodeType>) {
-    return (
-        <div className={`${styles.node} ${styles.rootNode} ${selected ? styles.nodeSelected : ""}`}>
-            <Handle type={'target'} position={Position.Top} className={styles.handle} />
-            <div className={styles.nodeHeader}>
-                <span className={styles.nodeEyebrow}>{data.abilityKind}</span>
-                <strong>{data.title}</strong>
-            </div>
-            <p className={styles.nodeCopy}>{data.summary || "Describe the card's job."}</p>
-            <Handle type={'source'} position={Position.Bottom} className={styles.handle} />
-        </div>
-    );
-}
-
-function ModifierNode({ id, data, selected }: NodeProps<ModifierNodeType>) {
-    const { setNodes } = useReactFlow<AbilityBuilderNode, Edge>();
-    const resolvedData = resolveModifierData(data);
-    const optionPool = data.optionPoolId ? getModifierOptionPool(data.optionPoolId) : undefined;
-    const selectedOptionId = resolveOptionId(resolvedData.selectedOptionId, optionPool?.options[0]?.id);
-
-    return (
-        <div
-            className={`${styles.node} ${styles.modifierNode} ${styles[`tone${toneForFamily(data.family)}`]} ${
-                selected ? styles.nodeSelected : ""
-            }`}
-            >
-            <Handle type={'target'} position={Position.Top} className={styles.handle} />
-            <div className={styles.nodeHeader}>
-                <span className={styles.nodeEyebrow}>{data.family}</span>
-                <strong>{resolvedData.label}</strong>
-            </div>
-            <LaneBadge lane={resolvedData.lane} />
-            {optionPool ? (
-                <select
-                    className={`nodrag ${styles.nodeOptionSelect}`}
-                    value={selectedOptionId}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={(event) => {
-                        const nextOptionId = event.target.value;
-                        setNodes((current) =>
-                            current.map((node): AbilityBuilderNode => {
-                                if (node.id !== id || node.type !== 'marketModifier') return node;
-                                return {
-                                    ...node,
-                                    data: {
-                                        ...node.data,
-                                        selectedOptionId: nextOptionId,
-                                    },
-                                };
-                            }),
-                        );
-                    }}
-                >
-                    {optionPool.options.map((option) => (
-                        <option key={option.id} value={option.id}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
-            ) : null}
-            <p className={styles.nodeCopy}>{resolvedData.description}</p>
-            <div className={styles.nodeCost}>{formatCost(resolvedData.cost)}</div>
-            <Handle type={'source'} position={Position.Bottom} className={styles.handle} />
-        </div>
-    );
-}
-
-function FreeformNode({ data, selected }: NodeProps<FreeformNodeType>) {
-    return (
-        <div className={`${styles.node} ${styles.freeformNode} ${selected ? styles.nodeSelected : ""}`}>
-            <Handle type={'target'} position={Position.Top} className={styles.handle} />
-            <div className={styles.nodeHeader}>
-                <span className={styles.nodeEyebrow}>fallback</span>
-                <strong>{data.title}</strong>
-            </div>
-            <LaneBadge lane={data.lane} />
-            <p className={styles.nodeCopy}>{data.text}</p>
-            <Handle type={'source'} position={Position.Bottom} className={styles.handle} />
-        </div>
-    );
-}
-
-const nodeTypes = {
-    abilityRoot: AbilityRootNode,
-    marketModifier: ModifierNode,
-    freeformText: FreeformNode,
-};
+    AbilityBuilderProvider,
+    type AbilityBuilderContextValue,
+} from "./AbilityBuilderContext";
+import BuilderSidebar from "./BuilderSidebar";
+import BuilderWorkspace from "./BuilderWorkspace";
 
 function AbilityBuilderInner() {
-    const initial = useMemo(() => buildBlankActionPreset(), []);
-    const [nodes, setNodes, onNodesChange] = useNodesState<AbilityBuilderNode>(initial.nodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
-    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initial.nodes[0]?.id ?? null);
-    const [sidebarMode, setSidebarMode] = useState<'palette' | 'inspector'>('palette');
-    const [openPaletteId, setOpenPaletteId] = useState<string>('roots');
-    const paletteSections = useMemo(() => buildPaletteSections(), []);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
-    const { screenToFlowPosition, fitView } = useReactFlow<AbilityBuilderNode, Edge>();
+    const [sidebarMode, setSidebarMode] = useState<"palette" | "inspector">("palette");
+    const [openPaletteId, setOpenPaletteId] = useState("activation");
+
+    const paletteSections = useMemo(() => buildPaletteSections(), []);
+
+    const graph = useAbilityBuilderGraph();
+    const {
+        nodes,
+        edges,
+        onNodesChange,
+        onEdgesChange,
+        selectedNodeId,
+        setSelectedNodeId,
+        selectedNode,
+        selectedModifierResolved,
+        selectedModifierOptionPool,
+        isActionCard,
+        onConnect,
+        onDragStart,
+        createDroppedNode,
+        updateSelectedModifier,
+        updateSelectedFreeform,
+        updateSelectedAbilityRoot,
+        updateModifierSelection,
+        loadPreset: loadPresetFromGraph,
+        deleteNodeById,
+    } = graph;
+
+    const summary = useMemo(() => computeAbilitySummary(nodes), [nodes]);
+    const card = useAbilityBuilderCard(nodes);
+    const publish = useAbilityBuilderPublish();
+    const workspace = useAbilityBuilderWorkspace({ createDroppedNode });
+
+    const { fitView } = useReactFlow<AbilityBuilderNode, Edge>();
+
+    const hasInvalidState = summary.warnings.length > 0;
+    const canPublish = !hasInvalidState && !card.hasBlockingCardIssues && !publish.isPublishing;
 
     useEffect(() => {
         const element = wrapperRef.current;
@@ -181,7 +74,7 @@ function AbilityBuilderInner() {
                 const bottomGap = 8;
                 const available = Math.max(420, viewportHeight - rect.top - bottomGap);
 
-                element.style.setProperty('--ability-builder-height', `${available}px`);
+                element.style.setProperty("--ability-builder-height", `${available}px`);
             });
         };
 
@@ -192,623 +85,177 @@ function AbilityBuilderInner() {
         });
 
         resizeObserver.observe(document.body);
-        window.addEventListener('resize', updateAvailableHeight);
+        window.addEventListener("resize", updateAvailableHeight);
 
         return () => {
             cancelAnimationFrame(frame);
             resizeObserver.disconnect();
-            window.removeEventListener('resize', updateAvailableHeight);
+            window.removeEventListener("resize", updateAvailableHeight);
         };
     }, []);
 
-    const onConnect = useCallback(
-        (connection: Connection) => {
-            const sourceLane = getNodeLane(nodes.find((node) => node.id === connection.source));
-            setEdges((current) => {
-                return addEdge(
-                    {
-                        ...connection,
-                        animated: false,
-                        markerEnd: { type: 'arrowclosed' },
-                    },
-                    current,
-                )
-            });
+    useEffect(() => {
+        if (!selectedNodeId) return;
 
-            if (sourceLane && connection.target) {
-                setNodes((current) =>
-                    current.map((node): AbilityBuilderNode => {
-                        if (node.id !== connection.target) return node;
-                        if (node.type === 'marketModifier' || node.type === 'freeformText') {
-                            return {
-                                ...node,
-                                data: {
-                                    ...node.data,
-                                    lane: sourceLane,
-                                },
-                            };
-                        }
-                        return node;
-                    }),
-                );
-            }
-        },
-        [nodes, setEdges, setNodes],
-    );
+        const isEditableTarget = (target: EventTarget | null) => {
+            if (!(target instanceof HTMLElement)) return false;
 
-    const onDragStart = useCallback((event: React.DragEvent, template: PaletteTemplate) => {
-        event.dataTransfer.setData('application/sunder-ability-node', JSON.stringify(template));
-        event.dataTransfer.effectAllowed = 'move';
-    }, []);
+            const tag = target.tagName;
+            return (
+                target.isContentEditable ||
+                tag === "INPUT" ||
+                tag === "TEXTAREA" ||
+                tag === "SELECT"
+            );
+        };
 
-    const onDragOver = useCallback((event: React.DragEvent) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-    }, []);
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Delete") return;
+            if (isEditableTarget(event.target)) return;
 
-    const onDrop = useCallback(
-        (event: React.DragEvent) => {
             event.preventDefault();
+            deleteNodeById(selectedNodeId);
+        };
 
-            const raw = event.dataTransfer.getData('application/sunder-ability-node');
-            if (!raw) return;
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [selectedNodeId, deleteNodeById]);
 
-            const template = JSON.parse(raw) as PaletteTemplate;
-            const position = screenToFlowPosition({
-                x: event.clientX,
-                y: event.clientY,
-            });
-
-            const newNode = createNodeFromTemplate(template, position);
-
-            setNodes((current) => [...current, newNode]);
-            setSelectedNodeId(newNode.id);
-        },
-        [screenToFlowPosition, setNodes],
-    );
-
-    const selectedNode = useMemo(
-        () => nodes.find((node) => node.id === selectedNodeId) ?? null,
-        [nodes, selectedNodeId],
-    );
-    const selectedModifierResolved = useMemo(
-        () => selectedNode?.type === 'marketModifier'
-            ? resolveModifierData(selectedNode.data)
-            : null,
-        [selectedNode],
-    );
-    const selectedModifierOptionPool = useMemo(
-        () =>
-            selectedNode?.type === 'marketModifier' && selectedNode.data.optionPoolId
-                ? getModifierOptionPool(selectedNode.data.optionPoolId)
-                : undefined,
-        [selectedNode],
-    );
-
-    const summary = useMemo(() => computeAbilitySummary(nodes), [nodes]);
-
-    function updateSelectedAbilityRoot(
-        updater: (data: AbilityRootData) => AbilityRootData,
-    ) {
+    useEffect(() => {
         if (!selectedNodeId) return;
 
-        setNodes((current) =>
-            current.map((node): AbilityBuilderNode => {
-                if (node.id !== selectedNodeId || node.type !== 'abilityRoot') return node;
+        const stillExists = nodes.some((node) => node.id === selectedNodeId);
+        if (!stillExists) {
+            setSelectedNodeId(null);
+        }
+    }, [selectedNodeId, nodes, setSelectedNodeId]);
 
-                return {
-                    ...node,
-                    data: updater(node.data),
-                };
-            }),
-        );
-    }
-
-    function updateSelectedModifier(
-        updater: (data: ModifierData) => ModifierData,
-    ) {
-        if (!selectedNodeId) return;
-
-        setNodes((current) =>
-            current.map((node): AbilityBuilderNode => {
-                if (node.id !== selectedNodeId || node.type !== 'marketModifier') return node;
-
-                return {
-                    ...node,
-                    data: updater(node.data),
-                };
-            }),
-        );
-    }
-
-    function updateSelectedFreeform(
-        updater: (data: FreeformData) => FreeformData,
-    ) {
-        if (!selectedNodeId) return;
-        setNodes((current) =>
-            current.map((node): AbilityBuilderNode => {
-                if (node.id !== selectedNodeId || node.type !== 'freeformText') return node;
-
-                return {
-                    ...node,
-                    data: updater(node.data),
-                };
-            }),
-        );
-    }
-
-    function loadPreset(kind: 'action' | 'surge') {
-        const next = kind === 'surge' ? buildBlankSurgePreset() : buildBlankActionPreset();
-
-        setNodes(next.nodes);
-        setEdges(next.edges);
-        setSelectedNodeId(next.nodes[0]?.id ?? null);
-        setSidebarMode('palette');
+    const loadPreset = useCallback((kind: "action" | "surge") => {
+        loadPresetFromGraph(kind);
+        setSidebarMode("palette");
 
         requestAnimationFrame(() => {
             fitView({ padding: 0.2, duration: 300 });
         });
-    }
+    }, [loadPresetFromGraph, fitView]);
 
-    function exportJson() {
+    const nodeTypes = useMemo(
+        () => ({
+            abilityRoot: AbilityRootNode,
+            marketModifier: (props: NodeProps<ModifierNodeType>) => (
+                <ModifierNode {...props} isActionCard={isActionCard} />
+            ),
+            freeformText: FreeformNode,
+        }),
+        [isActionCard],
+    );
+
+    const onExportJson = useCallback(() => {
         exportBlueprintJson(nodes, edges, summary);
-    }
+    }, [nodes, edges, summary]);
+
+    const onPublish = useCallback(async () => {
+        if (!canPublish) return;
+
+        try {
+            await publish.publish({
+                nodes,
+                edges,
+                summary,
+                cardState: card.cardState,
+            });
+        } catch {
+            // publish state is managed in useAbilityBuilderPublish
+        }
+    }, [canPublish, publish, nodes, edges, summary, card.cardState]);
+
+    const contextValue = useMemo<AbilityBuilderContextValue>(
+        () => ({
+            builderView: card.builderView,
+            setBuilderView: card.setBuilderView,
+            sidebarMode,
+            setSidebarMode,
+            paletteSections,
+            openPaletteId,
+            setOpenPaletteId,
+            onDragStart,
+            loadPreset,
+            selectedNode,
+            selectedModifierResolved,
+            selectedModifierOptionPool,
+            updateSelectedAbilityRoot,
+            updateSelectedModifier,
+            updateSelectedFreeform,
+            updateModifierSelection,
+            summary,
+            hasInvalidState,
+            cardState: card.cardState,
+            setCardState: card.setCardState,
+            cardIssues: card.cardIssues,
+            nodes,
+            edges,
+            nodeTypes,
+            onNodesChange,
+            onEdgesChange,
+            onConnect,
+            setSelectedNodeId,
+            canPublish,
+            hasBlockingCardIssues: card.hasBlockingCardIssues,
+            isPublishing: publish.isPublishing,
+            publishError: publish.publishError,
+            publishResult: publish.publishResult,
+            onPublish,
+            onExportJson,
+            onDragOver: workspace.onDragOver,
+            onDrop: workspace.onDrop,
+        }),
+        [
+            card.builderView,
+            card.setBuilderView,
+            sidebarMode,
+            setSidebarMode,
+            paletteSections,
+            openPaletteId,
+            setOpenPaletteId,
+            onDragStart,
+            loadPreset,
+            selectedNode,
+            selectedModifierResolved,
+            selectedModifierOptionPool,
+            updateSelectedAbilityRoot,
+            updateSelectedModifier,
+            updateSelectedFreeform,
+            updateModifierSelection,
+            summary,
+            hasInvalidState,
+            card.cardState,
+            card.setCardState,
+            card.cardIssues,
+            nodes,
+            edges,
+            nodeTypes,
+            onNodesChange,
+            onEdgesChange,
+            onConnect,
+            setSelectedNodeId,
+            canPublish,
+            card.hasBlockingCardIssues,
+            publish.isPublishing,
+            publish.publishError,
+            publish.publishResult,
+            onPublish,
+            onExportJson,
+            workspace.onDragOver,
+            workspace.onDrop,
+        ],
+    );
 
     return (
         <div className={styles.shell} ref={wrapperRef}>
-            <aside className={styles.sidebar}>
-                <div className={styles.sidebarTabs}>
-                    <button
-                        type="button"
-                        className={`${styles.sidebarTab} ${sidebarMode === 'palette' ? styles.sidebarTabActive : ''}`}
-                        onClick={() => setSidebarMode('palette')}
-                    >
-                        Palette
-                    </button>
-
-                    <button
-                        type="button"
-                        className={`${styles.sidebarTab} ${sidebarMode === 'inspector' ? styles.sidebarTabActive : ''}`}
-                        onClick={() => {
-                            if (selectedNode) {
-                                setSidebarMode('inspector');
-                            }
-                        }}
-                        disabled={!selectedNode}
-                    >
-                        Inspector
-                    </button>
-                </div>
-
-                <div className={styles.sidebarBody}>
-                    {sidebarMode === 'palette' ? (
-                        <>
-                            <div className={styles.sidebarSection}>
-                                <div className={styles.eyebrow}>Ability Builder</div>
-                                <h2 className={styles.sidebarTitle}>Block workspace</h2>
-                                <p className={styles.sidebarCopy}>
-                                    Drag blocks into the graph.
-                                </p>
-                            </div>
-
-                            <div className={styles.sidebarSection}>
-                                <div className={styles.presetRow}>
-                                    <button
-                                        type="button"
-                                        className={styles.smallButton}
-                                        onClick={() => loadPreset('action')}
-                                    >
-                                        Blank Action
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={styles.smallButton}
-                                        onClick={() => loadPreset('surge')}
-                                    >
-                                        Blank Surge
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className={styles.paletteAccordion}>
-                                {paletteSections.map((section) => {
-                                    const open = openPaletteId === section.id;
-
-                                    return (
-                                        <section key={section.id} className={styles.accordionSection}>
-                                            <button
-                                                type="button"
-                                                className={styles.accordionToggle}
-                                                onClick={() => setOpenPaletteId(open ? "" : section.id)}
-                                                aria-expanded={open}
-                                            >
-                                                <span>{section.title}</span>
-                                                <span className={styles.accordionMeta}>
-                                                {section.items.length}
-                                                    <span className={styles.accordionChevron}>
-                                                    {open ? "−" : "+"}
-                                                </span>
-                                            </span>
-                                            </button>
-
-                                            {open ? (
-                                                <div className={styles.palettePanel}>
-                                                    <div className={styles.paletteGrid}>
-                                                        {section.items.map((item) => (
-                                                            <button
-                                                                key={`${section.id}-${item.label}`}
-                                                                type="button"
-                                                                draggable
-                                                                className={styles.paletteItem}
-                                                                onDragStart={(event) => onDragStart(event, item)}
-                                                            >
-                                                                {item.label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            ) : null}
-                                        </section>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className={styles.sidebarSection}>
-                                <div className={styles.eyebrow}>Inspector</div>
-                                <h2 className={styles.sidebarTitle}>
-                                    {selectedNode ? 'Selected block' : 'No selection'}
-                                </h2>
-                            </div>
-
-                            {selectedNode ? (
-                                <>
-                                    {selectedNode.type === 'abilityRoot' ? (
-                                        <div className={styles.editorStack}>
-                                            <label className={styles.field}>
-                                                <span>Title</span>
-                                                <input
-                                                    value={selectedNode.data.title}
-                                                    onChange={(event) =>
-                                                        updateSelectedAbilityRoot((data) => ({
-                                                            ...data,
-                                                            title: event.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Kind</span>
-                                                <select
-                                                    value={selectedNode.data.abilityKind}
-                                                    onChange={(event) =>
-                                                        updateSelectedAbilityRoot((data) => ({
-                                                            ...data,
-                                                            abilityKind: event.target.value as AbilityKind,
-                                                        }))
-                                                    }
-                                                >
-                                                    <option value="action">Action</option>
-                                                    <option value="surge">Surge</option>
-                                                    <option value="trait">Trait</option>
-                                                    <option value="option">Option</option>
-                                                </select>
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Summary</span>
-                                                <textarea
-                                                    value={selectedNode.data.summary}
-                                                    onChange={(event) =>
-                                                        updateSelectedAbilityRoot((data) => ({
-                                                            ...data,
-                                                            summary: event.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </label>
-                                        </div>
-                                    ) : null}
-
-                                    {selectedNode.type === 'marketModifier' ? (
-                                        <div className={styles.editorStack}>
-                                            {selectedModifierOptionPool ? (
-                                                <label className={styles.field}>
-                                                    <span>{selectedModifierOptionPool.title}</span>
-                                                    <select
-                                                        value={resolveOptionId(
-                                                            selectedModifierResolved?.selectedOptionId,
-                                                            selectedModifierOptionPool.options[0]?.id,
-                                                        )}
-                                                        onChange={(event) =>
-                                                            updateSelectedModifier((data) => ({
-                                                                ...data,
-                                                                selectedOptionId: event.target.value,
-                                                            }))
-                                                        }
-                                                    >
-                                                        {selectedModifierOptionPool.options.map((option) => (
-                                                            <option key={option.id} value={option.id}>
-                                                                {option.label}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </label>
-                                            ) : null}
-
-                                            <label className={styles.field}>
-                                                <span>Label</span>
-                                                <input
-                                                    value={selectedNode.data.label}
-                                                    onChange={(event) =>
-                                                        updateSelectedModifier((data) => ({
-                                                            ...data,
-                                                            label: event.target.value,
-                                                        }))
-                                                    }
-                                                    disabled={Boolean(selectedModifierOptionPool)}
-                                                />
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Lane</span>
-                                                <select
-                                                    value={selectedNode.data.lane}
-                                                    onChange={(event) =>
-                                                        updateSelectedModifier((data) => ({
-                                                            ...data,
-                                                            lane: event.target.value as AbilityLane,
-                                                        }))
-                                                    }
-                                                >
-                                                    <option value="body">Body</option>
-                                                    <option value="focus">Focus</option>
-                                                    <option value="flipside">Flipside</option>
-                                                    <option value="option">Option</option>
-                                                </select>
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Family</span>
-                                                <select
-                                                    value={selectedNode.data.family}
-                                                    onChange={(event) =>
-                                                        updateSelectedModifier((data) => ({
-                                                            ...data,
-                                                            family: event.target.value as ModifierFamily,
-                                                        }))
-                                                    }
-                                                >
-                                                    <option value="activation">Activation</option>
-                                                    <option value="effect">Effect</option>
-                                                    <option value="narrative">Narrative</option>
-                                                    <option value="caveat">Caveat</option>
-                                                    <option value="consequence">Consequence</option>
-                                                    <option value="special">Special</option>
-                                                </select>
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Description</span>
-                                                <textarea
-                                                    value={selectedModifierOptionPool ? selectedModifierResolved?.description ?? '' : selectedNode.data.description}
-                                                    onChange={(event) =>
-                                                        updateSelectedModifier((data) => ({
-                                                            ...data,
-                                                            description: event.target.value,
-                                                        }))
-                                                    }
-                                                    disabled={Boolean(selectedModifierOptionPool)}
-                                                />
-                                            </label>
-
-                                            <div className={styles.costGrid}>
-                                                <label className={styles.field}>
-                                                    <span>Strings</span>
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        value={selectedModifierOptionPool ? selectedModifierResolved?.cost.strings ?? 0 : selectedNode.data.cost.strings}
-                                                        onChange={(event) =>
-                                                            updateSelectedModifier((data) => ({
-                                                                ...data,
-                                                                cost: {
-                                                                    ...data.cost,
-                                                                    strings: Number(event.target.value) || 0,
-                                                                },
-                                                            }))
-                                                        }
-                                                        disabled={Boolean(selectedModifierOptionPool)}
-                                                    />
-                                                </label>
-
-                                                <label className={styles.field}>
-                                                    <span>Beats</span>
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        value={selectedModifierOptionPool ? selectedModifierResolved?.cost.beats ?? 0 : selectedNode.data.cost.beats}
-                                                        onChange={(event) =>
-                                                            updateSelectedModifier((data) => ({
-                                                                ...data,
-                                                                cost: {
-                                                                    ...data.cost,
-                                                                    beats: Number(event.target.value) || 0,
-                                                                },
-                                                            }))
-                                                        }
-                                                        disabled={Boolean(selectedModifierOptionPool)}
-                                                    />
-                                                </label>
-
-                                                <label className={styles.field}>
-                                                    <span>Enh.</span>
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        value={selectedModifierOptionPool ? selectedModifierResolved?.cost.enhancements ?? 0 : selectedNode.data.cost.enhancements}
-                                                        onChange={(event) =>
-                                                            updateSelectedModifier((data) => ({
-                                                                ...data,
-                                                                cost: {
-                                                                    ...data.cost,
-                                                                    enhancements: Number(event.target.value) || 0,
-                                                                },
-                                                            }))
-                                                        }
-                                                        disabled={Boolean(selectedModifierOptionPool)}
-                                                    />
-                                                </label>
-                                            </div>
-                                        </div>
-                                    ) : null}
-
-                                    {selectedNode.type === 'freeformText' ? (
-                                        <div className={styles.editorStack}>
-                                            <label className={styles.field}>
-                                                <span>Title</span>
-                                                <input
-                                                    value={selectedNode.data.title}
-                                                    onChange={(event) =>
-                                                        updateSelectedFreeform((data) => ({
-                                                            ...data,
-                                                            title: event.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Lane</span>
-                                                <select
-                                                    value={selectedNode.data.lane}
-                                                    onChange={(event) =>
-                                                        updateSelectedFreeform((data) => ({
-                                                            ...data,
-                                                            lane: event.target.value as AbilityLane,
-                                                        }))
-                                                    }
-                                                >
-                                                    <option value="body">Body</option>
-                                                    <option value="focus">Focus</option>
-                                                    <option value="flipside">Flipside</option>
-                                                    <option value="option">Option</option>
-                                                </select>
-                                            </label>
-
-                                            <label className={styles.field}>
-                                                <span>Text</span>
-                                                <textarea
-                                                    value={selectedNode.data.text}
-                                                    onChange={(event) =>
-                                                        updateSelectedFreeform((data) => ({
-                                                            ...data,
-                                                            text: event.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </label>
-                                        </div>
-                                    ) : null}
-
-                                    <div className={styles.sidebarSection}>
-                                        <div className={styles.eyebrow}>Rule Checks</div>
-                                        <div className={styles.warningList}>
-                                            {summary.warnings.length > 0 ? (
-                                                summary.warnings.map((warning) => (
-                                                    <div key={warning} className={styles.warning}>
-                                                        {warning}
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className={styles.okay}>
-                                                    No obvious structural warnings yet.
-                                                </div>
-                                            )}
-                                            {summary.notes.map((note) => (
-                                                <div key={note} className={styles.note}>
-                                                    {note}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className={styles.emptyInspector}>
-                                    No node selected.
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            </aside>
-
-            <section className={styles.workspace} onDragOver={onDragOver} onDrop={onDrop}>
-                <div className={styles.toolbar}>
-                    {summary.isAction ? (
-                        <>
-                            <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Paid (Focus + Base)</span>
-                                <strong>{formatCost(summary.paid)}</strong>
-                            </div>
-                            {/*<div className={styles.summaryBlock}>*/}
-                            {/*    <span className={styles.toolbarLabel}>Focus</span>*/}
-                            {/*    <strong>{formatCost(summary.focus)}</strong>*/}
-                            {/*</div>*/}
-                            {/*<div className={styles.summaryBlock}>*/}
-                            {/*    <span className={styles.toolbarLabel}>Body</span>*/}
-                            {/*    <strong>{formatCost(summary.body)}</strong>*/}
-                            {/*</div>*/}
-                            <div className={`${styles.summaryBlock} ${summary.isFlipsideOverBudget ? styles.summaryBlockOver : ''}`}>
-                                <span className={styles.toolbarLabel}>
-                                    Flipside used / budget
-                                </span>
-                                <strong>
-                                    {calculateTotalFromCost(summary.flipside)} / {summary.flipsideBudgetStrings} Strings
-                                    {summary.flipsideBudgetEnhancements > 0
-                                        ? ` · ${summary.flipside.enhancements} / ${summary.flipsideBudgetEnhancements} Enh.`
-                                        : ''}
-                                </strong>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Total</span>
-                                <strong>{formatCost(summary.total)}</strong>
-                            </div>
-                            <div className={styles.summaryBlock}>
-                                <span className={styles.toolbarLabel}>Body</span>
-                                <strong>{formatCost(summary.body)}</strong>
-                            </div>
-                        </>
-                    )}
-
-                    <button type={'button'} className={styles.exportButton} onClick={exportJson}>
-                        Export JSON
-                    </button>
-                </div>
-
-                <ReactFlow<AbilityBuilderNode, Edge>
-                    nodes={nodes}
-                    edges={edges}
-                    nodeTypes={nodeTypes}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-                    onPaneClick={() => setSelectedNodeId(null)}
-                    fitView
-                    className={styles.flow}
-                    defaultEdgeOptions={{ markerEnd: { type: 'arrowclosed' } }}
-                    >
-                    <Background gap={24} size={1} />
-                    <MiniMap pannable zoomable />
-                    <Controls />
-                </ReactFlow>
-            </section>
+            <AbilityBuilderProvider value={contextValue}>
+                <BuilderSidebar />
+                <BuilderWorkspace />
+            </AbilityBuilderProvider>
         </div>
     );
 }

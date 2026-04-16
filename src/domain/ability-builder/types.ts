@@ -28,14 +28,18 @@ export type AbilityRootData = {
     summary: string;
 };
 
+export type ModifierSelectionValues = Record<string, string>;
+
 export type ModifierData = {
     label: string;
     family: ModifierFamily;
     lane: AbilityLane;
     description: string;
     cost: CostState;
+    costOverride?: CostState;
     optionPoolId?: string;
     selectedOptionId?: string;
+    selectionValues?: ModifierSelectionValues;
 };
 
 export type FreeformData = {
@@ -71,6 +75,7 @@ export type PaletteSection = {
 export type ModifierOption = {
     id: string;
     label: string;
+    resolvedLabel?: string;
     description: string;
     cost: CostState;
 };
