@@ -5,6 +5,9 @@ import type {
     ModifierFamily,
     ModifierNodeType,
 } from "./types.ts";
+import { deriveActivationProfile } from "./activation-profile.ts";
+import { resolveModifierData } from "./palette.ts";
+import { validateAbility } from './validation.ts';
 
 // ── Cost math ─────────────────────────────────────────────────────────────────
 
@@ -49,6 +52,8 @@ export function toneForFamily(family: ModifierFamily): string {
 
 export type AbilitySummary = {
     root: AbilityRootNodeType | undefined;
+    actionEconomyId: string;
+    resetConditionId: string;
     total: CostState;
     focus: CostState;
     flipside: CostState;
@@ -92,96 +97,86 @@ export function calculateTotalFromCost(cost: CostState): number {
 
 export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySummary {
     const root = nodes.find((node): node is AbilityRootNodeType => node.type === 'abilityRoot');
+    const profile = deriveActivationProfile(nodes);
 
     const modifierNodes = nodes.filter(
         (node): node is ModifierNodeType => node.type === 'marketModifier',
     );
+    const resolvedModifierData = modifierNodes.map((node) => resolveModifierData(node.data));
 
-    const focus = sumCosts(modifierNodes.filter((node) => node.data.lane === 'focus').map((node) => node.data.cost));
-    const flipside = sumCosts(modifierNodes.filter((node) => node.data.lane === 'flipside').map((node) => node.data.cost));
-    const body = sumCosts(modifierNodes.filter((node) => node.data.lane === 'body' || node.data.lane === 'option').map((node) => node.data.cost));
+    const focus = sumCosts(
+        resolvedModifierData
+            .filter((node) => node.lane === 'focus')
+            .map((node) => node.cost)
+    );
+    const flipside = sumCosts(
+        resolvedModifierData
+            .filter((node) => node.lane === 'flipside')
+            .map((node) => node.cost)
+    );
+    const body = sumCosts(
+        resolvedModifierData
+            .filter((node) => node.lane === 'body' || node.lane === 'option')
+            .map((node) => node.cost)
+    );
 
-    const isActionCard = root?.data.abilityKind === 'action' || root?.data.abilityKind === 'spell';
+    const isActionCard = profile.isSplitActionCard;
 
     // Flipside budget: body.strings / 2. Flipside is free within this budget.
     // Enhancement budget: Flipside may have at most the same number of Enhancements as Focus.
+    const focusTotal = calculateTotalFromCost(focus);
+    const flipsideTotal = calculateTotalFromCost(flipside);
+    const bodyTotal = calculateTotalFromCost(body);
 
-    const flipsideBudgetStrings = isActionCard ? Math.round((calculateTotalFromCost(focus) + calculateTotalFromCost(body) / 2) * 10) / 10 : 0;
+    const flipBudget10 = ((focusTotal + bodyTotal) / 2) * 10;
+    const flipsideBudgetStrings = isActionCard ? Math.round(flipBudget10) / 10 : 0;
     const flipsideBudgetEnhancements = isActionCard ? Math.max(0, focus.enhancements) : 0;
 
     // What the player actually pays: Focus + Body for Actions (Flipside is complimentary).
     // For non-Actions, all lanes contribute to the paid cost.
-    const paid = isActionCard ? sumCosts([focus, body]) : sumCosts([focus, body, flipside]);
+    const paid = isActionCard
+        ? sumCosts([focus, body])
+        : sumCosts([focus, body, flipside]);
 
-    const total = sumCosts(modifierNodes.map((node) => node.data.cost));
+    const total = sumCosts(resolvedModifierData.map((node) => node.cost));
 
-    const warnings: string[] = [];
-    const notes: string[] = [];
+    const paidTotal = calculateTotalFromCost(paid);
+    const totalCost = calculateTotalFromCost(total);
 
-    if (!root) warnings.push("Add an Ability Root node first.");
+    const issues = validateAbility({
+        nodes,
+        root,
+        actionEconomyId: profile.actionEconomyId,
+        resetConditionId: profile.resetConditionId,
+        modifierNodes,
+        resolvedModifierData,
+        focus,
+        flipside,
+        body,
+        paid,
+        total,
+        focusTotal,
+        flipsideTotal,
+        bodyTotal,
+        paidTotal,
+        totalCost,
+        flipsideBudgetStrings,
+        flipsideBudgetEnhancements,
+        isAction: isActionCard,
+    });
 
-    if (isActionCard) {
-        if (focus.strings <= 0) {
-            warnings.push('Action cards need a real Focus before the Flipside budget means anything.');
-        }
-        if (focus.strings > 0 && flipside.strings > flipsideBudgetStrings) {
-            warnings.push(
-                `Flipside strings used (${flipside.strings}) exceed the budget (${flipsideBudgetStrings}). Budget = ⌊Focus Strings ÷ 2⌋.`,
-            );
-        }
-        if (flipside.enhancements > flipsideBudgetEnhancements) {
-            warnings.push(
-                `Flipside enhancements (${flipside.enhancements}) exceed the Focus enhancements (${flipsideBudgetEnhancements}). The Flipside may use at most the same number of Enhancements as the Focus.`,
-            );
-        }
-    }
+    const warnings = issues
+        .filter((issue) => issue.severity === 'warning')
+        .map((issue) => issue.message);
 
-    if (
-        modifierNodes.some((node) => node.data.label.includes("Reset · Spell")) &&
-        !modifierNodes.some((node) => node.data.family === 'consequence')
-    ) {
-        warnings.push('Spell reset is present without any consequence block.');
-    }
-
-    // Spells and attacks already require a Test — "Test Required" caveat gives no discount.
-    const hasTestRequired = modifierNodes.some((node) => node.data.label === 'Caveat · Test Required');
-    const hasSpellReset = modifierNodes.some((node) => node.data.label.includes('Reset · Spell'));
-    const hasDamage = modifierNodes.some((node) => node.data.label.startsWith('Damage'));
-    if (hasTestRequired && (hasSpellReset || hasDamage)) {
-        warnings.push(
-            'Spells and attacks already require a Test — the "Test Required" caveat cannot reduce their cost.',
-        );
-    }
-
-    // Option Cards must have a Parent Ability that generates Options.
-    if (root?.data.abilityKind === 'option') {
-        notes.push(
-            'Option Cards require a Parent Ability with a "Generates Options" modifier. Make sure that Ability is built first.',
-        );
-        const hasGenOpt = modifierNodes.some((node) => node.data.label === 'Generates Options');
-        if (!hasGenOpt) {
-            warnings.push(
-                'This Option Card has no associated "Generates Options" modifier on its graph. Add one if this card is self-referential, or confirm the Parent Ability has that modifier.',
-            );
-        }
-    }
-
-    // Concentration discount note.
-    const hasConcentration = modifierNodes.some((node) => node.data.label === 'Duration · Concentration');
-    if (hasConcentration) {
-        if (root?.data.abilityKind === 'trait') {
-            notes.push(
-                'Concentration on a Trait: Traits are already constant effects, so the –1 Enhancement discount may be reduced. Confirm the discount with your GM.',
-            );
-        } else {
-            notes.push(
-                'Concentration grants a –1 Enhancement discount. The exact discount may vary based on the Ability type — confirm with your GM.',
-            );
-        }
-    }
+    const notes = issues
+        .filter((issue) => issue.severity === 'note')
+        .map((issue) => issue.message);
 
     return {
         root,
+        actionEconomyId: profile.actionEconomyId,
+        resetConditionId: profile.resetConditionId,
         total,
         focus,
         flipside,
@@ -190,7 +185,7 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
         flipsideBudgetStrings,
         flipsideBudgetEnhancements,
         isAction: isActionCard,
-        isFlipsideOverBudget: isActionCard && calculateTotalFromCost(flipside) > 0 && calculateTotalFromCost(flipside) > flipsideBudgetStrings,
+        isFlipsideOverBudget: isActionCard && flipsideTotal > flipsideBudgetStrings,
         warnings,
         notes,
     };

@@ -19,18 +19,18 @@ import SheetCard from "../common/SheetCard.tsx";
 import AttacksPanel from "../attacks/AttacksPanel.tsx";
 import GoalsPanel from "../story/GoalsPanel.tsx";
 import KnacksDomainsPanel from "../story/KnacksDomainsPanel.tsx";
-import InventoryPanel from "../iventory/InventoryPanel.tsx";
+import InventoryPanel from "../inventory/InventoryPanel.tsx";
 import DiceRoller from "../roll/DiceRoller.tsx";
 import EditorWorkspace from "../manage/EditorWorkspace.tsx";
 import ManageDrawer from "../manage/ManageDrawer";
 import CampaignRollWidget from "../roll/CampaignRollWidget.tsx";
 import RollHistoryDrawer from "../roll/RollHistoryDrawer.tsx";
 import NavBar from "../common/NavBar.tsx";
-import { publishRollEvent } from "../../lib/supabase/rolls.ts";
 import type { CampaignAssignment, RollBroadcastMode } from "../../types/roll-feed.ts";
 import type { TestResult } from "../../lib/rolling/types.ts";
 import styles from "./CharacterSheetShell.module.css";
 import {routes} from "../../lib/routing.ts";
+import { supabaseLibraryCampaignService } from "../../infrastructure/library/supabase-library-campaign-service.ts";
 
 type CharacterSheetShellProps = {
     initialSheet: CharacterSheetState;
@@ -267,7 +267,7 @@ export default function CharacterSheetShell({
                         rollBroadcastMode !== "self"
                     ) {
                         try {
-                            await publishRollEvent({
+                            await supabaseLibraryCampaignService.publishRollEvent({
                                 campaignId: assignedCampaign.id,
                                 characterSheetId: characterId,
                                 characterName: sheet.header.name,

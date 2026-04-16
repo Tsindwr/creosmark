@@ -1,12 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import CharacterSheetShell from "../shell/CharacterSheetShell";
 import type { CampaignAssignment } from "../../types/roll-feed";
-import {
-    getCampaignForCharacter,
-    getMyCharacterSheet,
-    updateCharacterSheet
-} from "../../lib/supabase/db";
 import type { CharacterSheetState } from "../../types/sheet";
+import { supabaseLibraryCampaignService } from "../../infrastructure/library/supabase-library-campaign-service.ts";
 
 type CharacterSheetFromDbProps = {
     characterId: string;
@@ -34,14 +30,14 @@ export default function CharacterSheetFromDb({
                 setLoading(true);
                 setErrorText(null);
 
-                const row = await getMyCharacterSheet(characterId);
+                const row = await supabaseLibraryCampaignService.getMyCharacterSheet(characterId);
                 if (!row) throw new Error("Character sheet not found.");
 
-                const campaign = await getCampaignForCharacter(characterId);
+                const campaign = await supabaseLibraryCampaignService.getCampaignForCharacter(characterId);
                 if (cancelled) return;
 
-                setSheet(row.sheet_json);
-                setAssignedCampaign(campaign)
+                setSheet(row.sheet);
+                setAssignedCampaign(campaign);
 
                 loadedRef.current = true;
                 setSaveState("idle");
@@ -83,7 +79,7 @@ export default function CharacterSheetFromDb({
         const handle = window.setTimeout(async () => {
             try {
                 setSaveState("saving");
-                await updateCharacterSheet(characterId, sheet);
+                await supabaseLibraryCampaignService.updateCharacterSheet(characterId, sheet);
 
                 lastSavedJsonRef.current = nextJson;
                 setSaveState("saved");

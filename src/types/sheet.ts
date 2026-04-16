@@ -16,6 +16,17 @@ export type PotentialKey =
   | "heart"
   | "tether";
 
+export const POTENTIAL_LABELS: Record<PotentialKey, string> = {
+    might: "Might",
+    finesse: "Finesse",
+    nerve: "Nerve",
+    seep: "Seep",
+    instinct: "Instinct",
+    wit: "Wit",
+    heart: "Heart",
+    tether: "Tether",
+}
+
 export type SheetSourceKind =
   | "manual"
   | "origin-profession"
@@ -112,6 +123,59 @@ export type SheetSourceTag = {
 export type PotentialScoreBonus = SheetSourceTag & {
   amount: number;
 };
+
+export type SkillKey =
+  | "force"
+  | "brace"
+  | "feat"
+  | "sleight"
+  | "squirm"
+  | "grace"
+  | "bear"
+  | "steel"
+  | "grit"
+  | "draw"
+  | "frame"
+  | "form"
+  | "read"
+  | "reflex"
+  | "sense"
+  | "reason"
+  | "recall"
+  | "esoterica"
+  | "aura"
+  | "hope"
+  | "sway"
+  | "grasp"
+  | "anchor"
+  | "weave";
+
+export const SKILL_LABELS: Record<SkillKey, string> = {
+    force: "Force",
+    brace: "Brace",
+    feat: "Feat",
+    sleight: "Sleight",
+    squirm: "Squirm",
+    grace: "Grace",
+    bear: "Bear",
+    steel: "Steel",
+    grit: "Grit",
+    draw: "Draw",
+    frame: "Frame",
+    form: "Form",
+    read: "Read",
+    reflex: "Reflex",
+    sense: "Sense",
+    reason: "Reason",
+    recall: "Recall",
+    esoterica: "Esoterica",
+    aura: "Aura",
+    hope: "Hope",
+    sway: "Sway",
+    grasp: "Grasp",
+    anchor: "Anchor",
+    weave: "Weave",
+}
 
 export type SkillDef = {
   name: string;

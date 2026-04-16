@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import CampaignRosterPage from "./CampaignRosterPage";
 import type { CampaignRecord } from "../../types/library";
-import { getCampaignRoster } from "../../lib/supabase/db";
+import { supabaseLibraryCampaignService } from "../../infrastructure/library/supabase-library-campaign-service.ts";
 
 type CampaignRosterFromDbProps = {
     campaignId: string;
@@ -22,7 +22,7 @@ export default function CampaignRosterFromDb({
                 setLoading(true);
                 setErrorText(null);
 
-                const row = await getCampaignRoster(campaignId);
+                const row = await supabaseLibraryCampaignService.getCampaignRoster(campaignId);
                 if (!row) throw new Error("Campaign not found.");
 
                 if (cancelled) return;
