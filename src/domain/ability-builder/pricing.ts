@@ -6,6 +6,7 @@ import type {
     ModifierNodeType,
 } from "./types.ts";
 import { deriveActivationProfile } from "./activation-profile.ts";
+import { applyMovementDamageLaneSurcharge } from "./cost-rules.ts";
 import { resolveModifierData } from "./palette.ts";
 import { validateAbility } from './validation.ts';
 
@@ -35,6 +36,38 @@ export function formatCost(cost: CostState): string {
     if (cost.beats) parts.push(`${formatSignedNumber(cost.beats)} Beats`);
     if (cost.enhancements) parts.push(`${formatSignedNumber(cost.enhancements)} Enhancements`);
     return parts.length ? parts.join(" · ") : "No cost";
+}
+
+function formatUnit(value: number, singular: string, plural: string): string {
+    return `${value} ${value === 1 ? singular : plural}`;
+}
+
+export function formatMarketCost(cost: CostState): string {
+    const totalTenths = (cost.strings * 10) + cost.beats;
+    const signPrefix = totalTenths < 0 ? "-" : "";
+    const absoluteTenths = Math.abs(totalTenths);
+    const normalizedStrings = Math.floor(absoluteTenths / 10);
+    const normalizedBeats = absoluteTenths % 10;
+    const parts: string[] = [];
+
+    if (normalizedStrings > 0) {
+        parts.push(formatUnit(normalizedStrings, "String", "Strings"));
+    }
+
+    if (normalizedBeats > 0) {
+        parts.push(formatUnit(normalizedBeats, "Beat", "Beats"));
+    }
+
+    if (cost.enhancements !== 0) {
+        parts.push(
+            `${cost.enhancements} ${
+                Math.abs(cost.enhancements) === 1 ? "Enhancement" : "Enhancements"
+            }`,
+        );
+    }
+
+    if (parts.length === 0) return "0";
+    return `${signPrefix}${parts.join(" · ")}`;
 }
 
 export function toneForFamily(family: ModifierFamily): string {
@@ -102,7 +135,9 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
     const modifierNodes = nodes.filter(
         (node): node is ModifierNodeType => node.type === 'marketModifier',
     );
-    const resolvedModifierData = modifierNodes.map((node) => resolveModifierData(node.data));
+    const baseResolvedModifierData = modifierNodes.map((node) => resolveModifierData(node.data));
+    const movementDamageLaneSurcharge = applyMovementDamageLaneSurcharge(baseResolvedModifierData);
+    const resolvedModifierData = movementDamageLaneSurcharge.modifiers;
 
     const focus = sumCosts(
         resolvedModifierData
@@ -162,6 +197,7 @@ export function computeAbilitySummary(nodes: AbilityBuilderNode[]): AbilitySumma
         totalCost,
         flipsideBudgetStrings,
         flipsideBudgetEnhancements,
+        movementDamageLaneSurchargeCount: movementDamageLaneSurcharge.appliedCount,
         isAction: isActionCard,
     });
 

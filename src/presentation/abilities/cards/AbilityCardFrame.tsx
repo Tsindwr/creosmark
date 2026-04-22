@@ -1,7 +1,7 @@
 import React from "react";
 import styles from './AbilityCards.module.css';
 import type { AbilityCardFaceKind, AbilityCardFormat } from "../../../domain";
-import { CARD_SYMBOL_SVGS } from "../../../domain";
+import { getCardSymbolClassName } from "../../../domain";
 import AbilityCardFaceBadge from "./AbilityCardFaceBadge.tsx";
 
 type Props = {
@@ -23,7 +23,7 @@ export default function AbilityCardFrame({
     children,
     preview,
 }: Props) {
-    const resetSvg = CARD_SYMBOL_SVGS.reset;
+    const resetIconClassName = getCardSymbolClassName("reset");
     const formatClass = FORMAT_CLASS_BY_FORMAT[format] ?? "";
 
     return (
@@ -46,10 +46,9 @@ export default function AbilityCardFrame({
 
                 {resetLabel ? (
                     <div className={styles.cardResetBadge} title={`Reset: ${resetLabel}`}>
-                        <span
-                            className={styles.cardResetBadgeIcon}
-                            dangerouslySetInnerHTML={{ __html: resetSvg }}
-                        />
+                        <span className={styles.cardResetBadgeIcon}>
+                            <i className={resetIconClassName} aria-hidden="true" />
+                        </span>
                         <span className={styles.cardResetBadgeLabel}>{resetLabel}</span>
                     </div>
                 ) : null}

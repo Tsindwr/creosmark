@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./AbilityCards.module.css";
-import type { AbilityBuilderNode, AbilityCardModuleType, AbilityCardState } from "../../../domain";
-import { addDroppedModifierToFace, addModuleToFace, deriveActivationProfile } from "../../../domain";
+import type { AbilityBuilderNode, AbilityCardState } from "../../../domain";
+import { addDroppedModifierToFace, deriveActivationProfile } from "../../../domain";
 import AbilityCardFrame from "./AbilityCardFrame";
 import AbilityCardModuleRenderer from "./AbilityCardModuleRenderer";
 import {
@@ -19,14 +19,6 @@ type Props = {
     previewMode: "edit" | "preview";
     onCardStateChange: (next: AbilityCardState) => void;
 };
-
-const MODULE_OPTIONS: Array<{ type: AbilityCardModuleType; label: string }> = [
-    { type: "attack_notation", label: "Attack Notation" },
-    { type: "rules_text", label: "Rules Text" },
-    { type: "keyword_line", label: "Keyword Line" },
-    { type: "icon_rail", label: "Icon Rail" },
-    { type: "footer_note", label: "Footer Note" },
-];
 
 export default function AbilityCardFaceEditor({
     nodes,
@@ -76,30 +68,10 @@ export default function AbilityCardFaceEditor({
                 if (!payload) return;
 
                 onCardStateChange(
-                    addDroppedModifierToFace(cardState, faceId, {
-                        modifierNodeId: payload.modifierNodeId,
-                        renderKind: payload.renderKind,
-                    }),
+                    addDroppedModifierToFace(cardState, faceId, payload),
                 );
             }}
         >
-            {previewMode === "edit" ? (
-                <div className={styles.faceCanvasControls}>
-                    {MODULE_OPTIONS.map((option) => (
-                        <button
-                            key={option.type}
-                            type="button"
-                            className={styles.faceAddModuleButton}
-                            onClick={() =>
-                                onCardStateChange(addModuleToFace(cardState, faceId, option.type))
-                            }
-                        >
-                            + {option.label}
-                        </button>
-                    ))}
-                </div>
-            ) : null}
-
             <AbilityCardFrame
                 format={cardState.format}
                 faceKind={faceKind}

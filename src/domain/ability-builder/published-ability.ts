@@ -38,6 +38,35 @@ export type AbilityPublishDocument = {
     };
 };
 
+function deriveAbilityKind(summary: AbilitySummary): AbilityKind | "unknown" {
+    if (summary.root?.data.abilityKind) {
+        return summary.root.data.abilityKind;
+    }
+
+    if (summary.resetConditionId === "spell") {
+        return "spell";
+    }
+
+    if (summary.actionEconomyId === "surge") {
+        return "surge";
+    }
+
+    if (summary.actionEconomyId === "trait") {
+        return "trait";
+    }
+
+    if (
+        summary.actionEconomyId === "action" ||
+        summary.actionEconomyId === "twoActions" ||
+        summary.actionEconomyId === "minute" ||
+        summary.actionEconomyId === "ritual"
+    ) {
+        return "action";
+    }
+
+    return "unknown";
+}
+
 export function createAbilityPublishDocument(params: {
     nodes: AbilityBuilderNode[];
     edges: Edge[];
@@ -45,11 +74,14 @@ export function createAbilityPublishDocument(params: {
     cardState: AbilityCardState;
 }): AbilityPublishDocument {
     const { nodes, edges, summary, cardState } = params;
+    const titleFromCard = cardState.titleOverride.trim();
+    const titleFromRoot = summary.root?.data.title?.trim() ?? "";
+    const title = titleFromCard || titleFromRoot || "Untitled Ability";
 
     return {
         version: 2,
-        title: summary.root?.data.title?.trim() || "Untitled Ability",
-        abilityKind: summary.root?.data.abilityKind ?? "unknown",
+        title,
+        abilityKind: deriveAbilityKind(summary),
         activationProfile: {
             actionEconomyId: summary.actionEconomyId,
             resetConditionId: summary.resetConditionId,

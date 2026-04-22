@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import styles from "./cards/AbilityCards.module.css";
 import type { AbilityBuilderNode, AbilityCardFaceKind, AbilityCardState } from "../../domain";
-import { CARD_SYMBOL_SVGS, getCardModifierInventory } from "../../domain";
+import { getCardModifierInventory, getCardSymbolClassName } from "../../domain";
 
 type Props = {
     nodes: AbilityBuilderNode[];
@@ -14,8 +14,11 @@ function getUsedModifierIds(cardState: AbilityCardState): Set<string> {
 
     for (const face of cardState.faces) {
         for (const module of face.modules) {
-            if (module.type === "rules_text") {
-                for (const run of module.runs) {
+            if (module.type !== "icon_rail") {
+                const runs = module.type === "rules_text"
+                    ? module.runs
+                    : (module.runs ?? []);
+                for (const run of runs) {
                     if (run.kind === "modifier") used.add(run.modifierNodeId);
                 }
             }
@@ -50,7 +53,12 @@ export default function AbilityCardModifierSidebar({
 }: Props) {
     const usedModifierIds = useMemo(() => getUsedModifierIds(cardState), [cardState]);
     const inventory = useMemo(
-        () => getCardModifierInventory(nodes, cardState.modifierOverrides),
+        () =>
+            getCardModifierInventory(
+                nodes,
+                cardState.modifierOverrides,
+                { includeDescriptionNodes: true },
+            ),
         [nodes, cardState.modifierOverrides],
     );
 
@@ -71,7 +79,7 @@ export default function AbilityCardModifierSidebar({
                 <div className={styles.inventoryEyebrow}>Card Builder</div>
                 <h2 className={styles.inventoryTitle}>Modifier Inventory</h2>
                 <p className={styles.inventoryCopy}>
-                    Drag modifiers into a card face or directly into a rules/icon module.
+                    Drag modifiers or descriptions into a card face or directly into a rules/icon module.
                     Activation profile details are automatic.
                 </p>
             </div>
@@ -88,7 +96,7 @@ export default function AbilityCardModifierSidebar({
                             {items.map((item) => {
                                 const isUsed = usedModifierIds.has(item.modifierNodeId);
                                 const isIgnored = cardState.ignoredModifierNodeIds.includes(item.modifierNodeId);
-                                const svg = CARD_SYMBOL_SVGS[item.display.symbolId] ?? CARD_SYMBOL_SVGS.generic;
+                                const iconClassName = getCardSymbolClassName(item.display.symbolId);
 
                                 return (
                                     <div
@@ -102,10 +110,20 @@ export default function AbilityCardModifierSidebar({
                                             draggable={!isIgnored}
                                             className={styles.inventoryDragButton}
                                             onDragStart={(event) => {
-                                                const payload = JSON.stringify({
-                                                    modifierNodeId: item.modifierNodeId,
-                                                    renderKind: item.display.renderKind,
-                                                });
+                                                const payload = JSON.stringify(
+                                                    item.kind === "description"
+                                                        ? {
+                                                            kind: "description",
+                                                            descriptionNodeId: item.modifierNodeId,
+                                                            descriptionText:
+                                                                item.descriptionText ?? "",
+                                                        }
+                                                        : {
+                                                            kind: "modifier",
+                                                            modifierNodeId: item.modifierNodeId,
+                                                            renderKind: item.display.renderKind,
+                                                        },
+                                                );
 
                                                 event.dataTransfer.effectAllowed = "move";
                                                 event.dataTransfer.setData(
@@ -115,10 +133,9 @@ export default function AbilityCardModifierSidebar({
                                                 event.dataTransfer.setData("text/plain", payload);
                                             }}
                                         >
-                                            <span
-                                                className={styles.inventoryItemIcon}
-                                                dangerouslySetInnerHTML={{ __html: svg }}
-                                            />
+                                            <span className={styles.inventoryItemIcon}>
+                                                <i className={iconClassName} aria-hidden="true" />
+                                            </span>
                                             <span className={styles.inventoryItemText}>
                                                 {item.display.text}
                                             </span>

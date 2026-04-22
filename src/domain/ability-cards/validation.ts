@@ -36,8 +36,11 @@ export function validateAbilityCard(
 
     for (const face of cardState.faces) {
         for (const module of face.modules) {
-            if (module.type === 'rules_text') {
-                for (const run of module.runs) {
+            if (module.type !== 'icon_rail') {
+                const runs = module.type === "rules_text"
+                    ? module.runs
+                    : (module.runs ?? []);
+                for (const run of runs) {
                     if (run.kind === 'modifier') usedModifierIds.add(run.modifierNodeId);
                 }
             }

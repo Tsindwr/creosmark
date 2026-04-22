@@ -13,7 +13,9 @@ import {
     resolveModifierData,
     toneForFamily,
 } from "../../../domain";
+import { ARCHETYPES } from "../../../lib/sheet-data.ts";
 import ModifierDetailControls from "../../../components/abilities/ModifierDetailControls";
+import { useAbilityBuilderContext } from "../../../components/abilities/AbilityBuilderContext";
 import NodeDeleteButton from "./NodeDeleteButton";
 
 function LaneBadge({ lane }: { lane: AbilityLane }) {
@@ -131,11 +133,37 @@ export default function ModifierNode(
     { id, data, selected, isActionCard = false }: ModifierNodeProps,
 ) {
     const { setNodes, getEdges } = useReactFlow<AbilityBuilderNode, Edge>();
+    const { openPrerequisiteAbilityPicker } = useAbilityBuilderContext();
     const resolvedData = resolveModifierData(data);
     const optionPool = data.optionPoolId ? getModifierOptionPool(data.optionPoolId) : undefined;
     const selectedOptionId = resolveOptionId(resolvedData.selectedOptionId, optionPool?.options[0]?.id);
     const hasSplitActivationHooks = isActionCard && data.optionPoolId === "activationType";
     const detailSummary = formatModifierDetailSummary(data);
+    const isLegacyPrerequisiteCaveat =
+        resolvedData.family === "caveat" &&
+        !resolvedData.optionPoolId &&
+        resolvedData.label.toLowerCase().includes("prerequisite");
+    const isPrerequisiteCaveat =
+        (resolvedData.optionPoolId === "caveatType" &&
+            selectedOptionId === "prerequisite") ||
+        isLegacyPrerequisiteCaveat;
+    const prerequisiteAbilityId = data.selectionValues?.prerequisiteAbilityId?.trim();
+    const prerequisiteArchetypeId =
+        data.selectionValues?.prerequisiteArchetypeId?.trim() ??
+        data.selectionValues?.prerequisiteArchetype?.trim();
+    const prerequisiteArchetypeLabel = prerequisiteArchetypeId
+        ? ARCHETYPES.find((entry) => entry.id === prerequisiteArchetypeId)?.label
+        : undefined;
+    const prerequisiteAbilityTitle = data.selectionValues?.prerequisiteAbilityTitle?.trim();
+    const prerequisiteButtonText =
+        prerequisiteAbilityTitle ||
+        prerequisiteArchetypeLabel ||
+        (prerequisiteArchetypeId
+            ? `Archetype ${prerequisiteArchetypeId}`
+            : "") ||
+        (prerequisiteAbilityId
+            ? `Ability ${prerequisiteAbilityId.slice(0, 8)}`
+            : "Select Prerequisite");
 
     function updateModifierSelection(selectionId: string, value: string) {
         setNodes((current) => {
@@ -223,6 +251,21 @@ export default function ModifierNode(
                 compact
                 onChange={updateModifierSelection}
             />
+
+            {isPrerequisiteCaveat ? (
+                <button
+                    type="button"
+                    className={`${styles.nodePrerequisiteButton} ${
+                        prerequisiteAbilityTitle ? "" : styles.nodePrerequisiteButtonEmpty
+                    }`}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        openPrerequisiteAbilityPicker(id);
+                    }}
+                >
+                    {prerequisiteButtonText}
+                </button>
+            ) : null}
 
             {detailSummary ? (
                 <div className={styles.nodeDetailSummary}>{detailSummary}</div>

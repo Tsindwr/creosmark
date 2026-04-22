@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./cards/AbilityCards.module.css";
-import type { AbilityBuilderNode, AbilityCardState } from "../../domain";
+import type {
+    AbilityBuilderNode,
+    AbilityCardInlineDisplayMode,
+    AbilityCardState,
+} from "../../domain";
 import {
-    CARD_SYMBOL_SVGS,
     clearModifierOverride,
     getCardModifierInventory,
-    reconcileModifierPlacementForRenderKind,
+    getCardSymbolClassName,
     resolveModifierData,
+    updateModifierDisplayMode,
     updateModifierOverride,
 } from "../../domain";
 
@@ -21,8 +25,11 @@ function getUsedModifierIds(cardState: AbilityCardState): Set<string> {
 
     for (const face of cardState.faces) {
         for (const module of face.modules) {
-            if (module.type === "rules_text") {
-                for (const run of module.runs) {
+            if (module.type !== "icon_rail") {
+                const runs = module.type === "rules_text"
+                    ? module.runs
+                    : (module.runs ?? []);
+                for (const run of runs) {
                     if (run.kind === "modifier") used.add(run.modifierNodeId);
                 }
             }
@@ -36,6 +43,32 @@ function getUsedModifierIds(cardState: AbilityCardState): Set<string> {
     }
 
     return used;
+}
+
+function getModifierInlineDisplayMode(
+    cardState: AbilityCardState,
+    modifierNodeId: string,
+): AbilityCardInlineDisplayMode | null {
+    for (const face of cardState.faces) {
+        for (const module of face.modules) {
+            if (module.type === "icon_rail") continue;
+
+            const runs = module.type === "rules_text"
+                ? module.runs
+                : (module.runs ?? []);
+            const modifierRun = runs.find(
+                (run) =>
+                    run.kind === "modifier" &&
+                    run.modifierNodeId === modifierNodeId,
+            );
+
+            if (modifierRun?.kind === "modifier") {
+                return modifierRun.displayMode;
+            }
+        }
+    }
+
+    return null;
 }
 
 export default function AbilityCardInspectorSidebar({
@@ -72,12 +105,12 @@ export default function AbilityCardInspectorSidebar({
         ? cardState.modifierOverrides?.[selectedModifierNodeId]
         : undefined;
 
-    const effectiveDisplayKind = selectedItem?.display.renderKind;
     const selectedDisplayMode =
-        selectedOverride?.renderKind ??
-        (effectiveDisplayKind === "rail" || effectiveDisplayKind === "overlay"
-            ? "rail"
-            : "inline");
+        selectedModifierNodeId
+            ? getModifierInlineDisplayMode(cardState, selectedModifierNodeId) ??
+            selectedItem?.display.inlineMode ??
+            "inline_chip"
+            : "inline_chip";
 
     return (
         <div className={styles.inventoryPanel}>
@@ -120,7 +153,7 @@ export default function AbilityCardInspectorSidebar({
                     {inventory.map((item) => {
                         const isSelected = item.modifierNodeId === selectedModifierNodeId;
                         const isUsed = usedModifierIds.has(item.modifierNodeId);
-                        const svg = CARD_SYMBOL_SVGS[item.display.symbolId] ?? CARD_SYMBOL_SVGS.generic;
+                        const iconClassName = getCardSymbolClassName(item.display.symbolId);
                         const node = nodes.find(
                             (candidate): candidate is Extract<AbilityBuilderNode, { type: "marketModifier" }> =>
                                 candidate.type === "marketModifier" &&
@@ -137,10 +170,9 @@ export default function AbilityCardInspectorSidebar({
                                 }`}
                                 onClick={() => setSelectedModifierNodeId(item.modifierNodeId)}
                             >
-                                <span
-                                    className={styles.inventoryItemIcon}
-                                    dangerouslySetInnerHTML={{ __html: svg }}
-                                />
+                                <span className={styles.inventoryItemIcon}>
+                                    <i className={iconClassName} aria-hidden="true" />
+                                </span>
                                 <span className={styles.inventoryItemText}>{label}</span>
                                 <span className={styles.inventoryItemMeta}>
                                     {isUsed ? "Placed" : "Unplaced"}
@@ -155,7 +187,7 @@ export default function AbilityCardInspectorSidebar({
                 <h3 className={styles.inventoryFaceTitle}>Selected Modifier</h3>
                 {!selectedModifierNodeId || !selectedItem ? (
                     <div className={styles.modifierInspectorEmpty}>
-                        Select a modifier to edit its display text and placement mode.
+                        Select a modifier to edit its display text and token style.
                     </div>
                 ) : (
                     <div className={styles.modifierInspectorFields}>
@@ -164,24 +196,18 @@ export default function AbilityCardInspectorSidebar({
                             <select
                                 value={selectedDisplayMode}
                                 onChange={(event) => {
-                                    const renderKind =
-                                        event.target.value === "rail" ? "rail" : "inline";
-                                    const withOverride = updateModifierOverride(
-                                        cardState,
-                                        selectedModifierNodeId,
-                                        { renderKind },
-                                    );
                                     onCardStateChange(
-                                        reconcileModifierPlacementForRenderKind(
-                                            withOverride,
+                                        updateModifierDisplayMode(
+                                            cardState,
                                             selectedModifierNodeId,
-                                            renderKind,
+                                            event.target.value as AbilityCardInlineDisplayMode,
                                         ),
                                     );
                                 }}
                             >
-                                <option value="inline">Inline</option>
-                                <option value="rail">Block</option>
+                                <option value="inline_keyword">Keyword</option>
+                                <option value="inline_chip">Chip</option>
+                                <option value="inline_symbol">Symbol</option>
                             </select>
                         </label>
 

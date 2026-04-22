@@ -1,8 +1,9 @@
 import React from "react";
 import styles from "./AbilityCards.module.css";
-import type { AbilityBuilderNode, AbilityCardState } from "../../../domain";
+import {type AbilityBuilderNode, type AbilityCardState, resolveCardModifierPresentation} from "../../../domain";
 import {
     addTextRunToRulesModule,
+    addModifierRunToRulesModule,
     updateTextRun,
     updateModifierRunDisplayMode,
     removeRunFromRulesModule,
@@ -22,24 +23,95 @@ type Props = {
     onCardStateChange: (next: AbilityCardState) => void;
 };
 
-export default function AbilityCardRulesModule({
-                                                   nodes,
-                                                   cardState,
-                                                   faceId,
-                                                   module,
-                                                   previewMode,
-                                                   onCardStateChange,
-                                               }: Props) {
+function renderPreviewRuns(
+    nodes: AbilityBuilderNode[],
+    cardState: AbilityCardState,
+    runs: Extract<Props['module'], { type: 'rules_text' }>['runs'],
+) {
     return (
-        <div className={styles.rulesTextModule}>
+        <p className={styles.rulesParagraph}>
+            {runs.map((run, index) => {
+                const spacer = index > 0 ? ' ' : null;
+
+                if (run.kind === 'text') {
+                    return (
+                        <React.Fragment key={run.id}>
+                            {spacer}
+                            <span className={styles.rulesTextSpan}>{run.text}</span>
+                        </React.Fragment>
+                    );
+                }
+
+                const modifierNode = nodes.find(
+                    (node) =>
+                        node.type === 'marketModifier' &&
+                        node.id === run.modifierNodeId,
+                );
+                if (!modifierNode || modifierNode.type !== 'marketModifier') {
+                    return null;
+                }
+
+                const display = resolveCardModifierPresentation(nodes, cardState, run.modifierNodeId);
+
+                return (
+                    <React.Fragment key={run.id}>
+                        {spacer}
+                        <AbilityCardInlineToken
+                            text={display?.text || 'Unknown Modifier'}
+                            symbolId={display?.symbolId || 'unknown'}
+                            mode={run.displayMode}
+                        />
+                    </React.Fragment>
+                );
+            })}
+        </p>
+    );
+}
+
+export default function AbilityCardRulesModule({
+   nodes,
+   cardState,
+   faceId,
+   module,
+   previewMode,
+   onCardStateChange,
+}: Props) {
+    if (previewMode === 'preview') {
+        return renderPreviewRuns(nodes, cardState, module.runs);
+    }
+
+    return (
+        <div
+            className={styles.rulesTextModule}
+            onDragOver={(event) => {
+                event.preventDefault();
+            }}
+            onDrop={(event) => {
+                event.preventDefault();
+
+                const raw = event.dataTransfer.getData("application/sunder-card-modifier");
+                if (!raw) return;
+
+                const payload = JSON.parse(raw) as { modifierNodeId: string };
+
+                onCardStateChange(
+                    addModifierRunToRulesModule(
+                        cardState,
+                        faceId,
+                        module.id,
+                        payload.modifierNodeId,
+                    ),
+                );
+            }}
+        >
             {module.runs.map((run) => {
                 if (run.kind === "text") {
-                    return previewMode === "edit" ? (
+                    return (
                         <textarea
                             key={run.id}
                             className={styles.rulesTextInput}
                             value={run.text}
-                            placeholder="Write card text here..."
+                            placeholder={"Write card text here..."}
                             onChange={(event) =>
                                 onCardStateChange(
                                     updateTextRun(
@@ -52,11 +124,7 @@ export default function AbilityCardRulesModule({
                                 )
                             }
                         />
-                    ) : run.text ? (
-                        <p key={run.id} className={styles.rulesPreviewText}>
-                            {run.text}
-                        </p>
-                    ) : null;
+                    );
                 }
 
                 const modifierNode = nodes.find(
@@ -87,62 +155,58 @@ export default function AbilityCardRulesModule({
                             mode={run.displayMode}
                         />
 
-                        {previewMode === "edit" ? (
-                            <>
-                                <select
-                                    value={run.displayMode}
-                                    onChange={(event) =>
-                                        onCardStateChange(
-                                            updateModifierRunDisplayMode(
-                                                cardState,
-                                                faceId,
-                                                module.id,
-                                                run.id,
-                                                event.target.value as typeof run.displayMode,
-                                            ),
-                                        )
-                                    }
-                                >
-                                    <option value="inline_chip">Chip</option>
-                                    <option value="inline_keyword">Keyword</option>
-                                    <option value="inline_symbol">Symbol</option>
-                                </select>
 
-                                <button
-                                    type="button"
-                                    className={styles.miniButton}
-                                    onClick={() =>
-                                        onCardStateChange(
-                                            removeRunFromRulesModule(
-                                                cardState,
-                                                faceId,
-                                                module.id,
-                                                run.id,
-                                            ),
-                                        )
-                                    }
-                                >
-                                    Remove
-                                </button>
-                            </>
-                        ) : null}
+                        <select
+                            value={run.displayMode}
+                            onChange={(event) =>
+                                onCardStateChange(
+                                    updateModifierRunDisplayMode(
+                                        cardState,
+                                        faceId,
+                                        module.id,
+                                        run.id,
+                                        event.target.value as typeof run.displayMode,
+                                    ),
+                                )
+                            }
+                        >
+                            <option value="inline_chip">Chip</option>
+                            <option value="inline_keyword">Keyword</option>
+                            <option value="inline_symbol">Symbol</option>
+                        </select>
+
+                        <button
+                            type="button"
+                            className={styles.miniButton}
+                            onClick={() =>
+                                onCardStateChange(
+                                    removeRunFromRulesModule(
+                                        cardState,
+                                        faceId,
+                                        module.id,
+                                        run.id,
+                                    ),
+                                )
+                            }
+                        >
+                            Remove
+                        </button>
                     </div>
                 );
             })}
 
-            {previewMode === "edit" ? (
-                <button
-                    type="button"
-                    className={styles.miniButton}
-                    onClick={() =>
-                        onCardStateChange(
-                            addTextRunToRulesModule(cardState, faceId, module.id),
-                        )
-                    }
-                >
-                    Add text run
-                </button>
-            ) : null}
+
+            <button
+                type="button"
+                className={styles.miniButton}
+                onClick={() =>
+                    onCardStateChange(
+                        addTextRunToRulesModule(cardState, faceId, module.id),
+                    )
+                }
+            >
+                Add text run
+            </button>
         </div>
     );
 }

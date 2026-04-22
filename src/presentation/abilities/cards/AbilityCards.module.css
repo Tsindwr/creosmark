@@ -62,8 +62,14 @@
     display: grid;
     gap: 0.48rem;
     align-content: center;
-    justify-content: center;
+    justify-content: stretch;
     min-height: 0;
+
+}
+
+.editingCardBody,
+.previewingCardBody {
+    overflow-y: auto;
 }
 
 .faceBadge {
@@ -95,9 +101,12 @@
     place-items: center;
 }
 
+.faceBadgeIcon i,
 .faceBadgeIcon svg {
     width: 100%;
     height: 100%;
+    display: inline-grid;
+    place-items: center;
 }
 
 .cardResetBadge {
@@ -122,9 +131,12 @@
     place-items: center;
 }
 
+.cardResetBadgeIcon i,
 .cardResetBadgeIcon svg {
     width: 100%;
     height: 100%;
+    display: inline-grid;
+    place-items: center;
 }
 
 .cardResetBadgeLabel {
@@ -247,6 +259,10 @@
     gap: 0.42rem;
 }
 
+.rulesTextSpan {
+    white-space: pre-wrap;
+}
+
 .inlineRunEditor {
     display: flex;
     align-items: center;
@@ -262,43 +278,49 @@
 .inlineToken {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.72rem;
-    line-height: 1;
+    gap: 0.24rem;
+    vertical-align: baseline;
 }
 
 .inlineTokenChip {
-    padding: 0.26rem 0.42rem;
+    padding: 0.12rem 0.34rem;
     border-radius: 999px;
     border: 1px solid rgba(244, 242, 235, 0.18);
     background: rgba(255, 255, 255, 0.05);
+    margin: 0 0.08rem;
 }
 
 .inlineTokenKeyword {
     font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    /*text-transform: uppercase;*/
+    letter-spacing: 0.03em;
+    margin: 0 0.08rem;
 }
 
 .inlineTokenSymbol {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1rem;
+    height: 1rem;
     justify-content: center;
     border-radius: 999px;
     border: 1px solid rgba(244, 242, 235, 0.18);
     background: rgba(255,255,255,0.05);
+    margin: 0 0.08rem;
 }
 
 .inlineTokenIcon {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 0.82rem;
+    height: 0.82rem;
     display: inline-grid;
     place-items: center;
+    flex: 0 0 auto;
 }
 
+.inlineTokenIcon i,
 .inlineTokenIcon svg {
     width: 100%;
     height: 100%;
+    display: inline-grid;
+    place-items: center;
 }
 
 .iconRailModule {
@@ -331,9 +353,12 @@
     place-items: center;
 }
 
+.railIconSvg i,
 .railIconSvg svg {
     width: 100%;
     height: 100%;
+    display: inline-grid;
+    place-items: center;
 }
 
 .railIconLarge .railIconSvg {
@@ -363,14 +388,19 @@
 
 .cardCanvasWorkspace {
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 1rem;
     min-height: 100%;
+    overflow-y: auto;
 }
 
 .cardCanvasToolbar {
     display: flex;
     gap: 0.5rem;
-    align-items: center;
+    align-items: start;
+    justify-content: end;
+
+    margin: 1rem 1.5rem;
 }
 
 .cardModeButton,
@@ -394,6 +424,9 @@
     gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
     align-items: start;
+    justify-content: center;
+
+    margin: 2rem;
 }
 
 .cardCanvasGridAction {
@@ -432,12 +465,243 @@
     display: none;
 }
 
+.cardSections {
+    display: grid;
+    gap: 0.32rem;
+    align-content: start;
+}
+
+.cardSection {
+    position: relative;
+    min-height: 1.45rem;
+    border-top: 1px solid rgba(194, 196, 202, 0.34);
+    border-bottom: 1px solid rgba(194, 196, 202, 0.34);
+    padding: 0.18rem 1.85rem 0.2rem 0.3rem;
+    transition: background 120ms ease, border-color 120ms ease;
+}
+
+.cardSection:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.cardSectionSelected {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(210, 178, 76, 0.48);
+}
+
+.previewingCardBody .cardSectionSelected {
+    background: none;
+    border: none;
+}
+
+.cardSectionModifierDrop {
+    background: rgba(210, 178, 76, 0.1);
+    border-color: rgba(210, 178, 76, 0.64);
+}
+
+.cardSectionDropGuideLine {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 2px solid #e3bc52;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.cardSectionDropGuideLineTop {
+    top: -1px;
+}
+
+.cardSectionDropGuideLineBottom {
+    bottom: -1px;
+}
+
+.cardSectionControls {
+    position: absolute;
+    top: 0.16rem;
+    right: 0.08rem;
+    display: grid;
+    gap: 0.22rem;
+    z-index: 7;
+}
+
+.cardSectionControlButton {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 0.3rem;
+    border: 1px solid rgba(244, 242, 235, 0.24);
+    background: rgba(11, 14, 24, 0.96);
+    color: #f4f2eb;
+    font: inherit;
+    font-size: 0.7rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.cardSectionTypeMenu {
+    position: absolute;
+    top: 0;
+    right: 1.65rem;
+    min-width: 8rem;
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(244, 242, 235, 0.22);
+    background: rgba(8, 10, 16, 0.98);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.cardSectionTypeMenuButton {
+    border: 1px solid rgba(244, 242, 235, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f4f2eb;
+    border-radius: 0.4rem;
+    padding: 0.22rem 0.38rem;
+    text-align: left;
+    font: inherit;
+    font-size: 0.66rem;
+    cursor: pointer;
+}
+
+.cardSectionBody {
+    min-height: 1rem;
+}
+
+.cardSectionParagraph {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.34;
+    color: #f4f2eb;
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.cardSectionTextRun {
+    white-space: pre-wrap;
+}
+
+.cardSectionTextRunEditable {
+    white-space: pre-wrap;
+    background: transparent;
+    border: 1px dashed transparent;
+    border-radius: 0.2rem;
+    outline: none;
+    min-width: 0.24rem;
+}
+
+.cardSectionTextRunEditable:focus {
+    border-color: rgba(210, 178, 76, 0.46);
+    background: rgba(210, 178, 76, 0.08);
+}
+
+.cardSectionModifierRun {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12rem;
+    vertical-align: middle;
+}
+
+.cardSectionModifierTokenWrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.cardSectionModifierMoveButton {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(244, 242, 235, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f4f2eb;
+    font: inherit;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+
+.cardSectionModifierPendingDelete .inlineToken {
+    border-color: rgba(222, 85, 85, 0.68);
+    background: rgba(222, 85, 85, 0.16);
+}
+
+.cardSectionModifierDeleteBadge {
+    position: absolute;
+    top: -0.38rem;
+    right: -0.34rem;
+    width: 0.78rem;
+    height: 0.78rem;
+    border-radius: 999px;
+    background: #de5555;
+    color: #fff;
+    font-size: 0.58rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.cardSectionModifierLarge {
+    transform: scale(1.18);
+    transform-origin: center;
+}
+
+.cardSectionModifierBadge {
+    border-radius: 999px !important;
+    border-color: rgba(210, 178, 76, 0.44) !important;
+    background: rgba(210, 178, 76, 0.14) !important;
+}
+
+.cardSectionRail {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.cardSectionRailEmpty {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(244, 242, 235, 0.56);
+}
+
+.cardAddSectionButton {
+    margin-top: 0.3rem;
+    justify-self: stretch;
+    border-radius: 0.62rem;
+    border: 1px solid rgba(194, 196, 202, 0.34);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(244, 242, 235, 0.84);
+    padding: 0.34rem 0.55rem;
+    font: inherit;
+    font-size: 0.72rem;
+    text-align: left;
+    cursor: pointer;
+}
+
 .rulesPreviewText {
     margin: 0;
     font-size: 0.78rem;
     line-height: 1.3;
     white-space: pre-wrap;
     width: min-content;
+}
+
+.rulesParagraph {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.42;
+    color: #f4f2eb;
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: anywhere;
 }
 
 .moduleTextPreview {
@@ -548,9 +812,12 @@
     color: #f3c26b;
 }
 
+.inventoryItemIcon i,
 .inventoryItemIcon svg {
     width: 100%;
     height: 100%;
+    display: inline-grid;
+    place-items: center;
 }
 
 .inventoryItemText {

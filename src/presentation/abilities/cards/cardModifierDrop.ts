@@ -1,10 +1,5 @@
 import type React from "react";
-import type { CardModifierRenderKind } from "../../../domain";
-
-export type CardModifierDropPayload = {
-    modifierNodeId: string;
-    renderKind?: CardModifierRenderKind;
-};
+import type { CardModifierDropPayload } from "../../../domain";
 
 export function hasCardModifierDragData(event: React.DragEvent): boolean {
     const types = event.dataTransfer?.types;
@@ -30,12 +25,31 @@ export function parseCardModifierDropPayload(
 
     try {
         const payload = JSON.parse(raw) as
-            | { modifierNodeId?: string; renderKind?: string }
+            | {
+                kind?: string;
+                modifierNodeId?: string;
+                renderKind?: string;
+                descriptionNodeId?: string;
+                descriptionText?: string;
+            }
             | string;
 
         if (typeof payload === "string") {
             const modifierNodeId = payload.trim();
-            return modifierNodeId ? { modifierNodeId } : null;
+            return modifierNodeId
+                ? { kind: "modifier", modifierNodeId }
+                : null;
+        }
+
+        if (payload.kind === "description" || payload.descriptionNodeId !== undefined) {
+            const descriptionNodeId = payload.descriptionNodeId?.trim();
+            if (!descriptionNodeId) return null;
+
+            return {
+                kind: "description",
+                descriptionNodeId,
+                descriptionText: payload.descriptionText ?? "",
+            };
         }
 
         if (!payload.modifierNodeId) return null;
@@ -49,11 +63,14 @@ export function parseCardModifierDropPayload(
                 : undefined;
 
         return {
+            kind: "modifier",
             modifierNodeId: payload.modifierNodeId,
             renderKind,
         };
     } catch {
         const modifierNodeId = raw.trim();
-        return modifierNodeId ? { modifierNodeId } : null;
+        return modifierNodeId
+            ? { kind: "modifier", modifierNodeId }
+            : null;
     }
 }

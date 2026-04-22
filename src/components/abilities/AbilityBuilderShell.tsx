@@ -2,9 +2,16 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ReactFlowProvider, useReactFlow, type Edge, type NodeProps } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import styles from "./AbilityBuilderShell.module.css";
+import { ARCHETYPES } from "../../lib/sheet-data.ts";
 import type { AbilityBuilderNode, ModifierNodeType } from "../../domain";
-import { buildPaletteSections, computeAbilitySummary } from "../../domain";
-import { exportBlueprintJson } from "../../application";
+import {
+    buildPaletteSections,
+    computeAbilitySummary,
+    createDefaultAbilityCardState,
+    normalizeAbilityCardState,
+} from "../../domain";
+import { exportBlueprintJson, importBlueprintJson } from "../../application";
+import { getAbilityReferenceById } from "../../infrastructure";
 import { useAbilityBuilderGraph } from "../../presentation/abilities/hooks/useAbilityBuilderGraph";
 import { useAbilityBuilderCard } from "../../presentation/abilities/hooks/useAbilityBuilderCard";
 import { useAbilityBuilderPublish } from "../../presentation/abilities/hooks/useAbilityBuilderPublish";
@@ -12,6 +19,7 @@ import { useAbilityBuilderWorkspace } from "../../presentation/abilities/hooks/u
 import AbilityRootNode from "../../presentation/abilities/nodes/AbilityRootNode";
 import FreeformNode from "../../presentation/abilities/nodes/FreeformNode";
 import ModifierNode from "../../presentation/abilities/nodes/ModifierNode";
+import AbilityReferencePickerFacade from "../../presentation/abilities/prerequisite/AbilityReferencePickerFacade";
 import {
     AbilityBuilderProvider,
     type AbilityBuilderContextValue,
@@ -23,6 +31,10 @@ function AbilityBuilderInner() {
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const [sidebarMode, setSidebarMode] = useState<"palette" | "inspector">("palette");
     const [openPaletteId, setOpenPaletteId] = useState("activation");
+    const [prerequisitePickerState, setPrerequisitePickerState] = useState<{
+        modifierNodeId: string;
+        selectedReferenceId?: string;
+    } | null>(null);
 
     const paletteSections = useMemo(() => buildPaletteSections(), []);
 
@@ -32,7 +44,10 @@ function AbilityBuilderInner() {
         edges,
         onNodesChange,
         onEdgesChange,
+        setNodes,
         selectedNodeId,
+        selectedEdgeId,
+        setSelectedEdgeId,
         setSelectedNodeId,
         selectedNode,
         selectedModifierResolved,
@@ -46,7 +61,9 @@ function AbilityBuilderInner() {
         updateSelectedAbilityRoot,
         updateModifierSelection,
         loadPreset: loadPresetFromGraph,
+        loadGraph,
         deleteNodeById,
+        deleteEdgeById,
     } = graph;
 
     const summary = useMemo(() => computeAbilitySummary(nodes), [nodes]);
@@ -95,7 +112,7 @@ function AbilityBuilderInner() {
     }, []);
 
     useEffect(() => {
-        if (!selectedNodeId) return;
+        if (!selectedNodeId && !selectedEdgeId) return;
 
         const isEditableTarget = (target: EventTarget | null) => {
             if (!(target instanceof HTMLElement)) return false;
@@ -114,12 +131,20 @@ function AbilityBuilderInner() {
             if (isEditableTarget(event.target)) return;
 
             event.preventDefault();
-            deleteNodeById(selectedNodeId);
+
+            if (selectedEdgeId) {
+                deleteEdgeById(selectedEdgeId);
+                return;
+            }
+
+            if (selectedNodeId) {
+                deleteNodeById(selectedNodeId);
+            }
         };
 
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [selectedNodeId, deleteNodeById]);
+    }, [selectedNodeId, selectedEdgeId, deleteNodeById, deleteEdgeById]);
 
     useEffect(() => {
         if (!selectedNodeId) return;
@@ -129,6 +154,31 @@ function AbilityBuilderInner() {
             setSelectedNodeId(null);
         }
     }, [selectedNodeId, nodes, setSelectedNodeId]);
+
+    useEffect(() => {
+        if (!selectedEdgeId) return;
+
+        const stillExists = edges.some((edge) => edge.id === selectedEdgeId);
+        if (!stillExists) {
+            setSelectedEdgeId(null);
+        }
+    }, [edges, selectedEdgeId]);
+
+    const displayEdges = useMemo(
+        () =>
+            edges.map((edge) =>
+                edge.id === selectedEdgeId
+                    ? {
+                        ...edge,
+                        style: {
+                            ...(edge.style ?? {}),
+                            strokeWidth: 3,
+                        },
+                    }
+                    : edge,
+            ),
+        [edges, selectedEdgeId],
+    );
 
     const loadPreset = useCallback((kind: "action" | "surge") => {
         loadPresetFromGraph(kind);
@@ -151,8 +201,34 @@ function AbilityBuilderInner() {
     );
 
     const onExportJson = useCallback(() => {
-        exportBlueprintJson(nodes, edges, summary);
-    }, [nodes, edges, summary]);
+        exportBlueprintJson(nodes, edges, summary, card.cardState);
+    }, [nodes, edges, summary, card.cardState]);
+
+    const onImportJson = useCallback(async (file: File) => {
+        const fileText = await file.text();
+        const imported = importBlueprintJson(fileText);
+
+        loadGraph(imported.nodes, imported.edges);
+        setSelectedNodeId(imported.nodes[0]?.id ?? null);
+        setSelectedEdgeId(imported.edges[0]?.id ?? null);
+        setSidebarMode("palette");
+
+        const nextCardState = imported.cardState
+            ? normalizeAbilityCardState(imported.nodes, imported.cardState)
+            : createDefaultAbilityCardState(imported.nodes);
+        card.setCardState(nextCardState);
+
+        requestAnimationFrame(() => {
+            fitView({ padding: 0.2, duration: 300 });
+        });
+    }, [
+        loadGraph,
+        setSelectedNodeId,
+        setSelectedEdgeId,
+        setSidebarMode,
+        card.setCardState,
+        fitView,
+    ]);
 
     const onPublish = useCallback(async () => {
         if (!canPublish) return;
@@ -168,6 +244,77 @@ function AbilityBuilderInner() {
             // publish state is managed in useAbilityBuilderPublish
         }
     }, [canPublish, publish, nodes, edges, summary, card.cardState]);
+
+    const openPrerequisiteAbilityPicker = useCallback((modifierNodeId: string) => {
+        const modifierNode = nodes.find(
+            (node): node is ModifierNodeType =>
+                node.type === "marketModifier" && node.id === modifierNodeId,
+        );
+
+        setPrerequisitePickerState({
+            modifierNodeId,
+            selectedReferenceId:
+                modifierNode?.data.selectionValues?.prerequisiteAbilityId ??
+                modifierNode?.data.selectionValues?.prerequisiteArchetypeId ??
+                modifierNode?.data.selectionValues?.prerequisiteArchetype,
+        });
+    }, [nodes]);
+
+    const onPrerequisiteAbilitySelected = useCallback(async (referenceId: string) => {
+        const modifierNodeId = prerequisitePickerState?.modifierNodeId;
+        if (!modifierNodeId) return;
+
+        const selectedArchetype = ARCHETYPES.find(
+            (archetype) => archetype.id === referenceId,
+        );
+
+        let resolvedTitle: string | undefined = selectedArchetype?.label;
+        if (!selectedArchetype) {
+            try {
+                const reference = await getAbilityReferenceById(referenceId);
+                resolvedTitle = reference?.title;
+            } catch (error) {
+                console.error("Failed to resolve selected prerequisite title:", error);
+            }
+        }
+
+        setNodes((current) =>
+            current.map((node): AbilityBuilderNode => {
+                if (node.type !== "marketModifier" || node.id !== modifierNodeId) {
+                    return node;
+                }
+
+                const {
+                    prerequisiteAbilityId: _currentAbilityId,
+                    prerequisiteArchetypeId: _currentArchetypeId,
+                    prerequisiteArchetype: _currentArchetype,
+                    prerequisiteAbilityTitle: _currentPrerequisiteTitle,
+                    ...remainingSelectionValues
+                } = node.data.selectionValues ?? {};
+
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        selectionValues: {
+                            ...remainingSelectionValues,
+                            ...(selectedArchetype
+                                ? {
+                                    prerequisiteArchetypeId: selectedArchetype.id,
+                                    prerequisiteArchetype: selectedArchetype.id,
+                                }
+                                : { prerequisiteAbilityId: referenceId }),
+                            ...(resolvedTitle
+                                ? { prerequisiteAbilityTitle: resolvedTitle }
+                                : {}),
+                        },
+                    },
+                };
+            }),
+        );
+
+        setPrerequisitePickerState(null);
+    }, [prerequisitePickerState, setNodes]);
 
     const contextValue = useMemo<AbilityBuilderContextValue>(
         () => ({
@@ -193,12 +340,13 @@ function AbilityBuilderInner() {
             setCardState: card.setCardState,
             cardIssues: card.cardIssues,
             nodes,
-            edges,
+            edges: displayEdges,
             nodeTypes,
             onNodesChange,
             onEdgesChange,
             onConnect,
             setSelectedNodeId,
+            openPrerequisiteAbilityPicker,
             canPublish,
             hasBlockingCardIssues: card.hasBlockingCardIssues,
             isPublishing: publish.isPublishing,
@@ -206,6 +354,7 @@ function AbilityBuilderInner() {
             publishResult: publish.publishResult,
             onPublish,
             onExportJson,
+            onImportJson,
             onDragOver: workspace.onDragOver,
             onDrop: workspace.onDrop,
         }),
@@ -238,6 +387,7 @@ function AbilityBuilderInner() {
             onEdgesChange,
             onConnect,
             setSelectedNodeId,
+            openPrerequisiteAbilityPicker,
             canPublish,
             card.hasBlockingCardIssues,
             publish.isPublishing,
@@ -245,6 +395,7 @@ function AbilityBuilderInner() {
             publish.publishResult,
             onPublish,
             onExportJson,
+            onImportJson,
             workspace.onDragOver,
             workspace.onDrop,
         ],
@@ -255,6 +406,13 @@ function AbilityBuilderInner() {
             <AbilityBuilderProvider value={contextValue}>
                 <BuilderSidebar />
                 <BuilderWorkspace />
+
+                <AbilityReferencePickerFacade
+                    open={Boolean(prerequisitePickerState)}
+                    selectedReferenceId={prerequisitePickerState?.selectedReferenceId}
+                    onClose={() => setPrerequisitePickerState(null)}
+                    onSelect={onPrerequisiteAbilitySelected}
+                />
             </AbilityBuilderProvider>
         </div>
     );

@@ -59,6 +59,9 @@ export function buildBlankActionPreset(): AbilityPreset {
                     lane: "body",
                     description: "Attach an archetype, ability, or origin prerequisite.",
                     cost: { strings: -2, beats: 0, enhancements: 0 },
+                    optionPoolId: "caveatType",
+                    selectedOptionId: "prerequisite",
+                    selectionValues: {},
                 },
             },
             {

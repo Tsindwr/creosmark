@@ -36,6 +36,7 @@ export type AbilityValidationContext = {
 
     flipsideBudgetStrings: number;
     flipsideBudgetEnhancements: number;
+    movementDamageLaneSurchargeCount: number;
     isAction: boolean;
 };
 
@@ -266,8 +267,9 @@ const testRequiredDiscountRule: AbilityValidationRule = (context) => {
 
     const hasSpellReset = hasLabelContaining(context, "Reset · Spell");
     const hasAttackDamage = hasLabelPrefix(context, "Damage ·");
+    const hasCondition = hasLabelPrefix(context, "Condition ·");
 
-    if (!hasSpellReset && !hasAttackDamage) return [];
+    if (!hasSpellReset && !hasAttackDamage && !hasCondition) return [];
 
     return [
         warning(
@@ -327,6 +329,20 @@ const surgeHeuristicRule: AbilityValidationRule = (context) => {
     ];
 };
 
+const movementDamageLaneSurchargeRule: AbilityValidationRule = (context) => {
+    if (context.movementDamageLaneSurchargeCount <= 0) return [];
+
+    const surcharge = context.movementDamageLaneSurchargeCount;
+    const suffix = surcharge === 1 ? "" : "s";
+
+    return [
+        note(
+            "effect.movement.damage-lane-surcharge",
+            `Applied +${surcharge} String${suffix}: movement effects in a lane with damage cost +1 String each.`,
+        ),
+    ];
+};
+
 export const ABILITY_VALIDATION_RULES: AbilityValidationRule[] = [
     requireActivationProfileRule,
     actionNeedsRealFocusRule,
@@ -341,6 +357,7 @@ export const ABILITY_VALIDATION_RULES: AbilityValidationRule[] = [
     concentrationRule,
     durationLocksCardRule,
     surgeHeuristicRule,
+    movementDamageLaneSurchargeRule,
 ];
 
 export function validateAbility(

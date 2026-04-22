@@ -1,62 +1,155 @@
-export const CARD_SYMBOL_SVGS: Record<string, string> = {
-    direct: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M4 12h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  <path d="M11 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-    indirect: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M5 17c3-6 7-10 14-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  <path d="M13 5h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-    reset: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M20 12a8 8 0 1 1-2.3-5.6" fill="none" stroke="currentColor" stroke-width="2"/>
-  <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-</svg>`,
-    duration: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
-  <path d="M12 8v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-</svg>`,
-    damage: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M13 2L5 14h5l-1 8 8-12h-5l1-8Z" fill="currentColor"/>
-</svg>`,
-    range: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
-  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
-  <circle cx="12" cy="12" r="1.3" fill="currentColor"/>
-</svg>`,
-    targeting: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="9" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
-  <circle cx="16" cy="14" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
-</svg>`,
-    condition_minor: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4Z" fill="none" stroke="currentColor" stroke-width="2"/>
-</svg>`,
-    condition_major: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 2l9 5v5c0 6-4 9-9 10-5-1-9-4-9-10V7l9-5Z" fill="currentColor"/>
-</svg>`,
-    primed: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
-  <path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-</svg>`,
-    amplified: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 3l3 6 6 3-6 3-3 6-3-6-6-3 6-3 3-6Z" fill="none" stroke="currentColor" stroke-width="2"/>
-</svg>`,
-    narrative: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <path d="M4 6h16v10H8l-4 4V6Z" fill="none" stroke="currentColor" stroke-width="2"/>
-</svg>`,
-    generic: `
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <rect x="5" y="5" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
-</svg>`,
+export type CardSymbolDefinition = {
+    className: string;
+    html: string;
 };
+
+function createFontAwesomeSymbol(iconName: string): CardSymbolDefinition {
+    const className = `fa-solid fa-${iconName}`;
+    return {
+        className,
+        html: `<i class="${className}" aria-hidden="true"></i>`,
+    };
+}
+
+function buildSymbolMap<T extends Record<string, string>>(icons: T): {
+    [K in keyof T]: CardSymbolDefinition;
+} {
+    const entries = Object.entries(icons).map(([key, iconName]) => [
+        key,
+        createFontAwesomeSymbol(iconName),
+    ]);
+
+    return Object.fromEntries(entries) as { [K in keyof T]: CardSymbolDefinition };
+}
+
+export const CARD_SYMBOLS = buildSymbolMap({
+    // Existing builder symbol ids
+    direct: "hand-fist",
+    indirect: "hand-back-fist",
+    reset: "clock-rotate-left",
+    duration: "clock",
+    damage: "meteor",
+    range: "location-crosshairs",
+    targeting: "bullseye",
+    condition_minor: "shield-halved",
+    condition_major: "skull",
+    primed: "circle-notch",
+    amplified: "wand-sparkles",
+    narrative: "comments",
+    generic: "asterisk",
+
+    // Target types
+    target_ranged: "location-crosshairs",
+    target_melee: "hand-fist",
+    target_self: "location-arrow",
+    target_aoe: "explosion",
+    target_multi: "bullseye",
+
+    // Reset conditions
+    reset_spell: "wand-sparkles",
+    reset_short_rest: "book-bookmark",
+    reset_long_rest: "book",
+    reset_once_per_turn: "stopwatch",
+    reset_once_per_scene: "clock-rotate-left",
+    reset_general: "clock-rotate-left",
+
+    // Durations
+    duration_1_round: "stopwatch",
+    duration_1_scene: "clock-rotate-left",
+    duration_1_hour: "clock",
+    duration_until_long_rest: "book",
+    duration_until_dispelled: "scroll",
+    duration_concentration: "user-clock",
+    duration_sequence_die_slot: "circle-notch",
+    duration_sequence_die_experience: "certificate",
+
+    // Damage/healing
+    effect_heal: "heart",
+    effect_damage: "meteor",
+
+    // Conditions
+    condition_bleeding: "fire-flame-simple",
+    condition_blinded: "splotch",
+    condition_cursed: "heart-crack",
+    condition_dazed: "spiral",
+    condition_distracted: "puzzle-piece",
+    condition_fortified: "lock",
+    condition_frenzied: "heart-pulse",
+    condition_invisible: "ghost",
+    condition_vulnerable: "skull",
+    condition_petrified: "snowflake",
+    condition_pinned: "thumbtack",
+    condition_retaliate: "tooth",
+    condition_slowed: "splotch",
+    condition_spirited: "sun",
+    condition_warded: "shield-halved",
+    condition_afraid: "spider",
+    condition_armed: "dagger",
+    condition_armored: "shirt",
+    condition_bound: "hands-bound",
+    condition_charmed: "face-grin-hearts",
+    condition_deafened: "water",
+    condition_empowered: "hand-holding-heart",
+    condition_enraptured: "eye",
+    condition_held: "handshake-angle",
+    condition_muddled: "cloud",
+    condition_pushed: "wind",
+    condition_rooted: "anchor",
+    condition_silenced: "face-meh-blank",
+    condition_unseen: "eye-slash",
+    condition_exhaustion: "moon",
+
+    // Caveats/resources
+    caveat_spend_resistance: "circle-xmark",
+    caveat_take_stress: "bolt-lightning",
+
+    // Roll modifiers
+    roll_advantage: "star",
+    roll_disadvantage: "star-half-stroke",
+
+    // Dice symbols
+    die_d4: "play",
+    die_d6: "dice-d6",
+    die_d8: "diamond",
+    die_d10: "circle-half-stroke",
+    die_d12: "hexagon",
+    die_d20: "dice-d20",
+
+    // Potentials and misc
+    potential_might: "chess-knight",
+    potential_finesse: "fingerprint",
+    potential_nerve: "brain",
+    potential_seep: "radiation",
+    potential_instinct: "seedling",
+    potential_wit: "magnifying-glass",
+    potential_heart: "comments",
+    potential_tether: "ring",
+    token_spirit: "crow",
+    token_flavor: "feather-pointed",
+    token_experience: "certificate",
+    action_expend: "ban",
+    reference: "asterisk",
+    effect_movement: "shoe-prints",
+});
+
+export type CardSymbolId = keyof typeof CARD_SYMBOLS;
+
+export const CARD_SYMBOL_HTML: Record<CardSymbolId, string> = Object.fromEntries(
+    Object.entries(CARD_SYMBOLS).map(([key, value]) => [key, value.html]),
+) as Record<CardSymbolId, string>;
+
+export const CARD_SYMBOL_CLASSNAMES: Record<CardSymbolId, string> = Object.fromEntries(
+    Object.entries(CARD_SYMBOLS).map(([key, value]) => [key, value.className]),
+) as Record<CardSymbolId, string>;
+
+export function getCardSymbol(symbolId: string): CardSymbolDefinition {
+    return CARD_SYMBOLS[symbolId as CardSymbolId] ?? CARD_SYMBOLS.generic;
+}
+
+export function getCardSymbolHtml(symbolId: string): string {
+    return getCardSymbol(symbolId).html;
+}
+
+export function getCardSymbolClassName(symbolId: string): string {
+    return getCardSymbol(symbolId).className;
+}

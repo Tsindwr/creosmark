@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './AbilityCards.module.css';
-import { CARD_SYMBOL_SVGS } from "../../../domain";
+import { getCardSymbolClassName } from "../../../domain";
 
 type Props = {
     symbolId: string;
@@ -13,7 +13,7 @@ export default function AbilityCardRailIcon({
     label,
     emphasis = 'normal',
 }: Props) {
-    const svg = CARD_SYMBOL_SVGS[symbolId] ?? CARD_SYMBOL_SVGS.generic;
+    const iconClassName = getCardSymbolClassName(symbolId);
 
     return (
         <div
@@ -27,10 +27,9 @@ export default function AbilityCardRailIcon({
             title={label}
             aria-label={label}
         >
-            <span
-                className={styles.railIconSvg}
-                dangerouslySetInnerHTML={{ __html: svg }}
-            />
+            <span className={styles.railIconSvg}>
+                <i className={iconClassName} aria-hidden="true" />
+            </span>
             <span className={styles.railIconLabel}>{label}</span>
         </div>
     );

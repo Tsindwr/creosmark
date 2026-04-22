@@ -18,11 +18,18 @@ export default function AbilityCardCanvas({
     subtitle,
     onCardStateChange,
 }: Props) {
-    const [previewMode, setPreviewMode] = useState<"edit" | "preview">("edit");
+    const [previewMode, setPreviewMode] = useState<"edit" | "preview">("preview");
 
     return (
         <div className={styles.cardCanvasWorkspace}>
             <div className={styles.cardCanvasToolbar}>
+                <button
+                    type="button"
+                    className={previewMode === "preview" ? styles.cardModeActive : styles.cardModeButton}
+                    onClick={() => setPreviewMode("preview")}
+                >
+                    Preview Mode
+                </button>
                 <button
                     type="button"
                     className={previewMode === "edit" ? styles.cardModeActive : styles.cardModeButton}
@@ -30,12 +37,14 @@ export default function AbilityCardCanvas({
                 >
                     Edit Mode
                 </button>
+
                 <button
                     type="button"
-                    className={previewMode === "preview" ? styles.cardModeActive : styles.cardModeButton}
-                    onClick={() => setPreviewMode("preview")}
+                    className={styles.cardModeButton}
+                    disabled
+                    title="Undo is planned for command history."
                 >
-                    Preview Mode
+                    Undo
                 </button>
             </div>
 

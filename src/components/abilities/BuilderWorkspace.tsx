@@ -5,8 +5,13 @@ import {
     ReactFlow,
     type Edge,
 } from "@xyflow/react";
+import { useRef } from "react";
 import styles from "./AbilityBuilderShell.module.css";
-import { calculateTotalFromCost, formatCost, type AbilityBuilderNode } from "../../domain";
+import {
+    calculateTotalFromCost,
+    formatMarketCost,
+    type AbilityBuilderNode,
+} from "../../domain";
 import AbilityCardCanvas from "../../presentation/abilities/cards/AbilityCardCanvas";
 import { useAbilityBuilderContext } from "./AbilityBuilderContext";
 
@@ -32,9 +37,11 @@ export default function BuilderWorkspace() {
         publishResult,
         onPublish,
         onExportJson,
+        onImportJson,
         onDragOver,
         onDrop,
     } = useAbilityBuilderContext();
+    const importInputRef = useRef<HTMLInputElement | null>(null);
 
     return (
         <section
@@ -47,7 +54,7 @@ export default function BuilderWorkspace() {
                     <>
                         <div className={styles.summaryBlock}>
                             <span className={styles.toolbarLabel}>Paid (Focus + Base)</span>
-                            <strong>{formatCost(summary.paid)}</strong>
+                            <strong>{formatMarketCost(summary.paid)}</strong>
                         </div>
                         <div className={`${styles.summaryBlock} ${summary.isFlipsideOverBudget ? styles.summaryBlockOver : ""}`}>
                             <span className={styles.toolbarLabel}>
@@ -62,16 +69,10 @@ export default function BuilderWorkspace() {
                         </div>
                     </>
                 ) : (
-                    <>
-                        <div className={styles.summaryBlock}>
-                            <span className={styles.toolbarLabel}>Total</span>
-                            <strong>{formatCost(summary.total)}</strong>
-                        </div>
-                        <div className={styles.summaryBlock}>
-                            <span className={styles.toolbarLabel}>Body</span>
-                            <strong>{formatCost(summary.body)}</strong>
-                        </div>
-                    </>
+                    <div className={styles.summaryBlock}>
+                        <span className={styles.toolbarLabel}>Paid</span>
+                        <strong>{formatMarketCost(summary.paid)}</strong>
+                    </div>
                 )}
 
                 <div className={styles.toolbarActions}>
@@ -111,6 +112,36 @@ export default function BuilderWorkspace() {
                     <button type={"button"} className={styles.exportButton} onClick={onExportJson}>
                         Export JSON
                     </button>
+
+                    <button
+                        type={"button"}
+                        className={styles.exportButton}
+                        onClick={() => importInputRef.current?.click()}
+                    >
+                        Import JSON
+                    </button>
+
+                    <input
+                        ref={importInputRef}
+                        type="file"
+                        accept="application/json,.json"
+                        style={{ display: "none" }}
+                        onChange={async (event) => {
+                            const file = event.target.files?.[0];
+                            event.currentTarget.value = "";
+                            if (!file) return;
+
+                            try {
+                                await onImportJson(file);
+                            } catch (error) {
+                                window.alert(
+                                    error instanceof Error
+                                        ? error.message
+                                        : "Failed to import JSON.",
+                                );
+                            }
+                        }}
+                    />
                 </div>
 
                 {publishError ? (

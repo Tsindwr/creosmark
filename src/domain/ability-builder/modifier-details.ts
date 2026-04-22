@@ -1,4 +1,4 @@
-import type {ModifierData, ModifierOption} from "./types.ts";
+import type { ModifierData } from "./types.ts";
 import { getModifierOptionPool } from "./palette.ts";
 
 export type ModifierDetailSchema = {
@@ -9,6 +9,12 @@ export type ModifierDetailSchema = {
     otherOptions?: { id: string; label: string; description?: string }[];
 };
 
+export type ModifierDetailOption = {
+    id: string;
+    label: string;
+    description?: string;
+};
+
 function baseKey(data: ModifierData): string {
     return `${data.optionPoolId ?? ""}:${data.selectedOptionId ?? ""}`;
 }
@@ -17,13 +23,43 @@ function getSelectionValue(
     data: ModifierData,
     schema: ModifierDetailSchema,
 ): string {
-    const pool = getModifierOptionPool(schema.optionPoolId);
+    const options = getModifierDetailOptions(schema);
     return (
         data.selectionValues?.[schema.id] ??
             schema.defaultOptionId ??
-            pool?.options[0]?.id ??
+            options[0]?.id ??
             ""
     );
+}
+
+export function getModifierDetailOptions(
+    schema: ModifierDetailSchema,
+): ModifierDetailOption[] {
+    const seen = new Set<string>();
+    const options: ModifierDetailOption[] = [];
+
+    const pool = getModifierOptionPool(schema.optionPoolId);
+    for (const option of pool?.options ?? []) {
+        if (seen.has(option.id)) continue;
+        seen.add(option.id);
+        options.push({
+            id: option.id,
+            label: option.label,
+            description: option.description,
+        });
+    }
+
+    for (const option of schema.otherOptions ?? []) {
+        if (seen.has(option.id)) continue;
+        seen.add(option.id);
+        options.push({
+            id: option.id,
+            label: option.label,
+            description: option.description,
+        });
+    }
+
+    return options;
 }
 
 const POOL_DETAIL_SCHEMAS: Record<string, ModifierDetailSchema[]> = {
@@ -100,6 +136,15 @@ const BASE_DETAIL_SCHEMAS: Record<string, ModifierDetailSchema[]> = {
         },
     ],
 
+    "durationMode:sequenceDv": [
+        {
+            id: "sequenceDiePotential",
+            label: "Volatility Die",
+            optionPoolId: "potentialRef",
+            defaultOptionId: "might",
+        }
+    ],
+
     "increase:potential": [
         {
             id: "increasedPotential",
@@ -167,6 +212,13 @@ const BASE_DETAIL_SCHEMAS: Record<string, ModifierDetailSchema[]> = {
             label: "Minor Condition",
             optionPoolId: "minorConditionNameRef",
             defaultOptionId: "afraid",
+            otherOptions: [
+                {
+                    id: "other",
+                    label: "Other",
+                    description: "Describe the Minor Condition that is recovered.",
+                }
+            ],
         },
     ],
 
@@ -176,10 +228,15 @@ const BASE_DETAIL_SCHEMAS: Record<string, ModifierDetailSchema[]> = {
             label: "Major Condition",
             optionPoolId: "majorConditionNameRef",
             defaultOptionId: "blinded",
+            otherOptions: [
+                {
+                    id: "other",
+                    label: "Other",
+                    description: "Describe the Major Condition that is recovered.",
+                }
+            ],
         },
     ],
-
-    // "recover:mark": [],
 
     "recover:stress-track": [
         {
@@ -199,6 +256,15 @@ const BASE_DETAIL_SCHEMAS: Record<string, ModifierDetailSchema[]> = {
         },
     ],
 
+    "caveatType:increaseRiskiness": [
+        {
+            id: "riskinessLevel",
+            label: "Riskiness",
+            optionPoolId: "riskinessRef",
+            defaultOptionId: "risky",
+        }
+    ],
+
     "caveatType:spendStress": [
         {
             id: "spentStressPotential",
@@ -215,6 +281,28 @@ const BASE_DETAIL_SCHEMAS: Record<string, ModifierDetailSchema[]> = {
             optionPoolId: "potentialRef",
             defaultOptionId: "might",
         },
+    ],
+
+    "caveatType:testRequired": [
+        {
+            id: "testRequirementSkill",
+            label: "Skill",
+            optionPoolId: "skillRef",
+            defaultOptionId: "force",
+        },
+        {
+            id: "testRequirementPotential",
+            label: "Potential",
+            optionPoolId: "potentialRef",
+            defaultOptionId: "default",
+            otherOptions: [
+                {
+                    id: "default",
+                    label: "Default",
+                    description: "Use the default Potential for the Test.",
+                }
+            ],
+        }
     ],
 };
 
@@ -270,11 +358,9 @@ export function formatModifierDetailSummary(data: ModifierData): string {
 
     const parts = schemas
         .map((schema) => {
-            const pool = getModifierOptionPool(schema.optionPoolId);
-            if (!pool) return null;
-
+            const options = getModifierDetailOptions(schema);
             const selectedId = getSelectionValue(data, schema);
-            const option = pool.options.find((candidate) => candidate.id === selectedId);
+            const option = options.find((candidate) => candidate.id === selectedId);
             if (!option) return null;
 
             return `${schema.label}: ${option.label}`;

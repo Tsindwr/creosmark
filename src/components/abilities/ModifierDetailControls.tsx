@@ -1,4 +1,8 @@
-import {getModifierDetailSchemas, getModifierOptionPool, type ModifierData} from "../../domain";
+import {
+    getModifierDetailOptions,
+    getModifierDetailSchemas,
+    type ModifierData,
+} from "../../domain";
 import styles from './AbilityBuilderShell.module.css';
 
 type ModifierDetailControlsProps = {
@@ -8,10 +12,10 @@ type ModifierDetailControlsProps = {
 };
 
 export default function ModifierDetailControls({
-                                    data,
-                                    compact = false,
-                                    onChange,
-                                }: ModifierDetailControlsProps) {
+    data,
+    compact = false,
+    onChange,
+}: ModifierDetailControlsProps) {
     const schemas = getModifierDetailSchemas(data);
 
     if (schemas.length === 0) return null;
@@ -19,14 +23,18 @@ export default function ModifierDetailControls({
     return (
         <div className={compact ? styles.nodeDetailControls : styles.editorStack}>
             {schemas.map((schema) => {
-                const pool = getModifierOptionPool(schema.optionPoolId);
-                if (!pool || pool.options.length === 0) return null;
+                const options = getModifierDetailOptions(schema);
+                if (options.length === 0) return null;
 
-                const value =
+                const preferredValue =
                     data.selectionValues?.[schema.id] ??
                     schema.defaultOptionId ??
-                    pool.options[0]?.id ??
+                    options[0]?.id ??
                     "";
+
+                const value = options.some((option) => option.id === preferredValue)
+                    ? preferredValue
+                    : (options[0]?.id ?? "");
 
                 if (compact) {
                     return (
@@ -38,7 +46,7 @@ export default function ModifierDetailControls({
                                 onClick={(event) => event.stopPropagation()}
                                 onChange={(event) => onChange(schema.id, event.target.value)}
                             >
-                                {pool.options.map((option) => (
+                                {options.map((option) => (
                                     <option key={option.id} value={option.id}>
                                         {option.label}
                                     </option>
@@ -55,7 +63,7 @@ export default function ModifierDetailControls({
                             value={value}
                             onChange={(event) => onChange(schema.id, event.target.value)}
                         >
-                            {pool.options.map((option) => (
+                            {options.map((option) => (
                                 <option key={option.id} value={option.id}>
                                     {option.label}
                                 </option>

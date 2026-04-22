@@ -1,5 +1,5 @@
 import type { CostState, ModifierOptionPool } from './types';
-import {POTENTIAL_LABELS, SKILL_LABELS} from "../../types/sheet.ts";
+import {POTENTIAL_LABELS, RISKINESS_LABELS, SKILL_LABELS} from "../../types/sheet.ts";
 import {DOMAINS} from "../../lib/sheet-data.ts";
 import { MINOR_CONDITIONS, MAJOR_CONDITIONS } from "../../types/terms.ts"
 
@@ -77,6 +77,13 @@ export const RULE_TERM_OPTION_POOLS: Record<string, ModifierOptionPool> = {
             label: "Tether",
         },
     ]),
+
+    riskinessRef: makePool("riskinessRef", "Riskiness", Object.entries(RISKINESS_LABELS)
+        .filter(([key, _]) => key !== 'uncertain')
+        .map(([key, label])=> {
+            return { id: key, label: label }
+        })
+    ),
 
     volatilityDieRef: makePool("volatilityDieRef", "Volatility Die", Object.entries(POTENTIAL_LABELS)
         .map(([key, label]) => {

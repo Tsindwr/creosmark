@@ -3,19 +3,38 @@ import type {
     AbilityCardInlineDisplayMode,
     AbilityCardModifierOverride,
     AbilityCardRailDisplayMode,
+    AbilityCardState,
 } from "./types.ts";
 import type {
+    AbilityLane,
     AbilityBuilderNode,
+    FreeformNodeType,
     ModifierNodeType,
 } from "../ability-builder/types.ts";
 import {
     deriveActivationProfile,
     isActivationProfileModifier,
 } from "../ability-builder/activation-profile.ts";
-import { resolveModifierData } from "../ability-builder/palette.ts";
-import { formatModifierDetailSummary } from "../ability-builder/modifier-details.ts";
+import {
+    getModifierOptionPool,
+    resolveModifierCardLabel,
+    resolveModifierData,
+} from "../ability-builder/palette.ts";
+import { CARD_SYMBOLS } from "./symbols.ts";
 
 export type CardModifierRenderKind = 'inline' | 'rail' | 'overlay' | 'ignorable';
+
+export type CardModifierDropPayload =
+    | {
+        kind: "modifier";
+        modifierNodeId: string;
+        renderKind?: CardModifierRenderKind;
+    }
+    | {
+        kind: "description";
+        descriptionNodeId: string;
+        descriptionText: string;
+    };
 
 export type CardModifierDisplay = {
     text: string;
@@ -24,6 +43,39 @@ export type CardModifierDisplay = {
     inlineMode: AbilityCardInlineDisplayMode;
     railMode: AbilityCardRailDisplayMode;
 };
+
+export type CardModifierInventoryItem = {
+    kind: "modifier" | "description";
+    modifierNodeId: string;
+    faceKind: AbilityCardFaceKind;
+    display: CardModifierDisplay;
+    canIgnore: boolean;
+    descriptionText?: string;
+};
+
+function hasCardSymbol(symbolId: string): boolean {
+    return symbolId in CARD_SYMBOLS;
+}
+
+function resolveConditionSymbolId(
+    conditionId: string | undefined,
+    fallbackSymbolId: "condition_minor" | "condition_major",
+): string {
+    if (!conditionId) return fallbackSymbolId;
+
+    const specific = `condition_${conditionId}`;
+    if (hasCardSymbol(specific)) return specific;
+
+    if (
+        conditionId === "physically_vulnerable" ||
+        conditionId === "mentally_vulnerable"
+    ) {
+        const vulnerable = "condition_vulnerable";
+        if (hasCardSymbol(vulnerable)) return vulnerable;
+    }
+
+    return fallbackSymbolId;
+}
 
 function applyModifierOverride(
     display: CardModifierDisplay,
@@ -44,6 +96,31 @@ function applyModifierOverride(
     };
 }
 
+export function resolveCardModifierPresentation(
+    nodes: AbilityBuilderNode[],
+    cardState: AbilityCardState,
+    modifierNodeId: string,
+): CardModifierDisplay | null {
+    const modifierNode = nodes.find(
+        (node): node is ModifierNodeType =>
+            node.type === 'marketModifier' && node.id === modifierNodeId,
+    );
+
+    if (!modifierNode) return null;
+
+    const base = getCardModifierDisplay(modifierNode);
+    const override = cardState.modifierOverrides?.[modifierNodeId];
+
+    return {
+        ...base,
+        text:
+            override?.text && override.text.trim().length > 0
+                ? override.text.trim()
+                : base.text,
+        renderKind: override?.renderKind ?? base.renderKind,
+    };
+}
+
 function isModifierNode(node: AbilityBuilderNode): node is ModifierNodeType {
     return node.type === "marketModifier";
 }
@@ -60,14 +137,21 @@ export function getDefaultFaceForModifier(
     nodes: AbilityBuilderNode[],
     node: ModifierNodeType,
 ): AbilityCardFaceKind {
+    return getDefaultFaceForLane(nodes, node.data.lane);
+}
+
+export function getDefaultFaceForLane(
+    nodes: AbilityBuilderNode[],
+    lane: AbilityLane,
+): AbilityCardFaceKind {
     const profile = deriveActivationProfile(nodes);
     if (profile.isSplitActionCard) {
         const focusFace = getActionFocusFace(nodes);
         const indirectFace: AbilityCardFaceKind =
             focusFace === 'direct' ? 'indirect' : 'direct';
 
-        if (node.data.lane === 'focus') return focusFace;
-        if (node.data.lane === 'flipside') return indirectFace;
+        if (lane === 'focus') return focusFace;
+        if (lane === 'flipside') return indirectFace;
         return focusFace;
     }
 
@@ -78,8 +162,11 @@ export function canIgnoreModifierInCard(node: ModifierNodeType): boolean {
     const resolved = resolveModifierData(node.data);
 
     return (
-        resolved.label === "Narrative · Utility" ||
-        resolved.label === "Narrative · Interpretable"
+        (resolved.optionPoolId === "narrativeWeight" &&
+            (resolved.selectedOptionId === "utility" ||
+                resolved.selectedOptionId === "interpretable")) ||
+        (resolved.optionPoolId === "caveatType" &&
+            resolved.selectedOptionId === "prerequisite")
     );
 }
 
@@ -88,12 +175,11 @@ export function getCardModifierDisplay(
     override?: AbilityCardModifierOverride,
 ): CardModifierDisplay {
     const resolved = resolveModifierData(node.data);
-    const details = formatModifierDetailSummary(node.data);
-    const withDetails = (base: string) => (details ? `${base} (${details})` : base);
+    const cardLabel = resolveModifierCardLabel(node.data);
 
-    if (resolved.label.startsWith("Damage · Initial")) {
+    if (resolved.optionPoolId === "damageBase") {
         return applyModifierOverride({
-            text: withDetails("Damage"),
+            text: cardLabel,
             symbolId: "damage",
             renderKind: "inline",
             inlineMode: "inline_chip",
@@ -101,9 +187,9 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label.startsWith("Damage · Increase")) {
+    if (resolved.optionPoolId === "damageIncrease") {
         return applyModifierOverride({
-            text: withDetails("Bonus Damage"),
+            text: cardLabel,
             symbolId: "damage",
             renderKind: "inline",
             inlineMode: "inline_chip",
@@ -111,9 +197,9 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label === 'Damage · Primed') {
+    if (resolved.optionPoolId === "damagePriming") {
         return applyModifierOverride({
-            text: 'Primed',
+            text: cardLabel,
             symbolId: 'primed',
             renderKind: 'overlay',
             inlineMode: 'inline_chip',
@@ -121,9 +207,9 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label.startsWith("Range")) {
+    if (resolved.optionPoolId === "rangeDistance") {
         return applyModifierOverride({
-            text: withDetails("Range"),
+            text: cardLabel,
             symbolId: "range",
             renderKind: 'inline',
             inlineMode: 'inline_chip',
@@ -131,9 +217,19 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label.startsWith('Targeting ·')) {
+    if (resolved.optionPoolId === "movementDistance") {
         return applyModifierOverride({
-            text: withDetails("Targeting"),
+            text: cardLabel,
+            symbolId: "effect_movement",
+            renderKind: 'inline',
+            inlineMode: 'inline_chip',
+            railMode: 'rail_icon',
+        }, override);
+    }
+
+    if (resolved.optionPoolId === 'targetingMode') {
+        return applyModifierOverride({
+            text: cardLabel,
             symbolId: 'targeting',
             renderKind: 'inline',
             inlineMode: 'inline_chip',
@@ -141,29 +237,43 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label.startsWith('Condition · Minor')) {
+    if (resolved.optionPoolId === 'conditionMinor') {
+        const selectedConditionId =
+            resolved.selectionValues?.minorConditionName ??
+            getModifierOptionPool("minorConditionNameRef")?.options[0]?.id;
+
         return applyModifierOverride({
-            text: withDetails('Minor Condition'),
-            symbolId: 'condition_minor',
+            text: cardLabel,
+            symbolId: resolveConditionSymbolId(
+                selectedConditionId,
+                "condition_minor",
+            ),
             renderKind: 'inline',
             inlineMode: 'inline_chip',
             railMode: 'rail_icon',
         }, override);
     }
 
-    if (resolved.label.startsWith('Condition · Major')) {
+    if (resolved.optionPoolId === 'conditionMajor') {
+        const selectedConditionId =
+            resolved.selectionValues?.majorConditionName ??
+            getModifierOptionPool("majorConditionNameRef")?.options[0]?.id;
+
         return applyModifierOverride({
-            text: withDetails('Major Condition'),
-            symbolId: 'condition_major',
+            text: cardLabel,
+            symbolId: resolveConditionSymbolId(
+                selectedConditionId,
+                "condition_major",
+            ),
             renderKind: 'inline',
             inlineMode: 'inline_chip',
             railMode: 'rail_large_icon',
         }, override);
     }
 
-    if (resolved.label.startsWith('Reset ·')) {
+    if (resolved.optionPoolId === 'resetCondition') {
         return applyModifierOverride({
-            text: resolved.label.replace("Reset · ", ""),
+            text: cardLabel,
             symbolId: 'reset',
             renderKind: 'rail',
             inlineMode: 'inline_keyword',
@@ -171,9 +281,9 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label.startsWith("Duration ·")) {
+    if (resolved.optionPoolId === "durationMode") {
         return applyModifierOverride({
-            text: resolved.label.replace("Duration · ", ""),
+            text: cardLabel,
             symbolId: 'duration',
             renderKind: 'rail',
             inlineMode: 'inline_keyword',
@@ -181,9 +291,9 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label === "Amplified Mode") {
+    if (resolved.optionPoolId === "amplifiedMode") {
         return applyModifierOverride({
-            text: 'Amplified',
+            text: cardLabel,
             symbolId: 'amplified',
             renderKind: 'rail',
             inlineMode: 'inline_keyword',
@@ -191,9 +301,13 @@ export function getCardModifierDisplay(
         }, override);
     }
 
-    if (resolved.label === "Narrative · Utility" || resolved.label === 'Narrative · Interpretable') {
+    if (
+        resolved.optionPoolId === "narrativeWeight" &&
+        (resolved.selectedOptionId === "utility" ||
+            resolved.selectedOptionId === "interpretable")
+    ) {
         return applyModifierOverride({
-            text: resolved.label.replace("Narrative · ", ""),
+            text: cardLabel,
             symbolId: 'narrative',
             renderKind: 'ignorable',
             inlineMode: 'inline_keyword',
@@ -202,7 +316,7 @@ export function getCardModifierDisplay(
     }
 
     return applyModifierOverride({
-        text: details ? `${resolved.label} (${details})` : resolved.label,
+        text: cardLabel,
         symbolId: 'generic',
         renderKind: 'inline',
         inlineMode: 'inline_chip',
@@ -213,14 +327,39 @@ export function getCardModifierDisplay(
 export function getCardModifierInventory(
     nodes: AbilityBuilderNode[],
     modifierOverrides?: Record<string, AbilityCardModifierOverride>,
-) {
-    return nodes
+    options?: {
+        includeDescriptionNodes?: boolean;
+    },
+): CardModifierInventoryItem[] {
+    const modifierItems: CardModifierInventoryItem[] = nodes
         .filter(isModifierNode)
         .filter((node) => !isActivationProfileModifier(node))
         .map((node) => ({
+            kind: "modifier" as const,
             modifierNodeId: node.id,
             faceKind: getDefaultFaceForModifier(nodes, node),
             display: getCardModifierDisplay(node, modifierOverrides?.[node.id]),
             canIgnore: canIgnoreModifierInCard(node),
         }));
+
+    if (!options?.includeDescriptionNodes) return modifierItems;
+
+    const descriptionItems: CardModifierInventoryItem[] = nodes
+        .filter((node): node is FreeformNodeType => node.type === "freeformText")
+        .map((node) => ({
+            kind: "description" as const,
+            modifierNodeId: node.id,
+            faceKind: getDefaultFaceForLane(nodes, node.data.lane),
+            display: {
+                text: node.data.title?.trim() || "Description",
+                symbolId: "narrative",
+                renderKind: "ignorable",
+                inlineMode: "inline_keyword",
+                railMode: "rail_badge",
+            },
+            canIgnore: true,
+            descriptionText: node.data.text ?? "",
+        }));
+
+    return [...modifierItems, ...descriptionItems];
 }

@@ -570,6 +570,27 @@
     color: rgba(245, 247, 251, 0.72);
 }
 
+.nodePrerequisiteButton {
+    margin-top: 0.35rem;
+    width: 100%;
+    border-radius: 0.68rem;
+    border: 1px solid rgba(210, 178, 76, 0.28);
+    background: rgba(210, 178, 76, 0.12);
+    color: var(--sunder-ink, #f5f7fb);
+    text-align: left;
+    font: inherit;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 0.42rem 0.5rem;
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+.nodePrerequisiteButtonEmpty {
+    color: rgba(245, 247, 251, 0.72);
+    font-style: italic;
+}
+
 .cardCanvas {
     display: grid;
     gap: 1rem;

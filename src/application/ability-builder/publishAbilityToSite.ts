@@ -27,8 +27,13 @@ export async function publishAbilityToSite(params: {
 }): Promise<PublishedAbilityResult> {
     const { nodes, edges, summary, cardState, gateway } = params;
 
-    if (!summary.root) {
-        throw new Error("Add an Ability Root before publishing.");
+    if (
+        summary.actionEconomyId === "unknown" ||
+        summary.resetConditionId === "unknown"
+    ) {
+        throw new Error(
+            "Add one action economy modifier and one reset condition modifier before publishing.",
+        );
     }
 
     if (summary.warnings.length > 0) {

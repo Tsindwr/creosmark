@@ -1,5 +1,6 @@
 import type {
     AbilityLane,
+    CostState,
     ModifierData,
     ModifierOption,
     ModifierFamily,
@@ -8,6 +9,7 @@ import type {
     PaletteTemplate,
 } from "./types.ts";
 import { RULE_TERM_OPTION_POOLS } from "./rule-terms.ts";
+import { POTENTIAL_ABBREVIATIONS } from "../../types/sheet.ts";
 
 // ── Block catalog ─────────────────────────────────────────────────────────────
 
@@ -1028,7 +1030,7 @@ const FLAT_PALETTE_SECTIONS: FlatPaletteSection[] = [
                     },
                     {
                         id: "proficiency",
-                        label: "proficiency",
+                        label: "Proficiency",
                         resolvedLabel: "Increase · Proficiency",
                         description: "Give a target proficiency in a Skill.",
                         cost: { strings: 1, beats: 0, enhancements: 0 },
@@ -1399,6 +1401,29 @@ export function getModifierOptionPool(poolId: string): ModifierOptionPool | unde
     return MODIFIER_OPTION_POOLS[poolId];
 }
 
+function resolveIncreaseRiskinessCost(
+    data: ModifierData,
+    fallback: CostState,
+): CostState {
+    const isIncreaseRiskinessCaveat =
+        data.optionPoolId === "caveatType" &&
+        data.selectedOptionId === "increaseRiskiness";
+    if (!isIncreaseRiskinessCaveat) return fallback;
+
+    const riskinessLevel = data.selectionValues?.riskinessLevel;
+    switch (riskinessLevel) {
+        case "dire":
+            return { strings: -1, beats: 0, enhancements: 0 };
+        case "desperate":
+            return { strings: -1, beats: -5, enhancements: 0 };
+        case "uncertain":
+            return { strings: 0, beats: 0, enhancements: 0 };
+        case "risky":
+        default:
+            return { strings: 0, beats: -5, enhancements: 0 };
+    }
+}
+
 export function resolveModifierData(data: ModifierData): ModifierData {
     if (!data.optionPoolId) return data;
 
@@ -1410,12 +1435,335 @@ export function resolveModifierData(data: ModifierData): ModifierData {
         pool.options[0];
     if (!option) return data;
 
+    const baseCost = data.costOverride ?? option.cost;
+    const resolvedCost = data.costOverride
+        ? baseCost
+        : resolveIncreaseRiskinessCost(
+            {
+                ...data,
+                selectedOptionId: option.id,
+            },
+            baseCost,
+        );
+
     return {
         ...data,
         selectionValues: data.selectionValues ?? {},
         selectedOptionId: option.id,
         label: option.resolvedLabel ?? `${data.label} · ${option.label}`,
         description: option.description,
-        cost: data.costOverride ?? option.cost,
+        cost: resolvedCost,
     };
+}
+
+type ModifierCardLabelResolverContext = {
+    data: ModifierData;
+    selectedOption: ModifierOption | undefined;
+    getOptionLabel: (poolId: string, optionId: string | undefined) => string | undefined;
+};
+
+type ModifierCardLabelResolver = (
+    context: ModifierCardLabelResolverContext,
+) => string;
+
+function resolveOptionLabel(
+    poolId: string,
+    optionId: string | undefined,
+): string | undefined {
+    if (!optionId) return undefined;
+
+    const pool = getModifierOptionPool(poolId);
+    return pool?.options.find((option) => option.id === optionId)?.label;
+}
+
+function resolvePoolOptionIdOrDefault(
+    poolId: string,
+    optionId: string | undefined,
+    preferredFallbackOptionId?: string,
+): string | undefined {
+    if (optionId) return optionId;
+
+    const pool = getModifierOptionPool(poolId);
+    if (
+        preferredFallbackOptionId &&
+        pool?.options.some((option) => option.id === preferredFallbackOptionId)
+    ) {
+        return preferredFallbackOptionId;
+    }
+
+    return pool?.options[0]?.id;
+}
+
+function resolvePotentialAbbreviation(
+    potentialId: string | undefined,
+): string | undefined {
+    if (!potentialId) return undefined;
+
+    return POTENTIAL_ABBREVIATIONS[
+        potentialId as keyof typeof POTENTIAL_ABBREVIATIONS
+    ];
+}
+
+function getModifierCardLabelResolverKey(data: ModifierData): {
+    poolKey: string | undefined;
+    optionKey: string | undefined;
+} {
+    const poolKey = data.optionPoolId;
+    const optionKey =
+        data.optionPoolId && data.selectedOptionId
+            ? `${data.optionPoolId}:${data.selectedOptionId}`
+            : undefined;
+
+    return { poolKey, optionKey };
+}
+
+const MODIFIER_CARD_LABEL_OVERRIDES: Record<string, ModifierCardLabelResolver> = {
+    default: ({ data, selectedOption }) => selectedOption?.resolvedLabel ?? data.label,
+
+    damageBase: ({ data, getOptionLabel }) => {
+        if (data.selectedOptionId !== "initial") {
+            return data.selectedOptionId === "weapon" ? "Weapon Damage" : "Damage";
+        }
+
+        const damageDiePotentialId = resolvePoolOptionIdOrDefault(
+            "volatilityDieRef",
+            data.selectionValues?.damageDie,
+        );
+        const damageDieAbbreviation =
+            resolvePotentialAbbreviation(damageDiePotentialId) ?? "P";
+
+        const targetPotentialId = resolvePoolOptionIdOrDefault(
+            "potentialRef",
+            data.selectionValues?.targetPotential,
+        );
+        const targetPotentialLabel =
+            getOptionLabel("potentialRef", targetPotentialId) ?? "Potential";
+
+        return `1${damageDieAbbreviation}DV to ${targetPotentialLabel}`;
+    },
+    damageIncrease: ({ data, getOptionLabel }) => {
+        const damageDiePotentialId = resolvePoolOptionIdOrDefault(
+            "volatilityDieRef",
+            data.selectionValues?.damageDie,
+        );
+        const damageDieAbbreviation =
+            resolvePotentialAbbreviation(damageDiePotentialId) ?? "P";
+
+        return `1${damageDieAbbreviation}DV`;
+    },
+    damagePriming: () => "+",
+
+    rangeDistance: ({ selectedOption }) =>
+        selectedOption ? `${selectedOption.label}` : "Range",
+    movementDistance: ({ selectedOption }) =>
+        selectedOption ? `Move ${selectedOption.label}` : "Movement",
+
+    "targetingMode:additionalTarget": () => "+1 target",
+    "targetingMode:nearAoe": () => "Near AOE",
+    "targetingMode:closeAoe": () => "Close AOE",
+    "targetingMode:farAoe": () => "Far AOE",
+    targetingMode: ({ selectedOption }) =>
+        selectedOption ? selectedOption.label : "targeting",
+
+    conditionMinor: ({ data, getOptionLabel }) => {
+        const condition = getOptionLabel(
+            "minorConditionNameRef",
+            data.selectionValues?.minorConditionName,
+        );
+        return condition ? `${condition}` : "Minor Condition";
+    },
+    conditionMajor: ({ data, getOptionLabel }) => {
+        const condition = getOptionLabel(
+            "majorConditionNameRef",
+            data.selectionValues?.majorConditionName,
+        );
+        return condition ? `${condition}` : "Major Condition";
+    },
+
+    resetCondition: ({ selectedOption }) => selectedOption?.label ?? "Reset",
+    durationMode: ({ selectedOption }) => selectedOption?.label ?? "Duration",
+
+    increase: ({ data, selectedOption, getOptionLabel }) => {
+        switch (data.selectedOptionId) {
+            case "potential": {
+                const potential = getOptionLabel(
+                    "potentialRef",
+                    data.selectionValues?.increasedPotential,
+                );
+                return potential ? `temp. +1 to ${potential}` : "temp. +1 to Potential";
+            }
+            case "proficiency": {
+                const skill = getOptionLabel(
+                    "skillRef",
+                    data.selectionValues?.increasedSkill,
+                );
+                return skill ? `temp. ${skill} Proficiency` : "temp. Skill Proficiency";
+            }
+            case "advantage": {
+                const skill = getOptionLabel(
+                    "skillRef",
+                    data.selectionValues?.advantageSkill,
+                );
+                return skill && skill !== "Other"
+                    ? `gain ${skill} Advantage`
+                    : "gain Advantage";
+            }
+            case "domain": {
+                const domain = getOptionLabel(
+                    "domainRef",
+                    data.selectionValues?.increasedDomain,
+                );
+                return domain ? `temp. ${domain} Proficiency` : "temp. Domain Proficiency";
+            }
+            case "success":
+                return "increase Success Level";
+            default:
+                return selectedOption ? `Increase ${selectedOption.label}` : "Increase";
+        }
+    },
+
+    recover: ({ data, selectedOption, getOptionLabel }) => {
+        switch (data.selectedOptionId) {
+            case "stress": {
+                const potential = getOptionLabel(
+                    "potentialRef",
+                    data.selectionValues?.recoveredStressPotential,
+                );
+                return potential ? `recover 1 ${potential} Stress` : "recover Stress";
+            }
+            case "resistance": {
+                const potential = getOptionLabel(
+                    "potentialRef",
+                    data.selectionValues?.recoveredResistancePotential,
+                );
+                return potential
+                    ? `recover 1 ${potential} Resistance`
+                    : "recover Resistance";
+            }
+            case "minor-condition": {
+                const condition = getOptionLabel(
+                    "minorConditionNameRef",
+                    data.selectionValues?.recoveredMinorConditionName,
+                );
+                return condition ? `recover from ${condition}` : "recover Minor Condition";
+            }
+            case "major-condition": {
+                const condition = getOptionLabel(
+                    "majorConditionNameRef",
+                    data.selectionValues?.recoveredMajorConditionName,
+                );
+                return condition ? `recover from ${condition}` : "recover Major Condition";
+            }
+            case "stress-track": {
+                const potential = getOptionLabel(
+                    "potentialRef",
+                    data.selectionValues?.clearedStressPotential,
+                );
+                return potential
+                    ? `clear ${potential} Stress Track`
+                    : "clear Stress Track";
+            }
+            case "resistance-track": {
+                const potential = getOptionLabel(
+                    "potentialRef",
+                    data.selectionValues?.clearedResistancePotential,
+                );
+                return potential
+                    ? `clear ${potential} Resistances`
+                    : "clear Resistances";
+            }
+            default:
+                return selectedOption
+                    ? `recover ${selectedOption.label}`
+                    : "recover";
+        }
+    },
+
+    "caveatType:increaseRiskiness": ({ data, getOptionLabel }) => {
+        const riskiness = getOptionLabel(
+            "riskinessRef",
+            data.selectionValues?.riskinessLevel,
+        );
+        return riskiness
+            ? `${riskiness}`
+            : "+1 Riskiness";
+    },
+    "caveatType:prerequisite": ({ data }) => {
+        const title = data.selectionValues?.prerequisiteAbilityTitle?.trim();
+        if (title) return `requires ${title}`;
+
+        return "prerequisite";
+    },
+    "caveatType:spendStress": ({ data, getOptionLabel }) => {
+        const potentialId = resolvePoolOptionIdOrDefault(
+            "potentialRef",
+            data.selectionValues?.spentStressPotential,
+            "might",
+        );
+        const potential = getOptionLabel(
+            "potentialRef",
+            potentialId,
+        );
+        return potential ? `Spend 1 ${potential} Stress` : "Spend 1 Stress";
+    },
+    "caveatType:spendResistance": ({ data, getOptionLabel }) => {
+        const potentialId = resolvePoolOptionIdOrDefault(
+            "potentialRef",
+            data.selectionValues?.spentResistancePotential,
+            "might",
+        );
+        const potential = getOptionLabel(
+            "potentialRef",
+            potentialId,
+        );
+        return potential ? `spend 1 ${potential} Resistance` : "spend 1 Resistance";
+    },
+    "caveatType:testRequired": ({ data, getOptionLabel }) => {
+        const skillId = resolvePoolOptionIdOrDefault(
+            "skillRef",
+            data.selectionValues?.testRequirementSkill,
+            "force",
+        );
+        const skill = getOptionLabel(
+            "skillRef",
+            skillId,
+        );
+        const potentialSelectionId =
+            data.selectionValues?.testRequirementPotential ?? "default";
+        const potential =
+            potentialSelectionId !== "default"
+                ? getOptionLabel("potentialRef", potentialSelectionId)
+                : undefined;
+
+        return potential && skill
+            ? `On a successful ${potential} (${skill}) Test,`
+            : skill
+                ? `On a successful ${skill} Test,`
+                : "On a successful Test,";
+    },
+
+    narrativeWeight: ({ selectedOption }) => selectedOption?.label ?? "*",
+    amplifiedMode: () => "Amplified",
+};
+
+export function resolveModifierCardLabel(data: ModifierData): string {
+    const resolved = resolveModifierData(data);
+    const pool = resolved.optionPoolId
+        ? getModifierOptionPool(resolved.optionPoolId)
+        : undefined;
+    const selectedOption =
+        pool?.options.find((option) => option.id === resolved.selectedOptionId) ??
+        pool?.options[0];
+
+    const { poolKey, optionKey } = getModifierCardLabelResolverKey(resolved);
+    const resolver =
+        (optionKey ? MODIFIER_CARD_LABEL_OVERRIDES[optionKey] : undefined) ??
+        (poolKey ? MODIFIER_CARD_LABEL_OVERRIDES[poolKey] : undefined) ??
+        MODIFIER_CARD_LABEL_OVERRIDES.default;
+
+    return resolver({
+        data: resolved,
+        selectedOption,
+        getOptionLabel: resolveOptionLabel,
+    });
 }

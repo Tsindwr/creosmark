@@ -139,6 +139,7 @@ export function useAbilityBuilderGraph() {
     const [nodes, setNodes, onNodesChange] = useNodesState<AbilityBuilderNode>(initial.nodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initial.nodes[0]?.id ?? null);
+    const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(initial.edges[0]?.id ?? null);
 
     const isActionCard = useMemo(() => isActionCardFromNodes(nodes), [nodes]);
 
@@ -291,12 +292,24 @@ export function useAbilityBuilderGraph() {
         setSelectedNodeId(next.nodes[0]?.id ?? null);
     }
 
+    function loadGraph(nextNodes: AbilityBuilderNode[], nextEdges: Edge[]) {
+        setNodes(nextNodes);
+        setEdges(nextEdges);
+        setSelectedNodeId(nextNodes[0]?.id ?? null);
+        setSelectedEdgeId(nextEdges[0]?.id ?? null);
+    }
+
     function deleteNodeById(nodeId: string) {
         setEdges((current) =>
             current.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
         );
         setNodes((current) => current.filter((node) => node.id !== nodeId));
         setSelectedNodeId((current) => (current === nodeId ? null : current));
+    }
+
+    function deleteEdgeById(edgeId: string) {
+        setEdges((current) => current.filter((edge) => edge.id !== edgeId));
+        setSelectedEdgeId((current) => (current === edgeId ? null : current));
     }
 
     return {
@@ -307,7 +320,9 @@ export function useAbilityBuilderGraph() {
         setNodes,
         setEdges,
         selectedNodeId,
+        selectedEdgeId,
         setSelectedNodeId,
+        setSelectedEdgeId,
         selectedNode,
         selectedModifierResolved,
         selectedModifierOptionPool,
@@ -320,6 +335,8 @@ export function useAbilityBuilderGraph() {
         updateSelectedAbilityRoot,
         updateModifierSelection,
         loadPreset,
+        loadGraph,
         deleteNodeById,
+        deleteEdgeById,
     };
 }

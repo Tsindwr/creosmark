@@ -52,6 +52,7 @@ export type AbilityBuilderContextValue = {
     onEdgesChange: OnEdgesChange<Edge>;
     onConnect: (connection: Connection) => void;
     setSelectedNodeId: (id: string | null) => void;
+    openPrerequisiteAbilityPicker: (modifierNodeId: string) => void;
     canPublish: boolean;
     hasBlockingCardIssues: boolean;
     isPublishing: boolean;
@@ -59,6 +60,7 @@ export type AbilityBuilderContextValue = {
     publishResult: PublishedAbilityResult | null;
     onPublish: () => void;
     onExportJson: () => void;
+    onImportJson: (file: File) => Promise<void>;
     onDragOver: (event: React.DragEvent) => void;
     onDrop: (event: React.DragEvent) => void;
 };

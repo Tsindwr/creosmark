@@ -1,5 +1,4 @@
 import type {
-    AbilityCardFaceKind,
     AbilityCardFaceState,
     AbilityCardFormat,
     AbilityCardModule,
@@ -21,79 +20,27 @@ function makeRulesModule(): AbilityCardModule {
     };
 }
 
-function makeRailModule(): AbilityCardModule {
-    return {
-        id: newId(),
-        type: "icon_rail",
-        items: [],
-    };
-}
-
-function makeTextModule(
-    type: "header_meta" | "attack_notation" | "keyword_line" | "footer_note",
-    text = "",
-): AbilityCardModule {
-    return {
-        id: newId(),
-        type,
-        text,
-    };
-}
-
 function buildActionFaces(): AbilityCardFaceState[] {
     return [
         {
             id: newId(),
             faceKind: "direct",
-            modules: [
-                makeTextModule("attack_notation"),
-                makeRulesModule(),
-                makeRailModule(),
-                makeTextModule("footer_note"),
-            ],
+            modules: [makeRulesModule()],
         },
         {
             id: newId(),
             faceKind: "indirect",
-            modules: [
-                makeTextModule("attack_notation"),
-                makeRulesModule(),
-                makeRailModule(),
-                makeTextModule("footer_note"),
-            ],
+            modules: [makeRulesModule()],
         },
     ];
 }
 
-function buildSingleFace(
-    type: AbilityCardFormat,
-): AbilityCardFaceState[] {
-    if (type === 'trait') {
-        return [
-            {
-                id: newId(),
-                faceKind: "single",
-                modules: [
-                    makeTextModule("header_meta"),
-                    makeTextModule("keyword_line"),
-                    makeRulesModule(),
-                    makeRailModule(),
-                    makeTextModule("footer_note"),
-                ],
-            },
-        ];
-    }
-
+function buildSingleFace(): AbilityCardFaceState[] {
     return [
         {
             id: newId(),
             faceKind: "single",
-            modules: [
-                makeTextModule("attack_notation"),
-                makeRulesModule(),
-                makeRailModule(),
-                makeTextModule("footer_note"),
-            ],
+            modules: [makeRulesModule()],
         },
     ];
 }
@@ -143,7 +90,7 @@ export function createDefaultAbilityCardState(
         faces:
             isSplitCardFormat(format)
                 ? buildActionFaces()
-                : buildSingleFace(format),
+                : buildSingleFace(),
         ignoredModifierNodeIds: [],
         modifierOverrides: {},
     };
@@ -159,6 +106,15 @@ export function normalizeAbilityCardState(
             .filter((node) => node.type === 'marketModifier')
             .map((node) => node.id),
     );
+    const validIgnoredNodeIds = new Set(
+        nodes
+            .filter(
+                (node) =>
+                    node.type === "marketModifier" ||
+                    node.type === "freeformText",
+            )
+            .map((node) => node.id),
+    );
     const currentOverrides = current.modifierOverrides ?? {};
 
     let next = current;
@@ -169,7 +125,7 @@ export function normalizeAbilityCardState(
             titleOverride: current.titleOverride,
             subtitleOverride: current.subtitleOverride,
             ignoredModifierNodeIds: current.ignoredModifierNodeIds.filter((id) =>
-                validModifierIds.has(id),
+                validIgnoredNodeIds.has(id),
             ),
             modifierOverrides: Object.fromEntries(
                 Object.entries(currentOverrides).filter(([modifierNodeId]) =>
@@ -182,7 +138,7 @@ export function normalizeAbilityCardState(
     return {
         ...next,
         ignoredModifierNodeIds: next.ignoredModifierNodeIds.filter((id) =>
-            validModifierIds.has(id),
+            validIgnoredNodeIds.has(id),
         ),
         modifierOverrides: Object.fromEntries(
             Object.entries(next.modifierOverrides ?? {}).filter(([modifierNodeId]) =>
@@ -206,6 +162,15 @@ export function normalizeAbilityCardState(
                         ...module,
                         items: module.items.filter((item) =>
                             validModifierIds.has(item.modifierNodeId),
+                        ),
+                    };
+                }
+
+                if (module.runs) {
+                    return {
+                        ...module,
+                        runs: module.runs.filter((run) =>
+                            run.kind === "text" ? true : validModifierIds.has(run.modifierNodeId),
                         ),
                     };
                 }

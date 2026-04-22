@@ -25,7 +25,18 @@ export const POTENTIAL_LABELS: Record<PotentialKey, string> = {
     wit: "Wit",
     heart: "Heart",
     tether: "Tether",
-}
+};
+
+export const POTENTIAL_ABBREVIATIONS: Record<PotentialKey, string> = {
+  might: "M",
+  finesse: "F",
+  nerve: "N",
+  seep: "S",
+  instinct: "I",
+  wit: "W",
+  heart: "H",
+  tether: "T",
+};
 
 export type SheetSourceKind =
   | "manual"
@@ -292,6 +303,13 @@ export type CharacterHeaderState = {
 
 export type RollMode = "normal" | "advantage" | "disadvantage";
 export type RiskinessLevel = "uncertain" | "risky" | "dire" | "desperate";
+
+export const RISKINESS_LABELS: Record<RiskinessLevel, string> = {
+  uncertain: "Uncertain",
+  risky: "Risky",
+  dire: "Dire",
+  desperate: "Desperate",
+};
 
 export type RollComposerDraft = {
   potentialKey: PotentialKey;
