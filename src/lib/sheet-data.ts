@@ -107,6 +107,7 @@ export const ARCHETYPES: ArchetypeData[] = [
     { id: "frontliner", label: "Frontliner", levels: 0 },
     { id: "halfcaster", label: "Half-caster", levels: 0 },
     { id: "healer", label: "Healer", levels: 0 },
+    { id: "tank", label: "Tank", levels: 0 },
 ];
 
 export function getArchetypeLabel(id: ArchetypeId): string {
