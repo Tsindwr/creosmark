@@ -40,7 +40,7 @@ import {
     updateArchetypeLevel as updateArchetypeLevelCommand,
     updateArchetypeLevels as updateArchetypeLevelsCommand,
     updateFirstArchetypeBoons as updateFirstArchetypeBoonsCommand,
-    movePotentialPerk as movePotentialPerkCommand,
+    movePotentialPerk as movePotentialPerkCommand, getTierForAbsoluteLevelIndex, getBlockedPotentialKeysForTier,
 } from "../../application/character-sheet/commands.ts";
 import {
     getAllowedPerkFaces,
@@ -927,6 +927,7 @@ export default function EditorWorkspace({
                                 const absoluteLevel = index + 1;
                                 const levelTier = getTierForAbsoluteLevelIndex(index);
                                 const blockedPotentialKeys = getBlockedPotentialKeysForTier(
+                                    sheet,
                                     levelTier,
                                     level.id,
                                 );

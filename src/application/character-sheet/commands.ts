@@ -48,11 +48,11 @@ function getResolverPerkRecord(
   return result;
 }
 
-function getTierForAbsoluteLevelIndex(index: number): number {
+export function getTierForAbsoluteLevelIndex(index: number): number {
   return Math.floor(index / 4) + 1;
 }
 
-function getBlockedPotentialKeysForTier(
+export function getBlockedPotentialKeysForTier(
   sheet: CharacterSheetState,
   tier: number,
   currentLevelId: string,
