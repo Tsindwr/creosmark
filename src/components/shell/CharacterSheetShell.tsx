@@ -26,6 +26,7 @@ import ManageDrawer from "../manage/ManageDrawer";
 import CampaignRollWidget from "../roll/CampaignRollWidget.tsx";
 import RollHistoryDrawer from "../roll/RollHistoryDrawer.tsx";
 import NavBar from "../common/NavBar.tsx";
+import CharacterAbilitiesPanel from "../abilities/CharacterAbilitiesPanel.tsx";
 import type { CampaignAssignment, RollBroadcastMode } from "../../types/roll-feed.ts";
 import type { TestResult } from "../../lib/rolling/types.ts";
 import styles from "./CharacterSheetShell.module.css";
@@ -202,9 +203,9 @@ export default function CharacterSheetShell({
                         ) : null}
 
                         {activeTab === "abilities" ? (
-                            <Placeholder
-                                title="Abilities"
-                                copy="Use this space next for the big ability browser and card detail panel."
+                            <CharacterAbilitiesPanel
+                                abilityIds={sheet.abilityIds}
+                                onChange={(abilityIds) => setSheetField("abilityIds", abilityIds)}
                             />
                         ) : null}
 

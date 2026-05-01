@@ -14,6 +14,7 @@ import {
 } from "../../domain";
 import AbilityCardCanvas from "../../presentation/abilities/cards/AbilityCardCanvas";
 import { useAbilityBuilderContext } from "./AbilityBuilderContext";
+import { routes } from "../../lib/routing.ts";
 
 export default function BuilderWorkspace() {
     const {
@@ -26,6 +27,7 @@ export default function BuilderWorkspace() {
         onEdgesChange,
         onConnect,
         setSelectedNodeId,
+        setSelectedEdgeId,
         cardState,
         setCardState,
         summary,
@@ -121,6 +123,10 @@ export default function BuilderWorkspace() {
                         Import JSON
                     </button>
 
+                    <a href={routes.abilitiesAdmin()} className={styles.exportButton}>
+                        Ability Admin
+                    </a>
+
                     <input
                         ref={importInputRef}
                         type="file"
@@ -165,8 +171,18 @@ export default function BuilderWorkspace() {
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
-                    onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-                    onPaneClick={() => setSelectedNodeId(null)}
+                    onNodeClick={(_, node) => {
+                        setSelectedNodeId(node.id);
+                        setSelectedEdgeId(null);
+                    }}
+                    onEdgeClick={(_, edge) => {
+                        setSelectedEdgeId(edge.id);
+                        setSelectedNodeId(null);
+                    }}
+                    onPaneClick={() => {
+                        setSelectedNodeId(null);
+                        setSelectedEdgeId(null);
+                    }}
                     fitView
                     className={styles.flow}
                     defaultEdgeOptions={{ markerEnd: { type: "arrowclosed" } }}

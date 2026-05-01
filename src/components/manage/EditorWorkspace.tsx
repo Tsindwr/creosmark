@@ -48,6 +48,7 @@ import {
     getPotentialBonusTotal,
     getPotentialTotalScore,
 } from "../../domain/character-sheet/invariants.ts";
+import EditorAbilitiesSection from "./EditorAbilitiesSection.tsx";
 
 type BuilderTabId = EditorTabId | "origin";
 
@@ -1448,6 +1449,10 @@ export default function EditorWorkspace({
                             </article>
                         </div>
                     </section>
+                ) : null}
+
+                {tab === "abilities" ? (
+                    <EditorAbilitiesSection sheet={sheet} onChange={onChange} />
                 ) : null}
 
                 {tab === "goals" ? (

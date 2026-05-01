@@ -56,10 +56,42 @@ export type OwnedPrerequisitesForCharacter = {
     archetypeIds: ArchetypeId[];
 };
 
+export type UserType = "common" | "admin";
+
+type AbilityModerationRow = Pick<
+    AbilityRow,
+    | "id"
+    | "owner_id"
+    | "title"
+    | "ability_kind"
+    | "status"
+    | "ability_json"
+    | "card_json"
+    | "created_at"
+    | "updated_at"
+    | "published_at"
+>;
+
+export type AbilityModerationSummary = {
+    id: string;
+    ownerId: string;
+    title: string;
+    abilityKind: string;
+    status: "draft" | "published";
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string | null;
+    abilityDocument: AbilityPublishDocument;
+};
+
 const ABILITY_REFERENCE_FIELDS =
     "id, owner_id, title, ability_kind, status, ability_json, card_json, published_at, updated_at";
+const ABILITY_MODERATION_FIELDS =
+    "id, owner_id, title, ability_kind, status, ability_json, card_json, created_at, updated_at, published_at";
 const UUID_PATTERN =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+type AbilityNode = AbilityPublishDocument["graph"]["nodes"][number];
+type ModifierAbilityNode = Extract<AbilityNode, { type: "marketModifier" }>;
 
 function parseSearchWords(text: string): string[] {
     return text
@@ -100,13 +132,37 @@ function normalizeArchetypeId(input: string | undefined): ArchetypeId | null {
     return byLabel?.id ?? null;
 }
 
-function extractPrerequisiteSelectionNodes(document: AbilityPublishDocument) {
-    return document.graph.nodes.filter(
-        (node) =>
-            node.type === "marketModifier" &&
-            node.data.optionPoolId === "caveatType" &&
-            node.data.selectedOptionId === "prerequisite",
+function isPrerequisiteSelectionNode(node: AbilityNode): node is ModifierAbilityNode {
+    return (
+        node.type === "marketModifier" &&
+        node.data.optionPoolId === "caveatType" &&
+        node.data.selectedOptionId === "prerequisite"
     );
+}
+
+function extractPrerequisiteSelectionNodes(
+    document: AbilityPublishDocument,
+): ModifierAbilityNode[] {
+    return document.graph.nodes.filter(isPrerequisiteSelectionNode);
+}
+
+function getDocumentAbilityId(document: AbilityPublishDocument): string | null {
+    const record = document as unknown as Record<string, unknown>;
+    const abilityId = record.abilityId;
+    return typeof abilityId === "string" ? abilityId : null;
+}
+
+function withDocumentAbilityId(
+    document: AbilityPublishDocument,
+    abilityId: string,
+): AbilityPublishDocument {
+    const current = getDocumentAbilityId(document);
+    if (current === abilityId) return document;
+
+    return {
+        ...document,
+        abilityId,
+    } as AbilityPublishDocument;
 }
 
 function extractPrerequisiteAbilityIds(document: AbilityPublishDocument): string[] {
@@ -218,11 +274,11 @@ function describeAbilityBody(document: AbilityPublishDocument): string {
 function resolveAbilityDocument(
     row: AbilityReferenceSummaryRow,
 ): AbilityPublishDocument {
-    const base = row.ability_json;
-    if (base.card || !row.card_json) return base;
+    const withIdentity = withDocumentAbilityId(row.ability_json, row.id);
+    if (withIdentity.card || !row.card_json) return withIdentity;
 
     return {
-        ...base,
+        ...withIdentity,
         card: row.card_json,
     };
 }
@@ -250,6 +306,20 @@ function toAbilityReferenceSummary(
         descriptionText: describeAbilityBody(document),
         prerequisiteAbilityIds: extractPrerequisiteAbilityIds(document),
         directArchetypeIds: extractDirectArchetypeIds(document),
+    };
+}
+
+function toAbilityModerationSummary(row: AbilityModerationRow): AbilityModerationSummary {
+    return {
+        id: row.id,
+        ownerId: row.owner_id,
+        title: row.title,
+        abilityKind: row.ability_kind,
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        publishedAt: row.published_at,
+        abilityDocument: resolveAbilityDocument(row),
     };
 }
 
@@ -336,6 +406,7 @@ function extractOwnedAbilityIds(row: CharacterSheetRow): string[] {
     const sheet = row.sheet_json as Record<string, unknown>;
 
     const directCandidates: unknown[] = [
+        row.ability_ids,
         sheet.abilityIds,
         sheet.ownedAbilityIds,
         sheet.learnedAbilityIds,
@@ -425,8 +496,21 @@ export async function publishAbilityDocument(
 
     if (error) throw error;
 
+    const abilityId = data.id as string;
+    const persistedDocument = withDocumentAbilityId(document, abilityId);
+    if (persistedDocument !== document) {
+        const { error: syncError } = await supabase
+            .from("abilities")
+            .update({
+                ability_json: persistedDocument,
+            })
+            .eq("id", abilityId)
+            .eq("owner_id", userId);
+        if (syncError) throw syncError;
+    }
+
     return {
-        id: data.id as string,
+        id: abilityId,
         title: data.title as string,
         updatedAt: data.updated_at as string,
     };
@@ -560,4 +644,71 @@ export async function listOwnedPrerequisitesForCharacter(
         abilityIds: extractOwnedAbilityIds(row),
         archetypeIds: extractOwnedArchetypeIds(row),
     };
+}
+
+export async function getCurrentUserType(): Promise<UserType> {
+    const userId = await requireUserId();
+
+    const { data, error } = await supabase
+        .from("user_profiles")
+        .select("user_type")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+    if (error) throw error;
+
+    return data?.user_type === "admin" ? "admin" : "common";
+}
+
+export async function listModerationAbilities(
+    status: "draft" | "published" | "all" = "draft",
+): Promise<AbilityModerationSummary[]> {
+    let query = supabase
+        .from("abilities")
+        .select(ABILITY_MODERATION_FIELDS)
+        .order("updated_at", { ascending: false });
+
+    if (status !== "all") {
+        query = query.eq("status", status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return ((data ?? []) as AbilityModerationRow[]).map(toAbilityModerationSummary);
+}
+
+export async function saveModerationAbilityDraft(params: {
+    abilityId: string;
+    title: string;
+    abilityKind: string;
+    abilityDocument: AbilityPublishDocument;
+}): Promise<void> {
+    const { abilityId, title, abilityKind, abilityDocument } = params;
+    const normalizedDocument = withDocumentAbilityId(abilityDocument, abilityId);
+
+    const { error } = await supabase
+        .from("abilities")
+        .update({
+            title,
+            ability_kind: abilityKind,
+            ability_json: normalizedDocument,
+            card_json: normalizedDocument.card,
+        })
+        .eq("id", abilityId);
+
+    if (error) throw error;
+}
+
+export async function approveAbilityDraft(abilityId: string): Promise<void> {
+    const { error } = await supabase
+        .from("abilities")
+        .update({
+            status: "published",
+            published_at: new Date().toISOString(),
+        })
+        .eq("id", abilityId);
+
+    if (error) throw error;
 }

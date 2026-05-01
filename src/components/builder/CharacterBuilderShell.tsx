@@ -15,7 +15,8 @@ const BUILDER_STEPS = [
     { id: 'origin', label: '2. Origin' },
     { id: 'potentials', label: '3. Potentials' },
     { id: 'proficiencies', label: '4. Proficiencies' },
-    { id: 'goals', label: '5. Goals' },
+    { id: 'abilities', label: '5. Abilities' },
+    { id: 'goals', label: '6. Goals' },
 ] as const;
 
 type BuilderStepId = (typeof BUILDER_STEPS)[number]['id'];
