@@ -1,7 +1,6 @@
 import { supabase } from "./client";
 import type { CharacterSheetState } from "../../types/sheet";
 import type { CampaignRecord, CampaignSummary, CharacterSheetSummary } from "../../types/library";
-import {getCharacterLevelFromSummary} from "../library-data.ts";
 
 export type CharacterSheetRow = {
     id: string;

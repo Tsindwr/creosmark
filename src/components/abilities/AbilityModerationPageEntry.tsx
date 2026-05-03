@@ -267,7 +267,7 @@ function InnerAbilityModerationPage() {
 export default function AbilityModerationPageEntry() {
     return (
         <AuthGate fallback={<SignInScreen />}>
-            <AppShell activePath={routes.abilitiesHome()}>
+            <AppShell activePath={routes.abilitiesAdmin()}>
                 <InnerAbilityModerationPage />
             </AppShell>
         </AuthGate>

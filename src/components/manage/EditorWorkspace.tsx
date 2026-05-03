@@ -20,7 +20,7 @@ import {
     type EditorTabId,
     type DomainId,
 } from '../../lib/sheet-data.ts';
-import { BASE_PERKS } from "../../lib/rolling/perkData.ts";
+import { BASE_PERKS } from "../../domain";
 import type {PerkDefinition, PerkId} from "../../lib/rolling/types.ts";
 import {
     addArchetypeLevel as addArchetypeLevelCommand,
@@ -47,7 +47,7 @@ import {
     getPotentialBaseScore,
     getPotentialBonusTotal,
     getPotentialTotalScore,
-} from "../../domain/character-sheet/invariants.ts";
+} from "../../domain";
 import EditorAbilitiesSection from "./EditorAbilitiesSection.tsx";
 
 type BuilderTabId = EditorTabId | "origin";

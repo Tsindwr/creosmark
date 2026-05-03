@@ -84,14 +84,34 @@ export type AbilityModerationSummary = {
     abilityDocument: AbilityPublishDocument;
 };
 
+export type AbilityPlayCard = {
+    id: string;
+    title: string;
+    abilityKind: string;
+    updatedAt: string;
+    abilityDocument: AbilityPublishDocument;
+};
+
 const ABILITY_REFERENCE_FIELDS =
     "id, owner_id, title, ability_kind, status, ability_json, card_json, published_at, updated_at";
 const ABILITY_MODERATION_FIELDS =
     "id, owner_id, title, ability_kind, status, ability_json, card_json, created_at, updated_at, published_at";
+const ABILITY_PLAY_CARD_FIELDS =
+    "id, title, ability_kind, ability_json, card_json, updated_at";
 const UUID_PATTERN =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type AbilityNode = AbilityPublishDocument["graph"]["nodes"][number];
 type ModifierAbilityNode = Extract<AbilityNode, { type: "marketModifier" }>;
+type AbilityDocumentRow = {
+    id: string;
+    ability_json: AbilityPublishDocument;
+    card_json: AbilityCardState | null;
+};
+type AbilityPlayCardRow = AbilityDocumentRow & {
+    title: string;
+    ability_kind: string;
+    updated_at: string;
+};
 
 function parseSearchWords(text: string): string[] {
     return text
@@ -271,9 +291,7 @@ function describeAbilityBody(document: AbilityPublishDocument): string {
     return segments.join(" ");
 }
 
-function resolveAbilityDocument(
-    row: AbilityReferenceSummaryRow,
-): AbilityPublishDocument {
+function resolveAbilityDocument(row: AbilityDocumentRow): AbilityPublishDocument {
     const withIdentity = withDocumentAbilityId(row.ability_json, row.id);
     if (withIdentity.card || !row.card_json) return withIdentity;
 
@@ -319,6 +337,16 @@ function toAbilityModerationSummary(row: AbilityModerationRow): AbilityModeratio
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         publishedAt: row.published_at,
+        abilityDocument: resolveAbilityDocument(row),
+    };
+}
+
+function toAbilityPlayCard(row: AbilityPlayCardRow): AbilityPlayCard {
+    return {
+        id: row.id,
+        title: row.title,
+        abilityKind: row.ability_kind,
+        updatedAt: row.updated_at,
         abilityDocument: resolveAbilityDocument(row),
     };
 }
@@ -711,4 +739,38 @@ export async function approveAbilityDraft(abilityId: string): Promise<void> {
         .eq("id", abilityId);
 
     if (error) throw error;
+}
+
+export async function listAbilityPlayCardsByIds(
+    abilityIds: string[],
+): Promise<AbilityPlayCard[]> {
+    const normalizedIds = Array.from(
+        new Set(
+            abilityIds
+                .map((value) => value.trim())
+                .filter(Boolean),
+        ),
+    );
+    if (normalizedIds.length === 0) return [];
+
+    const { data, error } = await supabase
+        .from("abilities")
+        .select(ABILITY_PLAY_CARD_FIELDS)
+        .in("id", normalizedIds);
+
+    if (error) throw error;
+
+    const byId = new Map<string, AbilityPlayCardRow>();
+    for (const row of (data ?? []) as AbilityPlayCardRow[]) {
+        byId.set(row.id, row);
+    }
+
+    const ordered: AbilityPlayCard[] = [];
+    for (const abilityId of normalizedIds) {
+        const row = byId.get(abilityId);
+        if (!row) continue;
+        ordered.push(toAbilityPlayCard(row));
+    }
+
+    return ordered;
 }

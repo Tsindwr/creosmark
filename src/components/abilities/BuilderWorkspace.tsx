@@ -14,7 +14,6 @@ import {
 } from "../../domain";
 import AbilityCardCanvas from "../../presentation/abilities/cards/AbilityCardCanvas";
 import { useAbilityBuilderContext } from "./AbilityBuilderContext";
-import { routes } from "../../lib/routing.ts";
 
 export default function BuilderWorkspace() {
     const {
@@ -122,10 +121,6 @@ export default function BuilderWorkspace() {
                     >
                         Import JSON
                     </button>
-
-                    <a href={routes.abilitiesAdmin()} className={styles.exportButton}>
-                        Ability Admin
-                    </a>
 
                     <input
                         ref={importInputRef}

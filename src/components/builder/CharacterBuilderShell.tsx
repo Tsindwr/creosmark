@@ -8,7 +8,7 @@ import BuilderPotentialRoller, {
     type BuilderPotentialRollRequest,
 } from "./BuilderPotentialRoller.tsx";
 import styles from './CharacterBuilderShell.module.css';
-import { applyRolledPotentialBaseScore } from "../../application/character-sheet/commands.ts";
+import { applyRolledPotentialBaseScore } from "../../application";
 
 const BUILDER_STEPS = [
     { id: 'identity', label: '1. Identity' },
