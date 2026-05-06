@@ -1,4 +1,11 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState
+} from "react";
 import {
     type AbilityCardFaceState,
     type AbilityCardState,
@@ -27,13 +34,20 @@ type PlaymatCard = {
     document: AbilityPublishDocument;
 };
 
+type CardSpotlightState = {
+    card: PlaymatCard;
+    faceIndex: number;
+    originRect: DOMRectInit | null;
+    isClosing: boolean;
+}
+
 type HandFanProps = {
     title: string;
     cards: PlaymatCard[];
     side: "left" | "right";
     previewFaceIndexByCardId: Record<string, number>;
     flippingCardIds: Record<string, boolean>;
-    onCardSelect: (card: PlaymatCard) => void;
+    onCardSelect: (card: PlaymatCard, originElement?: HTMLElement) => void;
     onCardFaceToggle: (event: React.MouseEvent<HTMLElement>, card: PlaymatCard) => void;
 };
 
@@ -283,12 +297,63 @@ function resolveContentDensity(
     return "normal";
 }
 
+function buildCardSpotlightStyle(
+    spotlight: CardSpotlightState,
+): React.CSSProperties {
+    if (typeof window === 'undefined') {
+        return {};
+    }
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let targetHeightPx = Math.min(
+        viewportWidth * 0.78,
+        viewportHeight - 48,
+    );
+
+    let targetWidthPx = targetHeightPx * 63 / 88;
+
+    // Safety for narrow screens.
+    const maxWidthPx = viewportWidth - 48;
+    if (targetWidthPx > maxWidthPx) {
+        targetWidthPx = maxWidthPx;
+        targetHeightPx = targetWidthPx * 88 / 63;
+    }
+
+    const origin = spotlight.originRect;
+
+    const originCenterX = origin
+        ? (origin.x ?? 0) + (origin.width ?? 0) / 2
+        : viewportWidth / 2;
+
+    const originCenterY = origin
+        ? (origin.y ?? 0) + (origin.height ?? 0) / 2
+        : viewportHeight / 2;
+
+    const fromX = originCenterX - viewportWidth / 2;
+    const fromY = originCenterY - viewportHeight / 2;
+
+    const fromScale = origin?.height
+        ? Math.max(0.2, Math.min(1.1, origin.height / targetHeightPx))
+        : 0.45;
+
+    return {
+        "--spotlight-card-width": `${targetWidthPx.toFixed(2)}px`,
+        "--spotlight-card-height": `${targetHeightPx.toFixed(2)}px`,
+        "--spotlight-from-x": `${fromX.toFixed(2)}px`,
+        "--spotlight-from-y": `${fromY.toFixed(2)}px`,
+        "--spotlight-from-scale": `${fromScale.toFixed(3)}`,
+    } as React.CSSProperties;
+}
+
 function CardPreview(props: {
     card: PlaymatCard;
     faceIndex?: number;
     className?: string;
     isFlipping?: boolean;
     onFaceBadgeClick?: React.MouseEventHandler<HTMLElement>;
+    displayMode?: "tray" | "full";
 }) {
     const {
         card,
@@ -296,32 +361,51 @@ function CardPreview(props: {
         className,
         isFlipping = false,
         onFaceBadgeClick,
+        displayMode = 'tray',
     } = props;
+
     const faces = card.document.card.faces;
     const face = faces[faceIndex] ?? faces[0];
     if (!face) return null;
+
     const density = resolveContentDensity(card, face);
 
+    const cardFrame = (
+        <AbilityCardFrame
+            format={card.document.card.format}
+            faceKind={face.faceKind}
+            title={card.title}
+            subtitle={card.subtitle}
+            resetLabel={resolveResetLabel(card.document)}
+            preview="preview"
+            onFaceBadgeClick={onFaceBadgeClick}
+            contentDensity={density}
+        >
+            <AbilityCardModuleRenderer
+                nodes={card.document.graph.nodes}
+                cardState={card.document.card}
+                faceId={face.id}
+                previewMode="preview"
+                onCardStateChange={NOOP_CARD_STATE_CHANGE}
+            />
+        </AbilityCardFrame>
+    );
+
+    if (displayMode === "full") {
+        return (
+            <div className={`${className ?? ""} ${isFlipping ? styles.previewFlip : ""}`.trim()}>
+                {cardFrame}
+            </div>
+        );
+    }
+
     return (
-        <div className={`${className ?? ""} ${isFlipping ? styles.previewFlip : ""}`.trim()}>
-            <AbilityCardFrame
-                format={card.document.card.format}
-                faceKind={face.faceKind}
-                title={card.title}
-                subtitle={card.subtitle}
-                resetLabel={resolveResetLabel(card.document)}
-                preview="preview"
-                onFaceBadgeClick={onFaceBadgeClick}
-                contentDensity={density}
-            >
-                <AbilityCardModuleRenderer
-                    nodes={card.document.graph.nodes}
-                    cardState={card.document.card}
-                    faceId={face.id}
-                    previewMode="preview"
-                    onCardStateChange={NOOP_CARD_STATE_CHANGE}
-                />
-            </AbilityCardFrame>
+        <div className={`${className ?? ""} ${styles.scaledCardSlot}`.trim()}>
+            <div className={styles.scaledCardInner}>
+                <div className={isFlipping ? styles.previewFlip : undefined}>
+                    {cardFrame}
+                </div>
+            </div>
         </div>
     );
 }
@@ -346,7 +430,9 @@ function HandFan({
         const resolveCssLengthToPx = (rawValue: string): number => {
             const trimmed = rawValue.trim();
             if (!trimmed) return 0;
+
             if (trimmed.endsWith("px")) return Number.parseFloat(trimmed) || 0;
+
             if (trimmed.endsWith("rem")) {
                 const rootSize = Number.parseFloat(
                     window.getComputedStyle(document.documentElement).fontSize,
@@ -356,38 +442,67 @@ function HandFan({
             return Number.parseFloat(trimmed) || 0;
         };
 
-        const railRect = rail.getBoundingClientRect();
-        const computedStyle = window.getComputedStyle(rail);
-        const paddingLeftPx = Number.parseFloat(computedStyle.paddingLeft) || 0;
-        const paddingRightPx = Number.parseFloat(computedStyle.paddingRight) || 0;
-        const listMarginBudgetPx = 8;
-        const railWidthPx = Math.max(
-            0,
-            railRect.width - paddingLeftPx - paddingRightPx - listMarginBudgetPx,
-        );
+        const updateCardStep = () => {
+            const railRect = rail.getBoundingClientRect();
+            const computedStyle = window.getComputedStyle(rail);
 
-        const cardWidthRaw = window
-            .getComputedStyle(rail)
-            .getPropertyValue("--hand-card-width");
-        const firstCardEl = rail.querySelector("[data-hand-card='true']") as HTMLButtonElement | null;
-        const measuredCardWidthPx = firstCardEl?.getBoundingClientRect().width ?? 0;
-        const cardWidthPxFromVar = resolveCssLengthToPx(cardWidthRaw);
-        const cardWidthPx = cardWidthPxFromVar > 0 ? cardWidthPxFromVar : measuredCardWidthPx;
+            const paddingLeftPx = Number.parseFloat(computedStyle.paddingLeft) || 0;
+            const paddingRightPx = Number.parseFloat(computedStyle.paddingRight) || 0;
 
-        if (cards.length <= 1) {
-            setCardStepPx(cardWidthPx > 0 ? cardWidthPx : 160);
-            return;
-        }
-        if (cardWidthPx <= 0 || railWidthPx <= 0) {
-            setCardStepPx(90);
-            return;
-        }
+            const railWidthPx = Math.max(
+                0,
+                railRect.width - paddingLeftPx - paddingRightPx,
+            );
 
-        const fitStep = (railWidthPx - cardWidthPx - 8) / (cards.length - 1);
-        const maxStep = cardWidthPx * 0.52;
-        const resolvedStep = Math.max(0, Math.min(maxStep, fitStep));
-        setCardStepPx(Number(resolvedStep.toFixed(2)));
-    }, [cards.length, side]);
+            const firstCardEl = rail.querySelector(
+                "[data-hand-card='true']",
+            ) as HTMLButtonElement | null;
+
+            const measuredCardWidthPx = firstCardEl?.getBoundingClientRect().width ?? 0;
+
+            const cardWidthRaw = computedStyle.getPropertyValue("--hand-card-width");
+            const cardWidthPxFromVar = resolveCssLengthToPx(cardWidthRaw);
+
+            // Prefer measured width because transformed/slot-based previews may not match the raw CSS var.
+            const cardWidthPx =
+                measuredCardWidthPx > 0 ? measuredCardWidthPx : cardWidthPxFromVar;
+
+            if (cards.length <= 1) {
+                setCardStepPx(cardWidthPx > 0 ? cardWidthPx : 160);
+                return;
+            }
+
+            if (cardWidthPx <= 0 || railWidthPx <= 0) {
+                setCardStepPx(90);
+                return;
+            }
+
+            const edgeGutterPx = 12;
+
+            // This is the step required for:
+            // left edge of first card visible +
+            // right edge of last card visible.
+            const fitStep =
+                (railWidthPx - cardWidthPx - edgeGutterPx) / (cards.length - 1);
+
+            // Prevent silly over-spreading on very wide monitors.
+            const maxComfortableStep = cardWidthPx * 0.72;
+
+            const resolvedStep = Math.max(
+                0,
+                Math.min(maxComfortableStep, fitStep),
+            );
+
+            setCardStepPx(Number(resolvedStep.toFixed(2)));
+        };
+
+        updateCardStep();
+
+        const observer = new ResizeObserver(updateCardStep);
+        observer.observe(rail);
+
+        return () => observer.disconnect();
+    }, [cards.length]);
 
     return (
         <section className={`${styles.handZone} ${side === "right" ? styles.handZoneRight : styles.handZoneLeft}`}>
@@ -420,7 +535,7 @@ function HandFan({
                             type="button"
                             data-hand-card="true"
                             className={styles.handCardButton}
-                            onClick={() => onCardSelect(card)}
+                            onClick={(event) => onCardSelect(card, event.currentTarget)}
                             style={
                                 {
                                     "--hand-y": `${translateY.toFixed(2)}px`,
@@ -455,10 +570,26 @@ export default function CharacterAbilitiesPanel({
     const [previewFaceIndexByCardId, setPreviewFaceIndexByCardId] = useState<Record<string, number>>({});
     const [flippingCardIds, setFlippingCardIds] = useState<Record<string, boolean>>({});
 
-    const [overlayCard, setOverlayCard] = useState<PlaymatCard | null>(null);
-    const [overlayFaceIndex, setOverlayFaceIndex] = useState(0);
+    const [spotlight, setSpotlight] = useState<CardSpotlightState | null>(null);
+    const spotlightCloseTimerRef = useRef<number | null>(null);
 
     const flipTimerByCardIdRef = useRef<Record<string, number>>({});
+
+    const closeSpotlight = useCallback(() => {
+        setSpotlight((current) => {
+            if (!current || current.isClosing) return current;
+            return { ...current, isClosing: true };
+        });
+
+        if (spotlightCloseTimerRef.current) {
+            window.clearTimeout(spotlightCloseTimerRef.current);
+        }
+
+        spotlightCloseTimerRef.current = window.setTimeout(() => {
+            setSpotlight(null);
+            spotlightCloseTimerRef.current = null;
+        }, 190);
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -504,22 +635,26 @@ export default function CharacterAbilitiesPanel({
     }, [abilityIds]);
 
     useEffect(() => {
-        if (!overlayCard) return;
+        if (!spotlight) return;
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key !== "Escape") return;
             event.preventDefault();
-            setOverlayCard(null);
+            closeSpotlight();
         };
 
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [overlayCard]);
+    }, [spotlight, closeSpotlight]);
 
     useEffect(() => {
         return () => {
             for (const timerId of Object.values(flipTimerByCardIdRef.current)) {
                 window.clearTimeout(timerId);
+            }
+
+            if (spotlightCloseTimerRef.current) {
+                window.clearTimeout(spotlightCloseTimerRef.current);
             }
         };
     }, []);
@@ -533,9 +668,54 @@ export default function CharacterAbilitiesPanel({
         return Math.max(0, Math.min(configured, maxIndex));
     };
 
-    const openOverlayFromCard = (card: PlaymatCard) => {
-        setOverlayCard(card);
-        setOverlayFaceIndex(resolvePreviewFaceIndex(card));
+    const openSpotlightFromCard = (
+        card: PlaymatCard,
+        originElement?: HTMLElement,
+    ) => {
+        const rect = originElement?.getBoundingClientRect();
+
+        setSpotlight({
+            card,
+            faceIndex: resolvePreviewFaceIndex(card),
+            originRect: rect
+                ? {
+                    x: rect.left,
+                    y: rect.top,
+                    width: rect.width,
+                    height: rect.height,
+                }
+                : null,
+            isClosing: false,
+        });
+    };
+
+    const toggleSpotlightFace = (
+        event: React.MouseEvent<HTMLElement>,
+        card: PlaymatCard,
+    ) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const currentFaceIndex =
+            spotlight?.card.id === card.id
+                ? spotlight.faceIndex
+                : resolvePreviewFaceIndex(card);
+
+        const nextFaceIndex = resolveNextFaceIndex(card, currentFaceIndex);
+        if (nextFaceIndex === currentFaceIndex) return;
+
+        setSpotlight((current) => {
+            if (!current || current.card.id !== card.id) return current;
+            return {
+                ...current,
+                faceIndex: nextFaceIndex,
+            };
+        });
+
+        setPreviewFaceIndexByCardId((current) => ({
+            ...current,
+            [card.id]: nextFaceIndex,
+        }));
     };
 
     const toggleCardFace = (
@@ -602,8 +782,10 @@ export default function CharacterAbilitiesPanel({
         [cards],
     );
 
-    const overlayFaces = overlayCard?.document.card.faces ?? [];
-    const overlayFace = overlayFaces[overlayFaceIndex] ?? overlayFaces[0] ?? null;
+    const spotlightFace =
+        spotlight?.card.document.card.faces[spotlight?.faceIndex] ??
+        spotlight?.card.document.card.faces[0] ??
+        null;
 
     return (
         <section className={styles.playmat}>
@@ -637,7 +819,7 @@ export default function CharacterAbilitiesPanel({
                                     type="button"
                                     className={styles.traitStackItem}
                                     style={{ "--trait-index": `${index}` } as React.CSSProperties}
-                                    onClick={() => openOverlayFromCard(card)}
+                                    onClick={(event) => openSpotlightFromCard(card, event.currentTarget)}
                                 >
                                     <CardPreview
                                         card={card}
@@ -664,7 +846,7 @@ export default function CharacterAbilitiesPanel({
                                     key={card.id}
                                     type="button"
                                     className={styles.surgeCardButton}
-                                    onClick={() => openOverlayFromCard(card)}
+                                    onClick={(event) => openSpotlightFromCard(card, event.currentTarget)}
                                 >
                                     <CardPreview
                                         card={card}
@@ -687,7 +869,7 @@ export default function CharacterAbilitiesPanel({
                     side="left"
                     previewFaceIndexByCardId={previewFaceIndexByCardId}
                     flippingCardIds={flippingCardIds}
-                    onCardSelect={openOverlayFromCard}
+                    onCardSelect={openSpotlightFromCard}
                     onCardFaceToggle={toggleCardFace}
                 />
 
@@ -697,77 +879,50 @@ export default function CharacterAbilitiesPanel({
                     side="right"
                     previewFaceIndexByCardId={previewFaceIndexByCardId}
                     flippingCardIds={flippingCardIds}
-                    onCardSelect={openOverlayFromCard}
+                    onCardSelect={openSpotlightFromCard}
                     onCardFaceToggle={toggleCardFace}
                 />
             </div>
 
-            {overlayCard ? (
-                <div className={styles.overlay}>
+            {spotlight ? (
+                <div
+                    className={`${styles.spotlight} ${
+                        spotlight.isClosing ? styles.spotlightClosing : ""
+                    }`}
+                >
                     <button
                         type="button"
-                        className={styles.overlayScrim}
-                        aria-label="Close card details"
-                        onClick={() => setOverlayCard(null)}
+                        className={styles.spotlightScrim}
+                        aria-label="Close card preview"
+                        onClick={closeSpotlight}
                     />
 
-                    <section className={styles.overlayPanel} role="dialog" aria-modal="true">
-                        <header className={styles.overlayHeader}>
-                            <div>
-                                <div className={styles.eyebrow}>{overlayCard.subtitle}</div>
-                                <h4>{overlayCard.title}</h4>
-                            </div>
+                    <button
+                        type="button"
+                        className={styles.spotlightClose}
+                        aria-label="Close card preview"
+                        onClick={closeSpotlight}
+                    >
+                        ×
+                    </button>
 
-                            <button
-                                type="button"
-                                className={styles.overlayClose}
-                                onClick={() => setOverlayCard(null)}
-                            >
-                                Close
-                            </button>
-                        </header>
-
-                        {overlayFaces.length > 1 ? (
-                            <div className={styles.faceTabs}>
-                                {overlayFaces.map((face, index) => (
-                                    <button
-                                        key={face.id}
-                                        type="button"
-                                        className={`${styles.faceTab} ${
-                                            index === overlayFaceIndex ? styles.faceTabActive : ""
-                                        }`}
-                                        onClick={() => setOverlayFaceIndex(index)}
-                                    >
-                                        {faceLabel(face.faceKind)}
-                                    </button>
-                                ))}
-                            </div>
+                    <div
+                        className={styles.spotlightCardWrap}
+                        style={buildCardSpotlightStyle(spotlight)}
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        {spotlightFace ? (
+                            <CardPreview
+                                card={spotlight.card}
+                                faceIndex={spotlight.faceIndex}
+                                className={styles.spotlightCardPreview}
+                                displayMode={"full"}
+                                onFaceBadgeClick={(event) =>
+                                    toggleSpotlightFace(event, spotlight.card)
+                                }
+                            />
                         ) : null}
-
-                        <div className={styles.overlayCardHost}>
-                            {overlayFace ? (
-                                <div className={styles.overlayCardScale}>
-                                    <AbilityCardFrame
-                                        format={overlayCard.document.card.format}
-                                        faceKind={overlayFace.faceKind}
-                                        title={overlayCard.title}
-                                        subtitle={overlayCard.subtitle}
-                                        resetLabel={resolveResetLabel(overlayCard.document)}
-                                        preview="preview"
-                                        contentDensity={resolveContentDensity(overlayCard, overlayFace)}
-                                    >
-                                        <AbilityCardModuleRenderer
-                                            nodes={overlayCard.document.graph.nodes}
-                                            cardState={overlayCard.document.card}
-                                            faceId={overlayFace.id}
-                                            previewMode="preview"
-                                            onCardStateChange={NOOP_CARD_STATE_CHANGE}
-                                        />
-                                    </AbilityCardFrame>
-                                </div>
-                            ) : null}
-                        </div>
-                    </section>
+                    </div>
                 </div>
             ) : null}
         </section>

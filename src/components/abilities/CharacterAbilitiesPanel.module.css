@@ -1,6 +1,15 @@
 .playmat {
     --playmat-gap: 0.8rem;
+
+    /* Base design card size. Match this to AbilityCards.module.css. */
+    --hand-card-base-width: 270px;
+    --hand-card-base-height: 410px;
+
+    /* Tray preview scale. */
+    --hand-card-scale: 0.68;
     --hand-card-width: 11.6rem;
+    --hand-card-height: calc(var(--hand-card-width) * 88 / 63);
+
     position: relative;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
@@ -157,9 +166,9 @@
 .handDock {
     position: relative;
     z-index: 8;
-    min-height: 16rem;
+    min-height: calc(var(--hand-card-height) + 2.4rem);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 42rem);
+    grid-template-columns: minmax(14rem, 0.75fr) minmax(42rem, 1.65fr);
     gap: 0.72rem;
     align-items: end;
     overflow: visible;
@@ -183,8 +192,8 @@
 
 .handZoneRight {
     justify-items: end;
-    justify-self: end;
-    width: min(100%, 42rem);
+    justify-self: stretch;
+    width: 100%;
 }
 
 .handZoneLeft .handRail {
@@ -214,11 +223,11 @@
 .handRail {
     width: 100%;
     max-width: 100%;
-    min-height: 15.8rem;
+    min-height: calc(var(--hand-card-height) + 4rem);
     display: flex;
     align-items: end;
     overflow: visible;
-    padding: 0 0.2rem 0;
+    padding: 0 0.45rem;
     isolation: isolate;
 }
 
@@ -229,9 +238,8 @@
     background: transparent;
     padding: 0;
     cursor: pointer;
-    margin-left: calc(var(--hand-step, 8rem) - var(--hand-card-width));
-    transform:
-        translateY(var(--hand-y, 170px));
+    margin-left: calc(var(--hand-step, 5rem) - var(--hand-card-width));
+    transform: translateY(var(--hand-y, 170px));
     transform-origin: center bottom;
     transition: transform 120ms ease, filter 120ms ease;
     z-index: var(--hand-z, 0);
@@ -244,12 +252,40 @@
 
 .handCardButton:hover,
 .handCardButton:focus-visible {
-    filter: brightness(1.07);
+    filter: brightness(1.08);
     outline: none;
+}
+
+.handCardButton:hover .handCardPreview,
+.handCardButton:focus-visible .handCardPreview {
+    transform: scale(1.035);
+    transform-origin: center bottom;
 }
 
 .handCardPreview {
     width: var(--hand-card-width);
+    aspect-ratio: 63 / 88;
+}
+
+.scaledCardSlot {
+    width: var(--hand-card-width);
+    height: var(--hand-card-height);
+    overflow: visible;
+    position: relative;
+}
+
+.scaledCardInner {
+    width: var(--hand-card-base-width);
+    height: var(--hand-card-base-height);
+    transform: scale(var(--hand-card-scale));
+    transform-origin: left top;
+}
+
+/* This requires the data hook added to AbilityCardFram.tsx. */
+.scaledCardInner [data-ability-card-frame] {
+    width: var(--hand-card-base-width);
+    height: var(--hand-card-base-height);
+    max-width: none;
 }
 
 .previewFlip {
@@ -271,57 +307,147 @@
     }
 }
 
-.overlay {
+.spotlight {
     position: fixed;
     inset: 0;
-    z-index: 160;
+    z-index: 180;
+    display: grid;
+    place-items: center;
+    pointer-events: auto;
 }
 
-.overlayScrim {
+.spotlightScrim {
     position: absolute;
     inset: 0;
     border: none;
-    background: rgba(2, 4, 8, 0.8);
-    backdrop-filter: blur(4px);
-    cursor: pointer;
+    background: rgba(2, 4, 8, 0.54);
+    backdrop-filter: blur(2px);
+    cursor: zoom-out;
+    animation: spotlightScrimIn 170ms ease both;
 }
 
-.overlayPanel {
-    position: absolute;
-    inset: 6vh 5vw;
-    display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
-    gap: 0.6rem;
-    border-radius: 0.9rem;
-    border: 1px solid rgba(210, 178, 76, 0.26);
-    background:
-        radial-gradient(circle at 60% 18%, rgba(120, 170, 255, 0.12), transparent 34%),
-        linear-gradient(180deg, rgba(10, 13, 22, 0.99), rgba(5, 7, 12, 0.99));
-    padding: 0.85rem;
-    box-shadow: 0 26px 54px rgba(0, 0, 0, 0.46);
-}
-
-.overlayHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    gap: 0.8rem;
-}
-
-.overlayHeader h4 {
-    margin: 0.14rem 0 0;
-    font-size: 1.14rem;
-}
-
-.overlayClose {
-    border-radius: 0.72rem;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.06);
-    color: white;
+.spotlightClose {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3;
+    width: 2.35rem;
+    height: 2.35rem;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(231, 220, 186, 0.24);
+    background: rgba(9, 12, 20, 0.88);
+    color: rgba(245, 247, 251, 0.94);
     font: inherit;
-    font-weight: 700;
-    padding: 0.44rem 0.72rem;
+    font-size: 1.5rem;
+    line-height: 1;
     cursor: pointer;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.spotlightClose:hover,
+.spotlightClose:focus-visible {
+    border-color: rgba(210, 178, 76, 0.6);
+    background: rgba(21, 24, 37, 0.96);
+    outline: none;
+}
+
+.spotlightCardWrap {
+    position: relative;
+    z-index: 2;
+    width: var(--spotlight-card-width, calc(75dvh * 63 / 88));
+    height: var(--spotlight-card-height, 75dvh);
+    max-width: calc(100vw - 3rem);
+    max-height: calc(100dvh - 3rem);
+    display: grid;
+    place-items: center;
+    transform-origin: center center;
+    animation: spotlightCardIn 210ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    filter:
+            drop-shadow(0 24px 54px rgba(0, 0, 0, 0.58))
+            drop-shadow(0 0 28px rgba(210, 178, 76, 0.16));
+}
+
+.spotlightClosing .spotlightScrim {
+    animation: spotlightScrimOut 180ms ease both;
+}
+
+.spotlightClosing .spotlightCardWrap {
+    animation: spotlightCardOut 180ms cubic-bezier(0.7, 0, 0.84, 0) both;
+}
+
+.spotlightCardPreview {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 63 / 88;
+}
+
+/* Critical: break the normal 20rem card cap while spotlighted */
+.spotlightCardPreview [data-ability-card-frame] {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    aspect-ratio: 63 / 88;
+
+    --card-title-size: 8.45cqi;
+    --card-subtitle-size: 4.1cqi;
+    --card-body-size: 6.25cqi;
+    --card-body-line-height: 1.22;
+    --card-reset-font-size: 3cqi;
+}
+
+/* Make sure the inner border fills the enlarged frame. */
+.spotlightCardPreview [data-ability-card-frame] > * {
+    height: 100%;
+}
+
+@keyframes spotlightScrimIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes spotlightScrimOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes spotlightCardIn {
+    from {
+        opacity: 0.65;
+        transform:
+                translate(var(--spotlight-from-x, 0), var(--spotlight-from-y, 3rem))
+                scale(var(--spotlight-from-scale, 0.58));
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+@keyframes spotlightCardOut {
+    from {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+
+    to {
+        opacity: 0.65;
+        transform:
+                translate(var(--spotlight-from-x, 0), var(--spotlight-from-y, 3rem))
+                scale(var(--spotlight-from-scale, 0.58));
+    }
 }
 
 .faceTabs {
@@ -366,7 +492,9 @@
 
 @media (max-width: 1200px) {
     .playmat {
-        --hand-card-width: 10.8rem;
+        --hand-card-scale: 0.63;
+        --hand-card-width: 170px;
+        --hand-card-height: 258px;
     }
 
     .handDock {
@@ -397,20 +525,18 @@
 
 @media (max-width: 760px) {
     .playmat {
-        --hand-card-width: 9.2rem;
+        --hand-card-scale: 0.56;
+        --hand-card-width: 151px;
+        --hand-card-height: 230px;
         padding: 0.65rem;
     }
 
     .handRail {
-        min-height: 13.8rem;
+        min-height: calc(var(--hand-card-height) + 3.8rem);
     }
 
-    .overlayPanel {
-        inset: 2vh 2vw;
-    }
-
-    .overlayCardScale {
-        transform: scale(1);
-        padding-top: 0.2rem;
+    .spotlightCardWrap {
+        width: min(calc(100vw - 2rem), calc((100dvh - 4rem) * 63 / 88));
+        height: min(calc((100vw - 2rem) * 88 / 63), calc(100dvh - 4rem));
     }
 }

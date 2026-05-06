@@ -38,6 +38,7 @@ export default function AbilityCardFrame({
 
     return (
         <article
+            data-ability-card-frame
             className={`${styles.cardFrame} ${formatClass} ${densityClass}`}
         >
             <div className={styles.cardBorder}>

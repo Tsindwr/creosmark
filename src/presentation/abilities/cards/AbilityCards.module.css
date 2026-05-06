@@ -3,13 +3,20 @@
     aspect-ratio: 63 / 88;
     position: relative;
     container-type: inline-size;
-    --card-title-size: 7.2cqi;
-    --card-subtitle-size: 3.6cqi;
-    --card-body-size: 5cqi;
-    --card-body-line-height: 1.34;
-    --card-badge-size: 7.8%;
-    --card-reset-font-size: 2.45cqi;
-    --card-reset-icon-size: 2.5%;
+
+    --card-title-size: 8.1cqi;
+    --card-subtitle-size: 3.9cqi;
+    --card-body-size: 5.85cqi;
+    --card-body-line-height: 1.24;
+
+    --card-badge-size: 7.8cqi;
+    --card-reset-font-size: 2.85cqi;
+    --card-reset-icon-size: 1em;
+
+    --card-inline-symbol-size: 1.48em;
+    --card-inline-icon-size: 0.86em;
+    --card-rail-icon-size: 1.9em;
+
     border-radius: 1rem;
     overflow: visible;
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
@@ -19,30 +26,33 @@
 }
 
 .cardDensityRoomy {
-    --card-title-size: 7.8cqi;
-    --card-subtitle-size: 3.9cqi;
-    --card-body-size: 5.5cqi;
-    --card-body-line-height: 1.33;
-    --card-badge-size: 7.4%;
-    --card-reset-font-size: 2.65cqi;
+    --card-title-size: 8.45cqi;
+    --card-subtitle-size: 4.1cqi;
+    --card-body-size: 6.35cqi;
+    --card-body-line-height: 1.22;
+    --card-badge-size: 7.5cqi;
+    --card-reset-font-size: 3cqi;
+    --card-reset-icon-size: 2.1em;
 }
 
 .cardDensityNormal {
-    --card-title-size: 7.2cqi;
-    --card-subtitle-size: 3.6cqi;
-    --card-body-size: 5cqi;
-    --card-body-line-height: 1.34;
-    --card-badge-size: 7.8%;
-    --card-reset-font-size: 2.45cqi;
+    --card-title-size: 8.1cqi;
+    --card-subtitle-size: 3.9cqi;
+    --card-body-size: 5.85cqi;
+    --card-body-line-height: 1.24;
+    --card-badge-size: 7.8cqi;
+    --card-reset-font-size: 2.85cqi;
+    --card-reset-icon-size: 1.9em;
 }
 
 .cardDensityCompact {
-    --card-title-size: 6.6cqi;
-    --card-subtitle-size: 3.25cqi;
-    --card-body-size: 4.45cqi;
-    --card-body-line-height: 1.28;
-    --card-badge-size: 6.9%;
-    --card-reset-font-size: 2.2cqi;
+    --card-title-size: 7.3cqi;
+    --card-subtitle-size: 3.45cqi;
+    --card-body-size: 5.25cqi;
+    --card-body-line-height: 1.18;
+    --card-badge-size: 7.1cqi;
+    --card-reset-font-size: 2.55cqi;
+    --card-reset-icon-size: 1.7em;
 }
 
 .cardFrameAction,
@@ -119,6 +129,7 @@
     border: 0.48cqi solid rgba(231, 220, 186, 0.24);
     background: rgba(16, 18, 29, 0.94);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    line-height: 1;
 }
 
 .faceBadgeDirect {
@@ -143,18 +154,19 @@
 }
 
 .faceBadgeIcon {
-    width: 45%;
-    height: 45%;
+    width: 58%;
+    height: 58%;
     display: inline-grid;
     place-items: center;
+    line-height: 1;
 }
 
 .faceBadgeIcon i,
 .faceBadgeIcon svg {
     width: 100%;
     height: 100%;
-    display: inline-grid;
-    place-items: center;
+    display: block;
+    line-height: 1;
 }
 
 .cardResetBadge {
@@ -163,32 +175,36 @@
     bottom: 1.75%;
     display: inline-flex;
     align-items: center;
-    gap: 0.95%;
+    gap: 0.34em;
     border-radius: 999px;
     border: 0.24cqi solid rgba(231, 220, 186, 0.24);
     background: rgba(16, 18, 29, 0.94);
     color: rgba(244, 242, 235, 0.78);
-    padding: 0.66% 1.7% 0.64% 1.3%;
+    padding: 0.32em 0.72em 0.3em 0.52em;
     max-width: calc(100% - 19%);
+    font-size: var(--card-reset-font-size);
+    line-height: 1;
 }
 
 .cardResetBadgeIcon {
-    width: var(--card-reset-icon-size);
-    height: var(--card-reset-icon-size);
+    width: 1.18em;
+    height: 1.18em;
     display: inline-grid;
     place-items: center;
+    flex: 0 0 1.18em;
+    line-height: 1;
 }
 
 .cardResetBadgeIcon i,
 .cardResetBadgeIcon svg {
     width: 100%;
     height: 100%;
-    display: inline-grid;
-    place-items: center;
+    display: block;
+    line-height: 1;
 }
 
 .cardResetBadgeLabel {
-    font-size: var(--card-reset-font-size);
+    font-size: 1em;
     text-transform: uppercase;
     letter-spacing: 0.07em;
     white-space: nowrap;
@@ -326,57 +342,69 @@
 .inlineToken {
     display: inline-flex;
     align-items: center;
-    gap: 1.2%;
-    vertical-align: baseline;
-    font-size: calc(var(--card-body-size) * 0.82);
+    justify-content: center;
+    gap: 0.28em;
+    vertical-align: -0.16em;
+    font-size: calc(var(--card-body-size) * 0.9);
+    line-height: 1;
 }
 
 .inlineTokenChip {
-    padding: 0.6% 1.7%;
+    min-height: 1.45em;
+    padding: 0.16em 0.52em;
     border-radius: 999px;
     border: 1px solid rgba(244, 242, 235, 0.18);
     background: rgba(255, 255, 255, 0.05);
-    margin: 0 0.35%;
+    margin: 0 0.12em;
 }
 
 .inlineTokenKeyword {
     font-weight: 800;
     /*text-transform: uppercase;*/
     letter-spacing: 0.03em;
-    margin: 0 0.35%;
+    margin: 0 0.12em;
 }
 
 .inlineTokenSymbol {
-    width: 5.2%;
-    height: 5.2%;
-    justify-content: center;
+    display: inline-grid;
+    place-items: center;
+    width: var(--card-inline-symbol-size);
+    height: var(--card-inline-symbol-size);
+    padding: 0;
     border-radius: 999px;
     border: 1px solid rgba(244, 242, 235, 0.18);
     background: rgba(255,255,255,0.05);
-    margin: 0 0.35%;
+    margin: 0 0.12em;
 }
 
 .inlineTokenIcon {
-    width: 3.6%;
-    height: 3.6%;
+    width: var(--card-inline-icon-size);
+    height: var(--card-inline-icon-size);
     display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
+    line-height: 1;
+}
+
+.inlineTokenSymbol .inlineTokenIcon {
+    width: 68%;
+    height: 68%;
 }
 
 .inlineTokenIcon i,
 .inlineTokenIcon svg {
     width: 100%;
     height: 100%;
-    display: inline-grid;
-    place-items: center;
+    display: block;
+    line-height: 1;
 }
 
 .iconRailModule {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.45rem;
-    align-items: flex-start;
+    gap: 0.42rem;
+    align-items: center;
+    justify-content: center;
 }
 
 .railItemEditor {
@@ -391,32 +419,35 @@
 .railIcon {
     display: grid;
     justify-items: center;
-    gap: 0.9%;
-    min-width: 15%;
+    align-items: center;
+    gap: 0.22em;
+    min-width: 3.4em;
+    line-height: 1;
 }
 
 .railIconSvg {
-    width: 5.35%;
-    height: 5.35%;
+    width: var(--card-rail-icon-size);
+    height: var(--card-rail-icon-size);
     display: inline-grid;
     place-items: center;
+    line-height: 1;
 }
 
 .railIconSvg i,
 .railIconSvg svg {
     width: 100%;
     height: 100%;
-    display: inline-grid;
-    place-items: center;
+    display: block;
+    line-height: 1;
 }
 
 .railIconLarge .railIconSvg {
-    width: 6.5%;
-    height: 6.5%;
+    width: 2.28em;
+    height: 2.28em;
 }
 
 .railIconBadge {
-    padding: 0.9%;
+    padding: 0.32em;
     border-radius: 999px;
     border: 1px solid rgba(244,242,235,0.16);
 }
