@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-bh23rksi> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Combination Sum Finder</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="alternate icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><style>:root{--bg: #f7f8fb;--panel: #ffffff;--text: #1f2a37;--muted: #5c6774;--accent: #126ab2;--border: #d9e2ec}[data-astro-cid-bh23rksi]{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;color:var(--text);background:radial-gradient(circle at top left,#e8f1ff 0%,var(--bg) 45%)}.wrap[data-astro-cid-bh23rksi]{max-width:820px;margin:2rem auto;padding:0 1rem 2rem}h1[data-astro-cid-bh23rksi]{margin-bottom:.4rem}p[data-astro-cid-bh23rksi]{color:var(--muted)}.panel[data-astro-cid-bh23rksi]{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-top:1rem;box-shadow:0 8px 20px #1118270a}form[data-astro-cid-bh23rksi]{display:grid;gap:.7rem}label[data-astro-cid-bh23rksi]{font-weight:600}textarea[data-astro-cid-bh23rksi],input[data-astro-cid-bh23rksi]{width:100%;padding:.65rem .75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem}button[data-astro-cid-bh23rksi]{width:fit-content;border:none;border-radius:8px;background:var(--accent);color:#fff;padding:.6rem 1rem;font-weight:600;cursor:pointer}button[data-astro-cid-bh23rksi]:hover{filter:brightness(1.05)}#results[data-astro-cid-bh23rksi]{margin:.5rem 0 0;padding-left:1.25rem}#results[data-astro-cid-bh23rksi] li[data-astro-cid-bh23rksi]{padding:.2rem 0;word-break:break-word}@media(max-width:640px){.wrap[data-astro-cid-bh23rksi]{margin-top:1rem}}
+</style></head> <body data-astro-cid-bh23rksi> <main class="wrap" data-astro-cid-bh23rksi> <h1 data-astro-cid-bh23rksi>Combination Sum Finder</h1> <p data-astro-cid-bh23rksi>Find every combination from a number list that adds up to your target.</p> <form id="combo-form" class="panel" data-astro-cid-bh23rksi> <label for="numbers" data-astro-cid-bh23rksi>Numbers (comma separated)</label> <textarea id="numbers" rows="5" data-astro-cid-bh23rksi>177.5, 250, 189, 50, 1060, 96, 453</textarea> <label for="target" data-astro-cid-bh23rksi>Target</label> <input id="target" type="text" value="1726.5" data-astro-cid-bh23rksi> <button type="submit" data-astro-cid-bh23rksi>Find Combinations</button> </form> <section class="panel" data-astro-cid-bh23rksi> <h2 data-astro-cid-bh23rksi>Results</h2> <p id="meta" data-astro-cid-bh23rksi>Submit to calculate.</p> <ol id="results" data-astro-cid-bh23rksi></ol> </section> </main> <script lang="ts">
+  const form = document.getElementById("combo-form");
+  const numbersInput = document.getElementById("numbers");
+  const targetInput = document.getElementById("target");
+  const meta = document.getElementById("meta");
+  const results = document.getElementById("results");
+
+  if (
+    !(form instanceof HTMLFormElement) ||
+    !(numbersInput instanceof HTMLTextAreaElement) ||
+    !(targetInput instanceof HTMLInputElement) ||
+    !(meta instanceof HTMLParagraphElement) ||
+    !(results instanceof HTMLOListElement)
+  ) {
+    throw new Error("Expected form elements were not found in the page.");
+  }
+
+  const EPSILON = 0.000001;
+
+  function toCents(value) {
+    return Math.round(value * 100);
+  }
+
+  function parseNumbers(raw) {
+    return raw
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter((value) => Number.isFinite(value));
+  }
+
+  // Returns all combinations where each input number is used at most once.
+  function findCombinations(numbers, target) {
+    const sorted = [...numbers].sort((a, b) => a - b);
+    const targetCents = toCents(target);
+    const cents = sorted.map(toCents);
+    const combos = [];
+    const path = [];
+
+    function backtrack(startIndex, runningSum) {
+      if (runningSum === targetCents) {
+        combos.push([...path]);
+        return;
+      }
+
+      if (runningSum > targetCents) return;
+
+      for (let i = startIndex; i < cents.length; i += 1) {
+        if (i > startIndex && cents[i] === cents[i - 1]) continue;
+
+        const nextSum = runningSum + cents[i];
+        if (nextSum > targetCents) break;
+
+        path.push(sorted[i]);
+        backtrack(i + 1, nextSum);
+        path.pop();
+      }
+    }
+
+    backtrack(0, 0);
+    return combos;
+  }
+
+  function compareCombinations(a, b) {
+    if (a.length !== b.length) return a.length - b.length;
+    for (let i = 0; i < a.length; i += 1) {
+      if (a[i] !== b[i]) return a[i] - b[i];
+    }
+    return 0;
+  }
+
+  function fmt(value) {
+    if (Math.abs(value - Math.round(value)) < EPSILON) return String(Math.round(value));
+    return value.toFixed(2);
+  }
+
+  function renderCombinations(combos) {
+    results.innerHTML = "";
+    combos.forEach((combo) => {
+      const li = document.createElement("li");
+      li.textContent = combo.map(fmt).join(" + ");
+      results.appendChild(li);
+    });
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const numbers = parseNumbers(numbersInput.value);
+    const target = Number(targetInput.value.trim());
+
+    if (!numbers.length || !Number.isFinite(target)) {
+      meta.textContent = "Enter valid numbers and a valid target.";
+      results.innerHTML = "";
+      return;
+    }
+
+    const combos = findCombinations(numbers, target).sort(compareCombinations);
+    meta.textContent = `Found ${combos.length} combination${combos.length === 1 ? "" : "s"}.`;
+    renderCombinations(combos);
+  });
+</script> </body> </html>

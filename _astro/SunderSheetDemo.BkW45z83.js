@@ -1,0 +1,1 @@
+import{j as e}from"./jsx-runtime.u17CrQMm.js";import"./index.Bcm1Uarj.js";import{C as t}from"./CharacterSheetShell.PGPlj2cL.js";import{e as r}from"./abilities.DIXtMZBK.js";function s(){return e.jsx(t,{initialSheet:r})}export{s as default};

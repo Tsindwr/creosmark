@@ -1,0 +1,1 @@
+import{r as e}from"./index.Bcm1Uarj.js";function n(t){const[a,r]=e.useState(null),[s,u]=e.useState(!1);return e.useEffect(()=>{const o=new URLSearchParams(window.location.search);r(o.get(t)),u(!0)},[t]),{value:a,ready:s}}export{n as u};
